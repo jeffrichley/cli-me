@@ -114,3 +114,47 @@ Append-only. Newest entries at the bottom.
     write wiki pages, they include URLs from search results — but those URLs may already
     be dead (the search engine cached them). Always run the deterministic URL checker
     immediately after wiki pages are written, before any adversarial review.
+
+22. **CLI tools are faster to build than GUI wrappers.** yt-dlp (already a CLI) was
+    significantly faster to wrap than ffmpeg. The "thin wrapper + logic layer" pattern
+    works identically — the skill adds agent-friendly structure and defaults on top of
+    an already-rich CLI. No scripting API investigation needed.
+
+23. **`--force-overwrites` is the yt-dlp equivalent of ffmpeg's `-y`.** Agent context
+    has no stdin for interactive prompts. Every download command must include
+    `--force-overwrites` or `--no-overwrites` explicitly. Same lesson as ffmpeg.
+
+24. **Parallel agent implementation scales well for independent command groups.** Three
+    agents implemented info, process, and batch+config groups simultaneously with no
+    conflicts. The split-by-group architecture from lesson #3 enables this cleanly.
+
+25. **URL checker reports example URLs as "dead".** Placeholder URLs like
+    `https://www.youtube.com/playlist?list=PLAYLIST_ID` in code blocks are not broken
+    source citations. The URL checker should eventually distinguish between URLs in
+    `## Sources` sections vs. URLs in code blocks.
+
+26. **Adversarial reviewers find more issues in research-generated content.** The R1
+    reviewer found 8 factual errors in 10 technique pages — higher error rate than the
+    ffmpeg build. Research agents are less precise than source-code analysis agents.
+    The review pass is essential for research-heavy content.
+
+27. **Decomposed adversarial-reviewers.md into individual files.** Split the
+    monolithic file into protocol.md + 5 reviewer prompt files (r1–r5). Both
+    cli-me-meta and the new adversarial-review skill read from the same files.
+    Single source of truth for reviewer prompts.
+
+28. **Created standalone adversarial-review skill.** `/adversarial-review <name>`
+    runs static checks (link/orphan checker, URL checker, test suite) then
+    dispatches all 5 reviewers in parallel. Report-only by default, --fix for
+    auto-fix loop. Catches issues that build-time reviews miss because the
+    skill has evolved since it was built.
+
+29. **Link/orphan checker catches invisible files.** A markdown file that no
+    other markdown file links to is invisible to LLM agents — they'll never
+    discover it. The deterministic checker finds these instantly. Scoped to
+    .md files only; Python orphans are caught by imports and test suites.
+
+30. **index.md is a conventional entry point, like SKILL.md.** Agents find it
+    because SKILL.md says "Start with references/index.md" in prose, not via
+    a markdown link. Both are excluded from orphan detection as root nodes
+    that sit above the link graph.
