@@ -175,7 +175,7 @@ The `-ar 48000` flag on the output prevents an ffmpeg quirk where `loudnorm` int
 ## Learned from Usage
 
 - The JSON from Pass 1 appears at the very end of stderr, after all the other ffmpeg progress output. Use `tail -n 12` or pipe to `jq` after stripping non-JSON lines with `grep -A 12 '"input_i"'`.
-- If `normalization_type` in the Pass 1 JSON reads `"Dynamic"` instead of `"Linear"`, the filter fell back to dynamic mode — this happens when the measured offset would exceed the filter's gain range. Consider using `volume` to pre-attenuate the signal before normalizing.
+- If `normalization_type` in the Pass 1 JSON reads `"Dynamic"` instead of `"Linear"`, the filter fell back to dynamic mode — this happens when the measured offset would exceed the filter's gain range, OR when the audio has zero LRA (e.g., a pure tone or constant-level signal). Dynamic fallback still produces a valid output file; it is only a problem if artifact-free linear normalization is required. Consider using `volume` to pre-attenuate before normalizing when linear mode is needed.
 - For MP3 output, set `-b:a 192k` or higher; loudnorm at -14 LUFS on a low-bitrate MP3 will reveal compression artifacts that were previously masked by louder playback.
 - True peak limiting at -1.5 dBTP (not -1.0) gives extra headroom to survive lossy encoding, which can push intersample peaks above the measured true peak.
 - When processing a folder of files, run Pass 1 on all files first, collect all JSON into a lookup table, then run all Pass 2 encodes — this avoids reading each source file twice in serial.

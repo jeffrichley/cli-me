@@ -101,8 +101,8 @@ Modern FFmpeg (4.0+) reads the `rotate` metadata tag and applies `transpose` aut
 ## Sources
 
 - Mux: https://www.mux.com/articles/rotate-a-video-with-ffmpeg
-- Baeldung: https://www.baeldung.com/linux/ffmpeg-rotate-video
-- OTTVerse: https://ottverse.com/ffmpeg-rotate-video/
+- OTTVerse — Rotate A Video using FFmpeg: https://ottverse.com/rotate-a-video-using-ffmpeg-90-180/
+- FFmpeg Filters Documentation: https://ffmpeg.org/ffmpeg-filters.html#transpose
 - Cloudinary: https://cloudinary.com/guides/video-effects/ffmpeg-rotate-video
 
 ## Learned from Usage

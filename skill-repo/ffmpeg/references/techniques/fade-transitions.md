@@ -97,7 +97,7 @@ When using `-c:v copy` with audio fades only: since no video filter is applied, 
 ## Sources
 
 - DEV Community: https://dev.to/dak425/add-fade-in-and-fade-out-effects-with-ffmpeg-2bj7
-- Donald Feury: https://donaldfeury.xyz/add-fade-in-and-fade-out-effects-to-a-video-using-ffmpeg/
+- Editframe — Crossfade and fade effects: https://www.editframe.com/guides/crossfade-between-two-videos-using-ffmpeg
 - Editframe: https://www.editframe.com/guides/ffmpeg-fade-filter
 
 ## Learned from Usage

@@ -90,7 +90,7 @@ This is little-endian ARGB, not RGBA or RGB. Example: bright yellow = `&H0000FFF
 ## Learned from Usage
 
 - `libass` must be compiled into your FFmpeg build. Verify with `ffmpeg -filters | grep subtitles`. Most package manager builds include it; static builds from ffmpeg.org do too.
-- Windows path in filter: simplest approach is forward slashes (`subtitles=C:/Users/name/file.srt`) or escape the colon only (`subtitles=C\:/Users/name/file.srt`). Avoid backslash-heavy escaping — it varies by shell context and is error-prone.
+- Windows path in filter: **forward slashes alone do NOT work** (`subtitles=C:/path/file.srt` fails — ffmpeg parses the `:` as an option separator and treats `/path/file.srt` as `original_size`). The correct form is to escape the colon with a backslash: `subtitles=C\:/Users/name/file.srt`. Verified on ffmpeg 7.1 Windows (gyan.dev build).
 - `Alignment` values follow numpad layout: 1=bottom-left, 2=bottom-center, 3=bottom-right, 7=top-left, 8=top-center, 9=top-right.
 - Burning subtitles significantly increases encode time — libass renders each frame individually.
 - For vertical (9:16) social video, set `MarginV=150` in `force_style` to keep captions above platform UI overlays.

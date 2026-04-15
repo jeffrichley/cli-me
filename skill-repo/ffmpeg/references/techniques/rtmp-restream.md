@@ -154,7 +154,7 @@ The `[f=mp4]` tee output writes a local MP4 simultaneously. Note: the MP4 file w
 
 ## Sources
 
-- [Jonathan Hamberg: FFmpeg RTMP Restreaming Guide](https://jonathanhamberg.com/post/2019-10-27-ffmpeg-restream-multiple-services/)
+- [FFmpeg Tee Muxer Documentation](https://ffmpeg.org/ffmpeg-formats.html#tee-1)
 - [ffplayout discussion: Tee Muxer for Multi-Platform Streaming](https://github.com/ffplayout/ffplayout/discussions/371)
 - [ConsultWithGriff: Live Streaming with FFmpeg](https://consultwithgriff.com/streaming-with-ffmpeg/)
 - [FFmpeg Tee Muxer Documentation](https://ffmpeg.org/ffmpeg-formats.html#tee-1)

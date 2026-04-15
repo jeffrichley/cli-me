@@ -97,9 +97,9 @@ ffmpeg -ss 00:00:30 -i input.mp4 -frames:v 1 -vf "scale=320:-1" thumbnail_320.jp
 
 ## Sources
 
-- Mux: https://www.mux.com/articles/extract-frames-from-video
-- OTTVerse: https://ottverse.com/thumbnails-sprites-using-ffmpeg/
-- Bannerbear: https://www.bannerbear.com/blog/how-to-extract-frames-from-a-video-using-ffmpeg/
+- OTTVerse — Extract Frames using FFmpeg: https://ottverse.com/extract-frames-using-ffmpeg-a-comprehensive-guide/
+- OTTVerse — Thumbnails & Screenshots using FFmpeg: https://ottverse.com/thumbnails-screenshots-using-ffmpeg/
+- FFmpeg Wiki — Create thumbnails every X seconds: https://trac.ffmpeg.org/wiki/Create%20a%20thumbnail%20image%20every%20X%20seconds%20of%20the%20video
 
 ## Learned from Usage
 

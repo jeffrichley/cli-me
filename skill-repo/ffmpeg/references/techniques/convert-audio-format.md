@@ -121,8 +121,8 @@ When extracting audio with `-c:a copy`, FFmpeg simply demuxes the audio packets 
 ## Sources
 
 - trac.ffmpeg.org — Audio Encoding Guide: https://trac.ffmpeg.org/wiki/Encode/Audio
-- wavespeed.ai — FFmpeg Audio Conversion: https://wavespeed.ai/blog/ffmpeg-audio-conversion
-- linuxconfig.org — Convert Audio with FFmpeg: https://linuxconfig.org/how-to-convert-audio-files-on-linux-with-ffmpeg
+- OTTVerse — Audio Transcoding with FFmpeg: https://ottverse.com/transcode-audio-codec-ffmpeg-without-changing-video/
+- FFmpeg Wiki — MP3 Encoding Guide: https://trac.ffmpeg.org/wiki/Encode/MP3
 
 ## Learned from Usage
 

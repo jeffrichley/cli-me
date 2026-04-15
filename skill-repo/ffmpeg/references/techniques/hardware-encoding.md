@@ -173,8 +173,8 @@ VideoToolbox is a macOS framework that wraps Apple's hardware video codec (part 
 
 ## Sources
 
-- NVIDIA — FFmpeg NVENC Guide: https://docs.nvidia.com/video-technologies/video-codec-sdk/ffmpeg-with-nvidia-gpu/
-- x266.mov wiki — VAAPI Encoding: https://www.x266.mov/blog/vaapi
+- NVIDIA — FFmpeg Transcoding Guide: https://developer.nvidia.com/blog/nvidia-ffmpeg-transcoding-guide/
+- FFmpeg Wiki — Hardware Acceleration Intro: https://trac.ffmpeg.org/wiki/HWAccelIntro
 - Apple — VideoToolbox Documentation: https://developer.apple.com/documentation/videotoolbox
 
 ## Learned from Usage

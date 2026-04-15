@@ -100,9 +100,9 @@ For the **scene-change grid**, the `scene` variable in the `select` filter comes
 
 ## Sources
 
-- Mux: https://www.mux.com/articles/create-thumbnail-sprite-sheets-with-ffmpeg
-- bogotobogo: https://www.bogotobogo.com/FFMpeg/ffmpeg_thumbnails_sprites.php
-- GitHub gist (IAmStoxe): https://gist.github.com/IAmStoxe/5ac31a4e954b3ed73d6fae0b9e265b04
+- OTTVerse — Thumbnails & Screenshots using FFmpeg: https://ottverse.com/thumbnails-screenshots-using-ffmpeg/
+- OTTVerse — Extract Frames using FFmpeg: https://ottverse.com/extract-frames-using-ffmpeg-a-comprehensive-guide/
+- FFmpeg Wiki — Filtering Guide (tile filter): https://trac.ffmpeg.org/wiki/FilteringGuide
 
 ## Learned from Usage
 

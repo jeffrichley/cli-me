@@ -184,7 +184,7 @@ Note: `-tag:v hvc1` is required for Apple device compatibility. Without it, Safa
 
 ## Sources
 
-- [Mux: Video Encoding Ladder](https://mux.com/blog/encoding-video-for-delivery/)
+- [OTTVerse: Creating the Perfect Bitrate Ladder for Video Encoding](https://ottverse.com/perfect-bitrate-ladder-for-video-streaming-compression/)
 - [Streaming Learning Center: Encoding Ladder Best Practices](https://streaminglearningcenter.com/encoding/building-an-adaptive-bitrate-ladder.html)
 - [FFmpeg filter_complex Documentation](https://ffmpeg.org/ffmpeg-filters.html#Filtering-Guide)
 - [FFmpeg H.264 Encoding Guide](https://trac.ffmpeg.org/wiki/Encode/H.264)

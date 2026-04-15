@@ -198,7 +198,7 @@ ffmpeg \
 ## Sources
 
 - [OTTVerse: HLS Packaging with FFmpeg](https://ottverse.com/hls-packaging-using-ffmpeg-live-vod/)
-- [Mux: HLS Video Segmentation](https://www.mux.com/articles/hls-video-segmentation)
+- [OTTVerse: HLS vs MPEG-DASH Streaming Protocols Compared](https://ottverse.com/hls-vs-mpeg-dash-video-streaming/)
 - [FFmpeg HLS Muxer Documentation](https://ffmpeg.org/ffmpeg-formats.html#hls-2)
 - [FFmpeg x264 Encoding Guide](https://trac.ffmpeg.org/wiki/Encode/H.264)
 

@@ -123,7 +123,7 @@ The threshold is always specified as a dB value relative to full scale. `-40dB` 
 ## Sources
 
 - FFmpeg filter documentation for `silenceremove`: https://ffmpeg.org/ffmpeg-filters.html#silenceremove
-- Transloadit demo and explanation of silenceremove parameters: https://transloadit.com/demos/audio-encoding/remove-silence-from-audio/
+- FFmpeg Wiki — Filtering Guide (silence detection and removal): https://trac.ffmpeg.org/wiki/FilteringGuide
 - FFmpeg wiki on audio filtering: https://trac.ffmpeg.org/wiki/AudioChannelManipulation
 
 ## Learned from Usage

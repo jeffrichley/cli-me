@@ -241,8 +241,8 @@ Warning: with `-c copy`, the `-tune zerolatency` and bitrate flags have no effec
 
 ## Sources
 
-- [Mux Blog: How to Fake a Live Stream with FFmpeg](https://mux.com/blog/how-to-fake-a-live-stream/)
-- [LiveReacting: Loop Video with FFmpeg for Live Streaming](https://livereacting.com/blog/loop-video-ffmpeg-live-stream/)
+- [OTTVerse: RTMP Streaming using FFmpeg Tutorial](https://ottverse.com/rtmp-streaming-using-ffmpeg-tutorial/)
+- [OTTVerse: How to Loop Videos using FFmpeg](https://ottverse.com/how-to-loop-videos-using-ffmpeg-step-by-step-tutorial/)
 - [ConsultWithGriff: 24/7 Livestreaming with FFmpeg](https://consultwithgriff.com/24-7-livestreaming-with-ffmpeg/)
 - [FFmpeg concat Demuxer Documentation](https://ffmpeg.org/ffmpeg-formats.html#concat-1)
 

@@ -179,9 +179,9 @@ The three adaptation sets produce three groups in the MPD: one for video (2 repr
 
 ## Sources
 
-- [zazu.berlin: FFmpeg DASH Packaging Guide](https://zazu.berlin/ffmpeg-dash/)
+- [OTTVerse: HLS and MPEG-DASH ABR Packaging Overview](https://ottverse.com/abr-packaging-for-vod-live-hls-and-dash-overview/)
 - [FFmpeg DASH Muxer Documentation](https://ffmpeg.org/ffmpeg-formats.html#dash-2)
-- [Accurate.Video: CMAF with FFmpeg](https://www.accurate.video/blog/creating-cmaf-content-with-ffmpeg)
+- [GPAC Wiki: DASH Sequences and Examples](https://github.com/gpac/gpac/wiki/DASH-Sequences)
 - [DASH Industry Forum: Guidelines for Implementation](https://dashif.org/guidelines/)
 
 ## Learned from Usage

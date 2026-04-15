@@ -274,7 +274,7 @@ The **lossless first-pass strategy** works because the capture device delivers f
 
 - FFmpeg official docs — ffmpeg-devices: https://ffmpeg.org/ffmpeg-devices.html
 - GitHub gists — various screen capture examples
-- bogotobogo — "FFmpeg screen capture": https://www.bogotobogo.com/FFMpeg/ffmpeg_screen_capture.php
+- Gumlet Community — "How to record screen with FFmpeg": https://community.gumlet.com/t/how-to-record-screen-with-ffmpeg/518
 - ayosec ffmpeg-filters-docs — ddagrab filter documentation: https://github.com/ayosec/ffmpeg-filters-docs
 
 ## Learned from Usage

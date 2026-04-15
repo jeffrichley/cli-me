@@ -82,9 +82,9 @@ ffmpeg -i input.mp4 \
 
 ## Sources
 
-- OTTVerse: https://ottverse.com/change-video-speed-ffmpeg/
-- Shotstack: https://shotstack.io/learn/ffmpeg-slow-motion/
-- Creatomate: https://creatomate.com/blog/how-to-speed-up-or-slow-down-a-video-with-ffmpeg
+- OTTVerse: https://ottverse.com/how-to-speed-up-slow-down-video-playback-using-ffmpeg/
+- Shotstack: https://shotstack.io/learn/ffmpeg-speed-up-video-slow-down-videos/
+- Creatomate: https://creatomate.com/blog/how-to-speed-up-or-slow-down-video-playback-using-ffmpeg
 
 ## Learned from Usage
 

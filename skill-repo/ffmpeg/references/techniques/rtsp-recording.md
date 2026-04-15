@@ -151,9 +151,8 @@ In systemd unit files, `%` characters must be escaped as `%%` because systemd us
 
 ## Sources
 
-- Tom Humph — "Recording RTSP Streams with FFmpeg" (Medium): https://medium.com/@tomhumphrey/recording-rtsp-streams-with-ffmpeg
-- cavelab.dev — "FFmpeg RTSP stream recording": https://cavelab.dev/wiki/FFmpeg_RTSP_recording
-- FFmpeg official docs — RTSP: https://ffmpeg.org/ffmpeg-protocols.html#rtsp
+- OTTVerse — RTMP Streaming using FFmpeg Tutorial: https://ottverse.com/rtmp-streaming-using-ffmpeg-tutorial/
+- FFmpeg official docs — RTSP protocol: https://ffmpeg.org/ffmpeg-protocols.html#rtsp
 - FFmpeg official docs — segment muxer: https://ffmpeg.org/ffmpeg-formats.html#segment_002c-stream_005fsegment_002c-ssegment
 
 ## Learned from Usage

@@ -137,7 +137,7 @@ H.264 levels define limits on resolution, frame rate, and bitrate. Level 4.0 sup
 
 - YouTube — Recommended Upload Encoding Settings: https://support.google.com/youtube/answer/1722171
 - Twitter/X — Video Specifications: https://developer.twitter.com/en/docs/twitter-api/v1/media/upload-media/api-reference/post-media-upload
-- TikTok — Video Specifications for Creators: https://www.tiktok.com/creator-portal/en-us/tiktok-content-tips/video-specifications/
+- TikTok — Video Size & Dimensions Guide: https://fliki.ai/blog/tiktok-video-size
 
 ## Learned from Usage
 

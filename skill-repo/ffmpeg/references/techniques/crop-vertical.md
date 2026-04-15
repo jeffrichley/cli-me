@@ -66,9 +66,9 @@ The expression `ih*9/16` computes the target width as a fraction of the input he
 
 ## Sources
 
-- vgmoose.dev: https://vgmoose.dev/blog/2021/ffmpeg-vertical-video/
-- Shotstack: https://shotstack.io/learn/ffmpeg-crop-video/
-- Bannerbear: https://www.bannerbear.com/blog/how-to-convert-landscape-videos-to-portrait-using-ffmpeg/
+- vgmoose.dev: https://vgmoose.dev/blog/how-to-crop-landscape-169-videos-to-vertical-916-using-ffmpeg-for-youtube-shorts-or-tiktok-6898118583/
+- Shotstack: https://shotstack.io/learn/crop-resize-videos-ffmpeg/
+- Bannerbear: https://www.bannerbear.com/blog/how-to-crop-resize-a-video-using-ffmpeg/
 
 ## Learned from Usage
 

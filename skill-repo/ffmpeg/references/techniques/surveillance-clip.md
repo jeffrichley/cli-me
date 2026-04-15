@@ -142,8 +142,8 @@ Surveillance cameras typically encode with hardware encoders that set keyframe i
 
 ## Sources
 
-- FFmpeg-Detect-Copy-Motion GitHub: https://github.com/zodrzodr/FFmpeg-Detect-Copy-Motion
-- Mux: https://www.mux.com/articles/ffmpeg-segment-recording
+- FFmpeg Filters Documentation — select filter: https://ffmpeg.org/ffmpeg-filters.html#select_002c-aselect
+- OTTVerse — Extract Frames using FFmpeg: https://ottverse.com/extract-frames-using-ffmpeg-a-comprehensive-guide/
 - FFmpeg documentation: https://ffmpeg.org/ffmpeg-formats.html#concat
 - FFmpeg documentation: https://ffmpeg.org/ffmpeg-formats.html#segment_002c-stream_005fsegment_002c-ssegment
 

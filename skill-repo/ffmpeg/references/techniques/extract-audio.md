@@ -110,7 +110,7 @@ For **re-encode mode**, the pipeline is: demux → decode (to PCM) → encode (t
 - Mux — "How to Extract Audio from Video Files Using FFmpeg": https://www.mux.com/articles/extract-audio-from-a-video-file-with-ffmpeg
 - OTTVerse — "Extract Audio from Video Using FFmpeg": https://ottverse.com/extract-audio-from-video-using-ffmpeg/
 - Cloudinary — "How to Use FFmpeg to Extract Audio From Video": https://cloudinary.com/guides/front-end-development/ffmpeg-extract-audio
-- Shotstack — "Extract Audio from Video using FFmpeg": https://shotstack.io/learn/ffmpeg-extract-audio/
+- OTTVerse — "Add, Remove, and Extract Audio using FFmpeg": https://ottverse.com/add-remove-extract-audio-from-video-using-ffmpeg/
 
 ## Learned from Usage
 

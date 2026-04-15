@@ -140,10 +140,10 @@ When bitrate is reported as `N/A` in JSON, it means the container does not store
 
 ## Sources
 
-- OTTVerse — "ffprobe Tutorial: Video Analysis": https://ottverse.com/ffprobe-tutorial-video-analysis/
+- OTTVerse — "ffprobe Comprehensive Tutorial with 7 Examples": https://ottverse.com/ffprobe-comprehensive-tutorial-with-examples/
 - FFmpeg official docs — ffprobe: https://ffmpeg.org/ffprobe.html
 - probe.dev — "ffprobe JSON output guide": https://probe.dev/
-- api.video — "How to Use ffprobe": https://api.video/blog/tutorials/how-to-use-ffprobe/
+- Cloudinary — "FFprobe Overview and Usage": https://cloudinary.com/glossary/ffprobe
 
 ## Learned from Usage
 

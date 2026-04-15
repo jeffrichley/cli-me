@@ -280,6 +280,22 @@ adversarial inputs (spaces in filenames, edge durations, unusual resolutions).
 Fix all findings. Update wiki pages with corrected commands. Re-run failing
 commands until they pass.
 
+### 3d.1 Deterministic URL Check
+
+Run the URL checker script against the skill's wiki pages:
+
+```bash
+uv run qa/check_urls.py <name>
+```
+
+This deterministically fetches EVERY URL in every technique page and reports
+HTTP status codes. No LLM judgment — pure HTTP status. Fix all dead URLs
+(404, 403, 410, 5xx, timeout) before proceeding.
+
+This catches URL rot that adversarial reviewers miss because they spot-check.
+The script checks ALL URLs. Run it after every round of URL replacements
+until the output is clean.
+
 ### 3e. Write Tier 3 manual tests
 
 Create `qa/<name>/test_manual.py` — tests that generate output files and print

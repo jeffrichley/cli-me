@@ -114,5 +114,7 @@ The **concat filter** is a real-time filter that decodes all inputs, processes f
 
 - The most common concat mistake: using `-f concat` with clips that have different resolutions or codecs. FFmpeg will not error clearly — the output will be corrupted or truncated.
 - Always use absolute paths in `filelist.txt` when running from scripts to avoid `-safe 0` surprises.
+- On Windows with Git Bash, `/tmp` paths in `filelist.txt` are not resolved by ffmpeg — use the actual Windows path (e.g., `C:/Users/name/AppData/Local/Temp/clip.mp4`). ffmpeg reads `filelist.txt` natively; Git Bash path translation does not apply to file contents.
+- Non-monotonic DTS warnings (`Non-monotonic DTS; previous: X, current: Y`) are common when concatenating clips made by the same encoder due to slight AAC timestamp rounding. These are benign for normal playback; add `-fflags +genpts` if strict timestamp compliance is required.
 - When the concat filter produces audio sync drift, verify that all input clips have the same sample rate before concatenating.
 - Three or more clips: increment `n=` and extend the input chain — `[0:v][0:a][1:v][1:a][2:v][2:a]concat=n=3:v=1:a=1`.
