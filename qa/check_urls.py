@@ -35,6 +35,11 @@ SKIP_DOMAINS = {
     "trac.ffmpeg.org",  # Anubis anti-bot wall
 }
 
+# Domains that block HEAD requests but work with GET
+GET_ONLY_DOMAINS = {
+    "support.google.com",  # Returns 404 on HEAD, 200 on GET
+}
+
 # SSL context that doesn't verify (some sites have bad certs)
 SSL_CTX = ssl.create_default_context()
 SSL_CTX.check_hostname = False
@@ -69,7 +74,8 @@ def check_url(url: str, timeout: int = 15) -> tuple[int, str]:
     if parsed.hostname in SKIP_DOMAINS:
         return (-1, "SKIPPED (known bot-blocker)")
 
-    req = urllib.request.Request(url, headers=HEADERS, method="HEAD")
+    method = "GET" if parsed.hostname in GET_ONLY_DOMAINS else "HEAD"
+    req = urllib.request.Request(url, headers=HEADERS, method=method)
     try:
         resp = urllib.request.urlopen(req, timeout=timeout, context=SSL_CTX)
         return (resp.status, "OK")
