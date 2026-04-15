@@ -1,0 +1,18 @@
+[project]
+name = "cli-me"
+version = "0.1.0"
+description = "Agent-native skills for GUI software — build, install, and evolve Claude Code skills"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15.0",
+]
+
+[project.scripts]
+clime = "cli_me.main:main"
+"cli-me" = "cli_me.main:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+]
