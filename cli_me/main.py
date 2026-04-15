@@ -7,9 +7,14 @@ import sys
 from pathlib import Path
 
 import typer
+from rich.console import Console
+from rich.table import Table
 
 from cli_me.installer import Installer
 from cli_me.registry import Registry
+
+console = Console()
+err_console = Console(stderr=True)
 
 app = typer.Typer(
     name="clime",
@@ -48,12 +53,17 @@ def list(
         skills = reg.list_all()
 
     if not skills:
-        typer.echo("No skills found.")
+        console.print("No skills found.", style="dim")
         return
 
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Name")
+    table.add_column("Category")
+    table.add_column("Tags")
     for skill in skills:
         tags = ", ".join(skill.get("tags", []))
-        typer.echo(f"  {skill['name']:<20} {skill.get('category', ''):<15} {tags}")
+        table.add_row(skill["name"], skill.get("category", ""), tags)
+    console.print(table)
 
 
 @app.command()
@@ -62,10 +72,14 @@ def search(query: str = typer.Argument(..., help="Search query")) -> None:
     reg = _get_registry()
     results = reg.search(query)
     if not results:
-        typer.echo("No skills found matching query.")
+        console.print("No skills found matching query.", style="dim")
         return
+    table = Table(show_header=True, header_style="bold")
+    table.add_column("Name")
+    table.add_column("Description")
     for skill in results:
-        typer.echo(f"  {skill['name']:<20} {skill.get('description', '')}")
+        table.add_row(skill["name"], skill.get("description", ""))
+    console.print(table)
 
 
 @app.command()
@@ -74,19 +88,23 @@ def info(name: str = typer.Argument(..., help="Skill name")) -> None:
     reg = _get_registry()
     skill = reg.get(name)
     if skill is None:
-        typer.echo(f"Skill '{name}' not found.", err=True)
+        err_console.print(f"Skill '{name}' not found.", style="bold red")
         raise typer.Exit(code=1)
 
-    typer.echo(f"Name:         {skill['name']}")
-    typer.echo(f"Description:  {skill.get('description', '')}")
-    typer.echo(f"Category:     {skill.get('category', '')}")
-    typer.echo(f"Tags:         {', '.join(skill.get('tags', []))}")
-    typer.echo(f"Version:      {skill.get('version', '')}")
-    typer.echo(f"Software:     {skill.get('software_url', '')}")
-    typer.echo(f"Source:       {skill.get('source_repo', '')}")
+    table = Table(show_header=False, box=None, pad_edge=False)
+    table.add_column("Field", style="bold")
+    table.add_column("Value")
+    table.add_row("Name", skill["name"])
+    table.add_row("Description", skill.get("description", ""))
+    table.add_row("Category", skill.get("category", ""))
+    table.add_row("Tags", ", ".join(skill.get("tags", [])))
+    table.add_row("Version", skill.get("version", ""))
+    table.add_row("Software", skill.get("software_url", ""))
+    table.add_row("Source", skill.get("source_repo", ""))
     deps = skill.get("dependencies", [])
     if deps:
-        typer.echo(f"Dependencies: {', '.join(deps)}")
+        table.add_row("Dependencies", ", ".join(deps))
+    console.print(table)
 
 
 @app.command()
@@ -98,7 +116,7 @@ def install(
 ) -> None:
     """Install a skill to a project or globally."""
     if not project and not global_:
-        typer.echo("Specify --project <path> or --global.", err=True)
+        err_console.print("Specify --project <path> or --global.", style="bold red")
         raise typer.Exit(code=1)
 
     installer = _get_installer()
@@ -109,9 +127,9 @@ def install(
             global_install=global_,
             force=force,
         )
-        typer.echo(f"Installed '{name}' to {dest}")
+        console.print(f"Installed [bold]{name}[/bold] to {dest}", style="green")
     except (ValueError, FileExistsError) as e:
-        typer.echo(str(e), err=True)
+        err_console.print(str(e), style="bold red")
         raise typer.Exit(code=1)
 
 
@@ -123,15 +141,15 @@ def uninstall(
 ) -> None:
     """Uninstall a skill from a project or globally."""
     if not project and not global_:
-        typer.echo("Specify --project <path> or --global.", err=True)
+        err_console.print("Specify --project <path> or --global.", style="bold red")
         raise typer.Exit(code=1)
 
     installer = _get_installer()
     try:
         installer.uninstall(name, project_path=project, global_install=global_)
-        typer.echo(f"Uninstalled '{name}'.")
+        console.print(f"Uninstalled [bold]{name}[/bold].", style="green")
     except FileNotFoundError as e:
-        typer.echo(str(e), err=True)
+        err_console.print(str(e), style="bold red")
         raise typer.Exit(code=1)
 
 
