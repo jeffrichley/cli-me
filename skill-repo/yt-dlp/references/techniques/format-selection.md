@@ -110,7 +110,7 @@ Accepted merge formats: `avi`, `flv`, `mkv`, `mov`, `mp4`, `webm`.
 
 - **`-f best` is NOT the default.** The default is `bv*+ba/b`. Using `-f best` gets the best pre-merged file, which is often lower quality than merging separate streams.
 - **Merging requires ffmpeg.** Without it, yt-dlp falls back to the best single-file format.
-- **Numeric fields use numeric comparison.** `[height<=720]` compares numerically. Use `?` suffix (e.g., `[filesize<?50M]`) when values might be missing — without it, formats with unknown values are excluded.
+- **Numeric fields use numeric comparison.** `[height<=720]` compares numerically. Use `?` suffix (e.g., `[filesize<=?50M]`) when values might be missing — without it, formats with unknown values are excluded.
 - **Codec filters use internal names.** Use `-F` to see what codec names a site reports (e.g., `avc1.64001F` for h264 on YouTube).
 - **Format codes are site-specific.** Format code `22` means 720p mp4 on YouTube, but codes differ across sites. Use `-F` to check.
 - **`-S` and `-f` can be combined.** `-S` controls ranking within the pool; `-f` controls which formats are eligible.

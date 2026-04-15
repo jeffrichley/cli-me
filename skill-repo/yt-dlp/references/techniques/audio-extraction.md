@@ -99,6 +99,9 @@ yt-dlp -x --audio-format mp3 --audio-quality 0 \
   --embed-metadata --embed-thumbnail \
   --write-subs --sub-langs "en" --embed-subs "URL"
 
+> **Note:** `--embed-subs` is silently ignored for audio-only containers (mp3, m4a, etc.)
+> since subtitles cannot be embedded in audio files.
+
 # FLAC with all metadata
 yt-dlp -x --audio-format flac \
   --embed-metadata --embed-thumbnail "URL"
@@ -117,6 +120,20 @@ yt-dlp -x --audio-format mp3 --audio-quality 0 \
   --download-archive audio-archive.txt \
   "PLAYLIST_URL"
 ```
+
+### Quality Levels (CLI wrapper)
+
+The CLI wrapper accepts named quality levels that map to yt-dlp's 0-10 scale:
+
+| Name | yt-dlp value | Approximate bitrate (MP3) |
+|------|-------------|--------------------------|
+| best | 0 | ~256-320 kbps |
+| high | 2 | ~192-256 kbps |
+| medium (default) | 5 | ~128-192 kbps |
+| low | 8 | ~64-96 kbps |
+| worst | 10 | ~32-48 kbps |
+
+You can also pass raw bitrate values: `--quality 192` or `--quality 192K`.
 
 ## Default Codec Quality Hierarchy
 

@@ -206,6 +206,7 @@ yt-dlp --windows-filenames -o "%(title)s.%(ext)s" "URL"
 - **`--restrict-filenames` replaces spaces and special characters.** It converts `&`, spaces, and unicode to ASCII-safe characters with underscores.
 - **Date formatting uses `>` separator.** To format a date: `%(upload_date>%Y-%m-%d)s`. The `>` separates the field name from the strftime format.
 - **Path separators create directories.** Using `/` in the template (e.g., `%(uploader)s/%(title)s`) automatically creates subdirectories.
+- **Video titles may contain illegal filename characters.** On Windows, characters like `<>:"/\|?*` in titles will cause download failures. Use `--restrict-filenames` (ASCII-safe) or `--windows-filenames` (removes Windows-illegal chars only) to prevent this.
 
 ## Sources
 

@@ -204,7 +204,7 @@ yt-dlp --client-certificate cert.pem --client-certificate-key key.pem \
 - **Cloudflare-protected sites may need user-agent matching.** If you get 403 errors even with cookies, pass `--user-agent` matching the browser you exported from.
 - **Two-factor auth (`-2`) only works with direct login.** It doesn't apply to cookie-based auth (which already includes the authenticated session).
 - **Cookies from browser may need keyring access on Linux.** If cookie extraction fails, try specifying the keyring: `--cookies-from-browser "chrome+gnomekeyring"`.
-- **Refresh cookies within 30 minutes for Cloudflare sites.** Visit the target site in your browser, then immediately export/use cookies.
+- **Refresh cookies frequently for Cloudflare-protected sites.** Challenge tokens expire quickly. Visit the target site in your browser, then immediately export/use cookies.
 
 ## Sources
 

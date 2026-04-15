@@ -12,6 +12,11 @@ common install locations:
 - `C:/Users/<user>/AppData/Roaming/Python/Python3*/Scripts/yt-dlp.exe`
 - `C:/Users/<user>/AppData/Local/Programs/Python/Python3*/Scripts/yt-dlp.exe`
 
+### Force overwrites by default
+All CLI commands add `--force-overwrites` automatically to prevent yt-dlp from
+hanging on interactive overwrite prompts. This means existing files WILL be
+overwritten without warning. Use `--no-overwrites` to prevent this.
+
 ### ffmpeg dependency
 Many post-processing operations require ffmpeg. If ffmpeg is not installed,
 yt-dlp will fail silently or produce incomplete output. Always check for

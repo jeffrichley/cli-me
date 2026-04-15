@@ -3,7 +3,8 @@ name: yt-dlp
 description: Video/audio download CLI for yt-dlp. Use when asked to download video,
   download audio, extract audio from video, download playlist, download channel,
   get subtitles, get thumbnails, download from YouTube, download from TikTok,
-  download from Twitter, rip audio, save video, archive channel, batch download,
+  download from Twitter, download from Instagram, download Instagram reel,
+  download from Vimeo, download Twitch clip, rip audio, save video, archive channel, batch download,
   remove sponsor segments, SponsorBlock, list formats, get video info, download
   with cookies, convert downloaded video, embed subtitles, embed metadata, or
   any media downloading from websites.
@@ -65,7 +66,7 @@ uv run yt_dlp_cli.py download video "https://youtube.com/watch?v=..."
 uv run yt_dlp_cli.py download audio "https://youtube.com/watch?v=..." --format mp3
 
 # Download playlist
-uv run yt_dlp_cli.py download playlist "https://youtube.com/playlist?list=..." --output "%(playlist_title)s/%(title)s.%(ext)s"
+uv run yt_dlp_cli.py download playlist "https://youtube.com/playlist?list=..."
 
 # List available formats
 uv run yt_dlp_cli.py info formats "https://youtube.com/watch?v=..."
@@ -95,6 +96,13 @@ uv run yt_dlp_cli.py download video "https://..." --cookies cookies.txt
 | Get subtitles only | `info subtitles URL --download --langs en` | Downloads subtitle files |
 | Remove sponsors | `process sponsorblock URL --remove sponsor` | Requires SponsorBlock API |
 | Archive playlist | `batch sync URL --archive archive.txt` | Skip already-downloaded |
+
+### Default Behavior
+
+- **Force overwrites:** All commands include `--force-overwrites` by default to
+  avoid interactive prompts in agent context. Pass `--no-overwrites` to prevent
+  overwriting existing files.
+- **Files download to the current working directory** unless `--output-dir` is specified.
 
 ## Knowledge Base
 

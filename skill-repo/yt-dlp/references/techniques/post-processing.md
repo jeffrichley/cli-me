@@ -203,6 +203,8 @@ yt-dlp --exec "echo Downloaded: {}" "URL"
 # Move file to a specific location
 yt-dlp --exec "mv {} /final/location/" "URL"
 
+> **Note:** `--exec` commands are OS-specific. Use `mv` on Unix, `move` on Windows.
+
 # Run after specific post-processing stage
 yt-dlp --exec after_move:"echo Final file: {}" "URL"
 ```
@@ -247,6 +249,7 @@ yt-dlp --fixup force "URL"
 - **Post-processor order matters.** yt-dlp runs post-processors in a fixed order. If you need a specific ordering, check issue #10056 on GitHub for workarounds.
 - **`--postprocessor-args` syntax changed from youtube-dl.** yt-dlp uses `NAME:ARGS` syntax to target specific post-processors. The old `--postprocessor-args "ARGS"` still works but applies to all ffmpeg invocations.
 - **`--download-sections` timestamps use `*` prefix.** The asterisk is required: `"*1:00-2:00"` not `"1:00-2:00"`.
+- **`process sponsorblock` requires `--remove` or `--mark`.** Running the command without either flag downloads the video with no SponsorBlock action — a silent no-op.
 
 ## Sources
 

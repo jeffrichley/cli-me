@@ -36,7 +36,7 @@ def build_args(
     if output:
         args.extend(["-o", output])
     else:
-        args.extend(["-o", "%(channel)s/%(upload_date)s - %(title)s.%(ext)s"])
+        args.extend(["-o", "%(channel)s/%(upload_date>%Y-%m-%d)s - %(title)s [%(id)s].%(ext)s"])
     if output_dir:
         args.extend(["-P", output_dir])
 
