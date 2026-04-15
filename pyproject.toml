@@ -20,6 +20,14 @@ clime = "cli_me.main:main"
 [tool.hatch.build.targets.wheel]
 packages = ["cli_me"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests", "qa"]
+markers = [
+    "command_graph: Tier 1 — tests command construction (no binary needed)",
+    "integration: Tier 2 — tests against real binary (skips if missing)",
+    "manual: Tier 3 — requires human review (skip in CI)",
+]
+
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",

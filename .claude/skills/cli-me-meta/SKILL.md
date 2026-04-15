@@ -217,9 +217,35 @@ else:
 
 ## Phase 4: Test
 
-1. Run each CLI command against the real installed software
-2. Verify outputs exist and are correct (file size > 0, correct format, etc.)
-3. Test `--help` on all commands
+### 4a. Generate QA Playbook and Tests
+
+Create the QA suite in `qa/<name>/` (NOT inside the skill folder — QA is never
+shipped to users):
+
+1. **`qa/<name>/playbook.md`** — document what to test for each command:
+   - Test scenario, input required, expected output, verification method
+   - Manual verification steps for visual/audio quality
+   - Known edge cases and gotchas
+
+2. **`qa/<name>/test_commands.py`** — Tier 1 command-graph tests:
+   - Mock `subprocess.run` and `shutil.which`
+   - Invoke each command via CliRunner
+   - Assert the correct ffmpeg/software args are constructed
+   - No real binary needed — runs everywhere
+   - Mark with `@pytest.mark.command_graph`
+
+3. **`qa/<name>/test_integration.py`** — Tier 2 integration tests:
+   - Use synthetic fixtures from `qa/conftest.py` (test_video, test_audio, etc.)
+   - Run real commands against real software
+   - Verify outputs: file exists, correct format (ffprobe), expected properties
+   - Mark with `@pytest.mark.integration`
+   - Skip gracefully if software not installed
+
+### 4b. Run Tests
+
+1. Run Tier 1: `uv run pytest qa/<name>/test_commands.py -v`
+2. Run Tier 2: `uv run pytest qa/<name>/test_integration.py -v -m integration`
+3. Fix any failures found
 4. Document test results in `references/log.md`
 
 ## Phase 5: Write-back Instruction

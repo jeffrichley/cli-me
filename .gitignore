@@ -17,3 +17,7 @@ tmp/
 
 # Local Claude settings
 .claude/settings.local.json
+
+# QA fixtures (generated/downloaded at test time)
+qa/fixtures/*
+!qa/fixtures/.gitkeep
