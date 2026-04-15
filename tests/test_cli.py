@@ -63,7 +63,9 @@ def test_list_by_category(fake_repo):
 def test_list_by_category_no_match(fake_repo):
     result = runner.invoke(app, ["list", "--category", "audio"])
     assert result.exit_code == 0
+    # Should not contain any skill data when category doesn't match
     assert "gimp" not in result.output
+    assert "image-editing" not in result.output
 
 
 def test_search(fake_repo):
@@ -75,7 +77,8 @@ def test_search(fake_repo):
 def test_search_no_results(fake_repo):
     result = runner.invoke(app, ["search", "nonexistent"])
     assert result.exit_code == 0
-    assert "No skills found" in result.output
+    # Should not contain any skill names when nothing matches
+    assert "gimp" not in result.output
 
 
 def test_info(fake_repo):
