@@ -87,14 +87,22 @@ Create the wiki operational files:
 
 ## Phase 2: Scaffold
 
-Create the skill folder structure:
+Create the skill folder structure. **The CLI is a package, not a single file.**
+Split commands into modules by group from the start — one file per command group
+keeps files focused and enables parallel agent work:
 
 ```
 skill-repo/<name>/
 ├── SKILL.md
 ├── scripts/
 │   ├── pyproject.toml        # Self-contained — declares Typer dep so uv run works
-│   └── <name>_cli.py
+│   └── <name>_cli/
+│       ├── __init__.py       # Exports `app`
+│       ├── __main__.py       # `python -m <name>_cli` support
+│       ├── backend.py        # find_executable, detect_version, run helpers
+│       ├── convert.py        # Convert command group (example)
+│       ├── extract.py        # Extract command group (example)
+│       └── ...               # One file per command group
 └── references/
     ├── index.md
     ├── log.md
@@ -144,68 +152,97 @@ appending to the JSON directly:
 }
 ```
 
-## Phase 3: Implement
+## Phase 3: QA-First Implementation
 
-Create `scripts/pyproject.toml` so the CLI is self-contained and `uv run` works
-without the cli-me repo:
+**CRITICAL: Write tests BEFORE implementing commands. Test each command as you
+build it. Never implement all commands and test later.**
 
-```toml
-[project]
-name = "<name>-cli"
-version = "0.1.0"
-description = "Agent-native CLI for <Software Name>"
-requires-python = ">=3.12"
-dependencies = [
-    "typer>=0.15.0",
-]
+### 3a. Write the QA playbook
 
-[project.scripts]
-<name>-cli = "<name>_cli:app"
-```
+Create `qa/<name>/playbook.md` FIRST — before any implementation. Document:
+- What each command should do
+- Input required, expected output, verification method
+- Manual verification steps for visual/audio quality
+- Known edge cases and gotchas
 
-Write the Typer CLI at `scripts/<name>_cli.py`. Follow the template at
-`references/typer-cli-template.md`.
+### 3b. Write the backend module
 
-Every CLI must include:
+Create `scripts/<name>_cli/backend.py` with:
 
 ```python
 import subprocess
 import shutil
 import typer
 
-app = typer.Typer(help="<name> CLI — agent-native interface for <Software>")
-
+def find_executable(name: str) -> str:
+    """Find the software executable or exit with install instructions."""
+    path = shutil.which(name)
+    if path is None:
+        typer.echo(f"ERROR: {name} not found. Install with: <instructions>", err=True)
+        raise typer.Exit(code=1)
+    return path
 
 def detect_version() -> tuple[int, ...]:
     """Detect installed software version."""
-    path = shutil.which("<executable>")
-    if path is None:
-        typer.echo(
-            "ERROR: <Software> not found. Install with: <install instructions>",
-            err=True,
-        )
-        raise typer.Exit(code=1)
-    result = subprocess.run(
-        [path, "--version"], capture_output=True, text=True
-    )
-    # Parse version from output
     ...
 
-
-def find_executable() -> str:
-    """Find the software executable or exit with install instructions."""
-    path = shutil.which("<executable>")
-    if path is None:
-        typer.echo(
-            "ERROR: <Software> not found. Install with: <install instructions>",
-            err=True,
-        )
-        raise typer.Exit(code=1)
-    return path
+def run_command(args: list[str], check: bool = True) -> subprocess.CompletedProcess:
+    """Run a software command and return the result."""
+    ...
 ```
 
-Commands should map to the workflows and techniques documented in the wiki.
-Use version-aware branching where needed:
+### 3c. For EACH command group, follow this cycle:
+
+**DO NOT skip steps. DO NOT batch implement all commands then test.**
+
+1. **Write Tier 1 test** (`qa/<name>/test_commands.py`):
+   - Mock subprocess.run and shutil.which
+   - Assert the command builds the correct argument list
+   - Mark with `@pytest.mark.command_graph`
+
+2. **Run Tier 1 test — verify it fails**
+
+3. **Implement the command** in its own module (`scripts/<name>_cli/<group>.py`)
+
+4. **Run Tier 1 test — verify it passes**
+
+5. **Write Tier 2 test** (`qa/<name>/test_integration.py`):
+   - Use synthetic fixtures from `qa/conftest.py`
+   - Run real command against real software
+   - **Deep assertions**: exact dimensions, codecs, pixel formats, magic bytes,
+     duration precision, file size comparison, stream presence/absence.
+   - "File exists and is nonzero" is NEVER sufficient.
+   - Mark with `@pytest.mark.integration`
+
+6. **Run Tier 2 test — verify it passes against real software**
+   - If it fails, fix the command and re-run
+   - If the software is not installed, the test skips gracefully
+
+7. **Commit the command + both tests together**
+
+8. **Repeat for the next command group**
+
+### 3d. Verify wiki commands
+
+After all commands are implemented, run the CLI commands documented in the wiki
+technique pages. If any wiki command doesn't work or produces wrong output,
+fix the wiki page. The wiki must contain verified, working commands.
+
+### 3e. Write Tier 3 manual tests
+
+Create `qa/<name>/test_manual.py` — tests that generate output files and print
+paths + instructions for human review. Mark with `@pytest.mark.manual`.
+
+Cover anything that can't be asserted programmatically:
+- Visual quality (GIFs, resized images, cropped video)
+- Audio quality (normalization, denoising, ducking)
+- Subtitle visibility and positioning
+- Watermark placement and opacity
+- Transition smoothness (fades, speed changes)
+
+### 3f. Version-aware branching (when needed)
+
+Use simple branching in the backend module:
 
 ```python
 version = detect_version()
@@ -215,38 +252,16 @@ else:
     # legacy approach
 ```
 
-## Phase 4: Test
+Extract a protocol/strategy pattern only when branching justifies it.
 
-### 4a. Generate QA Playbook and Tests
+## Phase 4: Final Verification
 
-Create the QA suite in `qa/<name>/` (NOT inside the skill folder — QA is never
-shipped to users):
-
-1. **`qa/<name>/playbook.md`** — document what to test for each command:
-   - Test scenario, input required, expected output, verification method
-   - Manual verification steps for visual/audio quality
-   - Known edge cases and gotchas
-
-2. **`qa/<name>/test_commands.py`** — Tier 1 command-graph tests:
-   - Mock `subprocess.run` and `shutil.which`
-   - Invoke each command via CliRunner
-   - Assert the correct ffmpeg/software args are constructed
-   - No real binary needed — runs everywhere
-   - Mark with `@pytest.mark.command_graph`
-
-3. **`qa/<name>/test_integration.py`** — Tier 2 integration tests:
-   - Use synthetic fixtures from `qa/conftest.py` (test_video, test_audio, etc.)
-   - Run real commands against real software
-   - Verify outputs: file exists, correct format (ffprobe), expected properties
-   - Mark with `@pytest.mark.integration`
-   - Skip gracefully if software not installed
-
-### 4b. Run Tests
-
-1. Run Tier 1: `uv run pytest qa/<name>/test_commands.py -v`
-2. Run Tier 2: `uv run pytest qa/<name>/test_integration.py -v -m integration`
-3. Fix any failures found
-4. Document test results in `references/log.md`
+1. Run full Tier 1: `uv run pytest qa/<name>/test_commands.py -v`
+2. Run full Tier 2: `uv run pytest qa/<name>/test_integration.py -v -m integration`
+3. Run Tier 3: `uv run pytest qa/<name>/test_manual.py -v -m manual -s`
+4. Have a human review Tier 3 outputs
+5. Fix any failures found
+6. Document test results in `references/log.md`
 
 ## Phase 5: Write-back Instruction
 
