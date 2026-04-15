@@ -104,8 +104,8 @@ yt-dlp --extractor-retries 5 "URL"
 ### Retry Sleep (Backoff)
 
 ```bash
-# Fixed sleep between retries (seconds)
-yt-dlp --retry-sleep 5 "URL"
+# Sleep 5 seconds between HTTP retries (type prefix recommended for clarity)
+yt-dlp --retry-sleep http:5 "URL"
 
 # Linear backoff: start at 1s, increase by 1s each retry
 yt-dlp --retry-sleep "linear=1" "URL"
