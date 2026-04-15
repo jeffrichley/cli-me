@@ -74,7 +74,7 @@ ffmpeg -i clip1.mp4 -i clip2_no_audio.mp4 \
   output.mp4
 ```
 
-Or using `anullsrc` with `-shortest` (better for clips where duration is already fixed):
+Or using `anullsrc` with `-shortest` (required — `anullsrc` generates infinite silence):
 ```bash
 ffmpeg -i clip1.mp4 -i clip2_no_audio.mp4 \
   -filter_complex \
@@ -82,8 +82,11 @@ ffmpeg -i clip1.mp4 -i clip2_no_audio.mp4 \
      [0:v][0:a][1:v][silence]concat=n=2:v=1:a=1[v][a]" \
   -map "[v]" -map "[a]" \
   -c:v libx264 -crf 18 -c:a aac -b:a 192k \
+  -shortest \
   output.mp4
 ```
+
+**Warning:** Without `-shortest`, `anullsrc` produces an unbounded output that corrupts the MP4. Always include `-shortest` when using `anullsrc`.
 
 **TS intermediate method (legacy — avoid):**
 ```bash

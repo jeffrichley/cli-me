@@ -11,7 +11,7 @@ Use subtitle burning when you need captions permanently embedded into the video 
 - `force_style=` overrides ASS style properties for font, color, size, and position.
 - ASS color format is `&HAABBGGRR` — **BGR, not RGB**, with alpha first. Common gotcha.
 - Requires full re-encode of the video stream. You cannot stream-copy (`-c:v copy`) when burning subtitles.
-- Windows paths in `subtitles=` require escaping backslashes: `subtitles=C\\:/path/file.srt`.
+- Windows paths in `subtitles=` filter: use forward slashes (`subtitles=C:/path/file.srt`) or escape colons (`subtitles=C\:/path/file.srt`). Avoid backslashes — they require double-escaping and are error-prone.
 
 **Soft subs** (separate subtitle track in container):
 - `-c:s mov_text` for MP4/MOV containers (only format MP4 supports).
@@ -85,12 +85,12 @@ This is little-endian ARGB, not RGBA or RGB. Example: bright yellow = `&H0000FFF
 - Bannerbear — "How to Add Subtitles to a Video File Using FFmpeg": https://www.bannerbear.com/blog/how-to-add-subtitles-to-a-video-file-using-ffmpeg/
 - Cloudinary — "How to Use FFmpeg to Add Subtitles to Videos": https://cloudinary.com/guides/video-effects/ffmpeg-subtitles
 - ffmpeg.media — "Subtitles with FFmpeg: Burn-In, Soft Subs, and Format Conversion": https://www.ffmpeg.media/articles/subtitles-burn-in-soft-subs-format-conversion
-- Baeldung — "How to Embed Subtitles into a Video Using FFmpeg": https://www.baeldung.com/linux/subtitles-ffmpeg
+- Wikibooks — "FFMPEG Subtitle Options": https://en.wikibooks.org/wiki/FFMPEG_An_Intermediate_Guide/subtitle_options
 
 ## Learned from Usage
 
 - `libass` must be compiled into your FFmpeg build. Verify with `ffmpeg -filters | grep subtitles`. Most package manager builds include it; static builds from ffmpeg.org do too.
-- Windows path in filter: backslashes must be double-escaped: `subtitles=C\\\\:/Users/name/file.srt` or use forward slashes `subtitles=C\:/Users/name/file.srt`.
+- Windows path in filter: simplest approach is forward slashes (`subtitles=C:/Users/name/file.srt`) or escape the colon only (`subtitles=C\:/Users/name/file.srt`). Avoid backslash-heavy escaping — it varies by shell context and is error-prone.
 - `Alignment` values follow numpad layout: 1=bottom-left, 2=bottom-center, 3=bottom-right, 7=top-left, 8=top-center, 9=top-right.
 - Burning subtitles significantly increases encode time — libass renders each frame individually.
 - For vertical (9:16) social video, set `MarginV=150` in `force_style` to keep captions above platform UI overlays.

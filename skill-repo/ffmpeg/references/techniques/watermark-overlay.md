@@ -75,10 +75,10 @@ The `overlay` filter composites `[1:v]` onto `[0:v]` using alpha compositing if 
 
 ## Sources
 
-- Mux: https://www.mux.com/articles/ffmpeg-watermark
-- OTTVerse: https://ottverse.com/ffmpeg-overlay-filter-watermark/
 - Cloudinary: https://cloudinary.com/guides/video-effects/ffmpeg-watermark
-- Bannerbear: https://www.bannerbear.com/blog/how-to-add-a-watermark-to-video-using-ffmpeg/
+- Creatomate: https://creatomate.com/blog/how-to-add-a-transparent-overlay-on-a-video-using-ffmpeg
+- Martin Riedl: https://www.martin-riedl.de/2020/01/03/add-a-logo-to-a-video-using-ffmpeg/
+- FFmpeg Filters Documentation (overlay): https://ffmpeg.org/ffmpeg-filters.html#overlay-1
 
 ## Learned from Usage
 

@@ -329,18 +329,20 @@ def test_audio_normalize(test_audio, tmp_path, ffprobe_path, ffmpeg_path):
         "-af", "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json",
         "-f", "null", "-",
     ], capture_output=True, text=True)
-    # Parse the loudnorm JSON from stderr
+    # Parse the loudnorm JSON from stderr — MUST succeed, not conditional
     stderr = measure_result.stderr
     import json as json_mod
     json_start = stderr.rfind("{")
     json_end = stderr.rfind("}") + 1
-    if json_start >= 0 and json_end > json_start:
-        loudness_data = json_mod.loads(stderr[json_start:json_end])
-        measured_i = float(loudness_data.get("input_i", 0))
-        # Output loudness should be within 1.5 LUFS of target (-16)
-        assert abs(measured_i - (-16.0)) < 1.5, (
-            f"Expected loudness ~-16 LUFS, got {measured_i} LUFS"
-        )
+    assert json_start >= 0 and json_end > json_start, (
+        f"Failed to find loudnorm JSON in ffmpeg stderr:\n{stderr[-500:]}"
+    )
+    loudness_data = json_mod.loads(stderr[json_start:json_end])
+    measured_i = float(loudness_data.get("input_i", 0))
+    # Output loudness should be within 1.5 LUFS of target (-16)
+    assert abs(measured_i - (-16.0)) < 1.5, (
+        f"Expected loudness ~-16 LUFS, got {measured_i} LUFS"
+    )
 
 
 # ===========================================================================

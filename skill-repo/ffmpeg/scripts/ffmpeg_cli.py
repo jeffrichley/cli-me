@@ -74,9 +74,13 @@ def detect_version() -> str:
 
 
 def run_ffmpeg(args: list[str], check: bool = True) -> subprocess.CompletedProcess:
-    """Run an ffmpeg command. Returns CompletedProcess."""
+    """Run an ffmpeg command. Returns CompletedProcess.
+
+    Always passes -y (overwrite without asking) to prevent ffmpeg from
+    hanging on interactive confirmation in agent contexts.
+    """
     exe = find_executable("ffmpeg")
-    cmd = [exe] + args
+    cmd = [exe, "-y"] + args
     return subprocess.run(cmd, capture_output=True, text=True, check=check)
 
 

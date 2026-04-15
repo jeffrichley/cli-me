@@ -169,7 +169,7 @@ The `-ar 48000` flag on the output prevents an ffmpeg quirk where `loudnorm` int
 ## Sources
 
 - k.ylo.ph: "FFmpeg Loudness Normalization" — the canonical reference for two-pass workflow and JSON parsing. https://k.ylo.ph/2016/04/04/loudnorm.html
-- Peter Forgacs blog: explains why single-pass dynamic normalization produces pumping artifacts and when linear mode is appropriate
+- Peter Forgacs blog: "Audio Loudness Normalization with FFmpeg" — explains single-pass vs two-pass and when linear mode is appropriate. https://peterforgacs.github.io/2018/05/20/Audio-normalization-with-ffmpeg/
 - ffmpeg-normalize (GitHub: slhck/ffmpeg-normalize) — Python CLI wrapper that automates two-pass; reviewing its source confirms the JSON field names and correct pass 2 filter string format. https://github.com/slhck/ffmpeg-normalize
 
 ## Learned from Usage

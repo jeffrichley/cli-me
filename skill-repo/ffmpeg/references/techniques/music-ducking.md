@@ -85,7 +85,7 @@ ffmpeg -i voice.wav -i music.wav \
   -map "[out]" output_aggressive.wav
 ```
 
-This version adds a volume floor (`volume=0.08`) to the music so it never goes completely silent — even at maximum compression, you hear a faint bed.
+This version uses aggressive compression (ratio=20, low threshold) so the music nearly disappears under speech. The `volume=0.4` pre-reduction ensures the music baseline is already quiet before compression kicks in.
 
 **Weights-only approach for quick level balance (no sidechain):**
 ```bash
@@ -140,7 +140,7 @@ The `threshold=0.02` value is a linear amplitude ratio (0.0–1.0 scale), not de
 
 - FFmpeg filter documentation for `sidechaincompress`: https://ffmpeg.org/ffmpeg-filters.html#sidechaincompress
 - FFmpeg filter documentation for `amix`: https://ffmpeg.org/ffmpeg-filters.html#amix
-- GitHub Gist by mhavo — ducking with sidechaincompress, original reference for threshold/ratio/attack/release starting values: https://gist.github.com/mhavo
+- GitHub Gist by mhavo — ducking with sidechaincompress: https://gist.github.com/mhavo/533fa9586bdd090836116bac71c769f0
 
 ## Learned from Usage
 
