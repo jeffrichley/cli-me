@@ -12,6 +12,9 @@ dependencies = [
 clime = "cli_me.main:main"
 "cli-me" = "cli_me.main:main"
 
+[tool.setuptools.packages.find]
+include = ["cli_me*"]
+
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
