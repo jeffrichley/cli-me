@@ -85,10 +85,10 @@ The `%04d` pattern is a C-style printf format — `%04d` means a zero-padded int
 
 ## Sources
 
-- Wikibooks (FFmpeg) — image2 demuxer and pattern format reference
-- ffmpeg.media — framerate vs output rate distinction
-- OTTVerse — pix_fmt yuv420p requirement for H.264 web compatibility
-- Shotstack — slideshow framerate technique
+- Wikibooks (FFmpeg) — "FFMPEG An Intermediate Guide/image sequence": https://en.wikibooks.org/wiki/FFMPEG_An_Intermediate_Guide/image_sequence
+- Shotstack — "How to Use FFmpeg to Convert Images to Video": https://shotstack.io/learn/use-ffmpeg-to-convert-images-to-video/
+- OTTVerse — "CBR, CRF, and Changing Resolution Using FFmpeg": https://ottverse.com/cbr-crf-changing-resolution-using-ffmpeg/
+- Gumlet — "How to Create a Video from Images Using FFmpeg": https://www.gumlet.com/learn/ffmpeg-images-to-video/
 
 ## Learned from Usage
 

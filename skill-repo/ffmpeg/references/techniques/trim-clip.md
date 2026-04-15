@@ -89,10 +89,10 @@ ffmpeg operates in a demux → decode → filter → encode → mux pipeline. Wh
 
 ## Sources
 
-- Mux: https://www.mux.com/articles/cut-a-video-with-ffmpeg
-- OTTVerse: https://ottverse.com/trim-cut-video-using-ffmpeg/
-- Baeldung: https://www.baeldung.com/linux/ffmpeg-trim-video
-- Bannerbear: https://www.bannerbear.com/blog/how-to-trim-a-video-using-ffmpeg/
+- Mux — "How to Extract Clips from Videos Using FFmpeg": https://www.mux.com/articles/clip-sections-of-a-video-with-ffmpeg
+- OTTVerse — "How to Cut Video Using FFmpeg": https://ottverse.com/trim-cut-video-using-start-endtime-reencoding-ffmpeg/
+- Shotstack — "How to Trim a Video Using FFmpeg": https://shotstack.io/learn/use-ffmpeg-to-trim-video/
+- Bannerbear — "How to Trim a Video Using FFmpeg": https://www.bannerbear.com/blog/how-to-trim-a-video-using-ffmpeg/
 
 ## Learned from Usage
 

@@ -92,8 +92,8 @@ When you re-encode with `libx264`, FFmpeg fully decodes each frame to raw YUV, p
 
 ## Sources
 
-- OTTVerse — "FFmpeg Commands for Transcoding": https://ottverse.com/ffmpeg-commands-for-transcoding/
-- Baeldung — "Converting Video with FFmpeg": https://www.baeldung.com/linux/ffmpeg-video-conversion
+- OTTVerse — "Convert MKV to MP4 Using FFmpeg": https://ottverse.com/how-to-convert-mkv-to-mp4-using-vlc-ffmpeg-handbrake/
+- Bannerbear — "Converting Video and Audio Formats Using FFmpeg": https://www.bannerbear.com/blog/converting-video-and-audio-formats-using-ffmpeg/
 - avpres.net — FFmpeg container format notes: https://avpres.net/FFmpeg/
 
 ## Learned from Usage

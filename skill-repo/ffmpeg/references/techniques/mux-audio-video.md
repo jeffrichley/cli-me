@@ -93,9 +93,9 @@ FFmpeg's muxer combines packet streams from multiple demuxers into a single outp
 
 ## Sources
 
-- Mux — stream copy and -map fundamentals
-- Streaming Learning Center — multiple audio tracks and language metadata
-- Filmora — looping music with -stream_loop and -shortest, sync correction with -itsoffset
+- Mux — "How to Combine Audio and Video Files Using FFmpeg": https://www.mux.com/articles/merge-audio-and-video-files-with-ffmpeg
+- Streaming Learning Center — "FFmpeg to the Rescue: Muxing Audio and Video Files": https://streaminglearningcenter.com/learning/ffmpeg-to-the-rescue-muxing-audio-and-video-files.html
+- Filmora — "Mastering FFmpeg: How to Merge Audio and Video with Ease": https://filmora.wondershare.com/video-editor/ffmpeg-merge-audio-and-video.html
 
 ## Learned from Usage
 

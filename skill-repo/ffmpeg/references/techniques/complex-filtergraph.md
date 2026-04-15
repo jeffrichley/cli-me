@@ -146,9 +146,10 @@ ffmpeg -i video.mp4 -i logo.png \
 
 ## Sources
 
-- FFmpeg filter documentation — overlay, hstack, vstack, xstack, amerge, amix reference
-- OTTVerse — complex filtergraph construction patterns
-- TechnoGumbo — PiP and grid layout practical examples
+- FFmpeg — "Filters Documentation" (overlay, hstack, vstack, xstack, amerge, amix reference): https://ffmpeg.org/ffmpeg-filters.html
+- FFmpeg Wiki — "Filtering Guide": https://trac.ffmpeg.org/wiki/FilteringGuide
+- OTTVerse — "Stack Videos Horizontally, Vertically, in a Grid With FFmpeg": https://ottverse.com/stack-videos-horizontally-vertically-grid-with-ffmpeg/
+- ffmpeg-api.com — "Create Picture-in-Picture Videos with FFmpeg": https://ffmpeg-api.com/learn/ffmpeg/recipe/picture-in-picture
 
 ## Learned from Usage
 

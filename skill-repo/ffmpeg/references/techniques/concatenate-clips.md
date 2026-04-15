@@ -102,10 +102,10 @@ The **concat filter** is a real-time filter that decodes all inputs, processes f
 
 ## Sources
 
-- WaveSpeedAI — concat demuxer reference and filelist.txt format
-- Shotstack — practical demuxer vs filter decision guide
-- OTTVerse — timestamp issues and `-fflags +genpts` explanation
-- Gumlet — silent audio track addition with `anullsrc`
+- WaveSpeedAI — "How to Merge and Concatenate Videos with FFmpeg": https://wavespeed.ai/blog/posts/blog-how-to-merge-concatenate-videos-ffmpeg/
+- Shotstack — "FFmpeg Concat: How to Merge Videos": https://shotstack.io/learn/use-ffmpeg-to-concatenate-video/
+- OTTVerse — "How to Concatenate MP4 Files Using FFmpeg in 3 Different Ways": https://ottverse.com/3-easy-ways-to-concatenate-mp4-files-using-ffmpeg/
+- Gumlet — "How to Combine Videos Using FFmpeg Concat": https://www.gumlet.com/learn/ffmpeg-concat/
 
 ## Learned from Usage
 

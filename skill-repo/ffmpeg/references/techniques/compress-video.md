@@ -116,8 +116,8 @@ The preset system in x264/x265 controls the depth of motion estimation, the numb
 ## Sources
 
 - slhck.info — "Understanding Rate Control Modes": https://slhck.info/video/2017/02/24/crf-guide.html
-- Mux — "Video Encoding Settings": https://mux.com/articles/video-encoding-settings
-- vibbit.ai — "FFmpeg CRF Encoding Guide": https://vibbit.ai/ffmpeg-crf-guide
+- Mux — "How to Compress Video Files While Maintaining Quality with FFmpeg": https://www.mux.com/articles/how-to-compress-video-files-while-maintaining-quality-with-ffmpeg
+- Vibbit — "FFmpeg CRF Examples: H.264, H.265, VP9 & AV1": https://vibbit.ai/blog/ffmpeg-crf-examples
 
 ## Learned from Usage
 

@@ -242,23 +242,26 @@ def convert_platform(
     """Encode for a specific platform with optimal settings."""
     platform_settings = {
         "youtube": [
-            "-c:v", "libx264", "-crf", "18", "-preset", "slow",
+            "-c:v", "libx264", "-profile:v", "high",
+            "-crf", "18", "-preset", "slow",
             "-pix_fmt", "yuv420p", "-bf", "2", "-g", "30",
-            "-c:a", "aac", "-b:a", "384k", "-ar", "48000",
+            "-c:a", "aac", "-b:a", "384k", "-ar", "48000", "-ac", "2",
             "-movflags", "+faststart",
         ],
         "twitter": [
-            "-c:v", "libx264", "-crf", "23", "-preset", "medium",
+            "-c:v", "libx264", "-profile:v", "high", "-level:v", "4.0",
+            "-crf", "23", "-preset", "medium",
             "-pix_fmt", "yuv420p",
-            "-vf", "scale='min(1280,iw)':min'(720,ih)':force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2",
-            "-c:a", "aac", "-b:a", "128k", "-ar", "44100",
+            "-vf", "scale='min(1280,iw)':'min(720,ih)':force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2",
+            "-c:a", "aac", "-b:a", "128k", "-ar", "44100", "-ac", "2",
             "-movflags", "+faststart",
         ],
         "tiktok": [
-            "-c:v", "libx264", "-crf", "20", "-preset", "medium",
-            "-pix_fmt", "yuv420p",
+            "-c:v", "libx264", "-profile:v", "high", "-level:v", "4.2",
+            "-crf", "18", "-preset", "slow",
+            "-pix_fmt", "yuv420p", "-r", "30",
             "-vf", "scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2",
-            "-c:a", "aac", "-b:a", "192k", "-ar", "44100",
+            "-c:a", "aac", "-b:a", "256k", "-ar", "44100", "-ac", "2",
             "-movflags", "+faststart",
         ],
     }

@@ -151,10 +151,10 @@ NVIDIA NVENC encodes on the GPU's dedicated video encode engine, which is separa
 
 ## Sources
 
-- OTTVerse — "FFmpeg Batch Processing": https://ottverse.com/ffmpeg-batch-processing/
-- ffmpeg.media — "Batch Convert Videos": https://ffmpeg.media/batch-convert/
-- streamingmedia — "Using FFmpeg for Batch Video Encoding": https://www.streamingmedia.com/
-- randomblock1 — "Batch Transcoding with FFmpeg and GNU Parallel": https://randomblock1.com/
+- OTTVerse — "Convert All Files Inside a Folder Using FFmpeg": https://ottverse.com/convert-all-files-inside-folder-ffmpeg-batch-convert/
+- Shotstack — "Batch Convert Videos Using FFmpeg": https://shotstack.io/learn/ffmpeg-batch-convert/
+- Streaming Learning Center — "Convert a Windows Folder With a One-Line For Loop FFmpeg Command": https://streaminglearningcenter.com/learning/convert-a-windows-folder-with-a-one-line-for-loop-ffmpeg-command.html
+- ffmpeg.media — "Batch Processing with FFmpeg: Automate Video Tasks for Multiple Files": https://www.ffmpeg.media/articles/batch-processing-automate-multiple-files
 
 ## Learned from Usage
 

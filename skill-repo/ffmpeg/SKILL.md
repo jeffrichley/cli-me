@@ -22,9 +22,20 @@ it does not process media in Python.
 
 ## CLI Commands
 
-Run commands via:
+Run commands from the skill's `scripts/` directory:
 ```bash
-uv run scripts/ffmpeg_cli.py <group> <command> [options]
+cd <skill-dir>/scripts
+uv run ffmpeg_cli.py <group> <command> [options]
+```
+
+Or from any directory using the full path:
+```bash
+uv run --project <skill-dir>/scripts <skill-dir>/scripts/ffmpeg_cli.py <group> <command> [options]
+```
+
+To discover available flags for any command:
+```bash
+uv run ffmpeg_cli.py <group> <command> --help
 ```
 
 ### Command Groups

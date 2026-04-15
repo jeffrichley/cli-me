@@ -57,9 +57,9 @@ The `-2` shorthand tells the filter to auto-calculate the dimension but round up
 
 ## Sources
 
-- OTTVerse: https://ottverse.com/ffmpeg-scale-filter/
-- Mux: https://www.mux.com/articles/ffmpeg-video-scaling
-- Creatomate: https://creatomate.com/blog/how-to-resize-a-video-using-ffmpeg
+- OTTVerse — "Resize/Scale/Change Resolution of a Video Using FFmpeg": https://ottverse.com/change-resolution-resize-scale-video-using-ffmpeg/
+- Creatomate — "How to Change the Resolution of a Video Using FFmpeg": https://creatomate.com/blog/how-to-change-the-resolution-of-a-video-using-ffmpeg
+- Gumlet — "How to Scale and Resize a Video Using FFmpeg": https://www.gumlet.com/learn/ffmpeg-resize-video/
 
 ## Learned from Usage
 

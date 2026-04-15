@@ -82,10 +82,10 @@ This is little-endian ARGB, not RGBA or RGB. Example: bright yellow = `&H0000FFF
 
 ## Sources
 
-- Bannerbear: https://www.bannerbear.com/blog/how-to-add-subtitles-to-a-video-using-ffmpeg/
-- Cloudinary: https://cloudinary.com/guides/video-effects/ffmpeg-subtitles
-- ffmpeg.media: https://ffmpeg.media/blog/burn-subtitles-into-video-with-ffmpeg
-- Baeldung: https://www.baeldung.com/linux/ffmpeg-subtitles
+- Bannerbear — "How to Add Subtitles to a Video File Using FFmpeg": https://www.bannerbear.com/blog/how-to-add-subtitles-to-a-video-file-using-ffmpeg/
+- Cloudinary — "How to Use FFmpeg to Add Subtitles to Videos": https://cloudinary.com/guides/video-effects/ffmpeg-subtitles
+- ffmpeg.media — "Subtitles with FFmpeg: Burn-In, Soft Subs, and Format Conversion": https://www.ffmpeg.media/articles/subtitles-burn-in-soft-subs-format-conversion
+- Baeldung — "How to Embed Subtitles into a Video Using FFmpeg": https://www.baeldung.com/linux/subtitles-ffmpeg
 
 ## Learned from Usage
 

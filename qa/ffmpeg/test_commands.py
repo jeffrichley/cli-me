@@ -981,3 +981,840 @@ class TestCombineFromImages:
         args = mock_run.call_args[0][0]
         fr_idx = args.index("-framerate")
         assert args[fr_idx + 1] == "30"
+
+
+# ---------------------------------------------------------------------------
+# NEW Tier 1 tests — 17 previously untested commands
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.command_graph
+class TestConvertHwaccel:
+    """convert hwaccel — encoder selection, quality flag, HEVC variant."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_nvenc_h264_encoder_and_quality_flag(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["convert", "hwaccel", "in.mp4", "out.mp4", "--encoder", "nvenc"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-c:v" in args
+        cv_idx = args.index("-c:v")
+        assert args[cv_idx + 1] == "h264_nvenc"
+        assert "-cq" in args
+        cq_idx = args.index("-cq")
+        assert args[cq_idx + 1] == "23"
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_nvenc_hevc_variant(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["convert", "hwaccel", "in.mp4", "out.mp4", "--encoder", "nvenc", "--hevc"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        cv_idx = args.index("-c:v")
+        assert args[cv_idx + 1] == "hevc_nvenc"
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_vaapi_encoder_and_device_flag(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["convert", "hwaccel", "in.mp4", "out.mp4", "--encoder", "vaapi"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-vaapi_device" in args
+        cv_idx = args.index("-c:v")
+        assert args[cv_idx + 1] == "h264_vaapi"
+        assert "-qp" in args
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_videotoolbox_encoder_quality_flag(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "convert", "hwaccel", "in.mp4", "out.mp4",
+                "--encoder", "videotoolbox", "--quality", "80",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        cv_idx = args.index("-c:v")
+        assert args[cv_idx + 1] == "h264_videotoolbox"
+        assert "-q:v" in args
+        qv_idx = args.index("-q:v")
+        assert args[qv_idx + 1] == "80"
+
+
+@pytest.mark.command_graph
+class TestExtractSprite:
+    """extract sprite — fps interval, scale, tile filter, -frames:v 1."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_tile_filter_chain(self, mock_which, mock_run):
+        probe_response = _make_run(stdout='{"format":{"duration":"100.0"},"streams":[]}')
+        ffmpeg_response = _make_run()
+        mock_run.side_effect = [probe_response, ffmpeg_response]
+        result = runner.invoke(
+            app,
+            [
+                "extract", "sprite", "in.mp4", "sprite.jpg",
+                "--cols", "10", "--rows", "10", "--thumb-width", "160",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        # Last call is the ffmpeg run
+        ffmpeg_args = mock_run.call_args[0][0]
+        assert "-vf" in ffmpeg_args
+        vf_idx = ffmpeg_args.index("-vf")
+        vf = ffmpeg_args[vf_idx + 1]
+        assert "fps=" in vf
+        assert "scale=160" in vf
+        assert "tile=10x10" in vf
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_frames_v_1_flag(self, mock_which, mock_run):
+        probe_response = _make_run(stdout='{"format":{"duration":"60.0"},"streams":[]}')
+        ffmpeg_response = _make_run()
+        mock_run.side_effect = [probe_response, ffmpeg_response]
+        result = runner.invoke(
+            app, ["extract", "sprite", "in.mp4", "sprite.jpg"]
+        )
+        assert result.exit_code == 0, result.output
+        ffmpeg_args = mock_run.call_args[0][0]
+        assert "-frames:v" in ffmpeg_args
+        fv_idx = ffmpeg_args.index("-frames:v")
+        assert ffmpeg_args[fv_idx + 1] == "1"
+
+
+@pytest.mark.command_graph
+class TestTransformSpeed:
+    """transform speed — setpts filter, atempo chain, --no-audio."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_2x_speed_setpts_and_atempo(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["transform", "speed", "in.mp4", "out.mp4", "--factor", "2.0"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-vf" in args
+        vf_idx = args.index("-vf")
+        assert "setpts=0.5*PTS" in args[vf_idx + 1]
+        assert "-af" in args
+        af_idx = args.index("-af")
+        assert "atempo=2.0" in args[af_idx + 1]
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_no_audio_drops_af(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["transform", "speed", "in.mp4", "out.mp4", "--factor", "2.0", "--no-audio"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-an" in args
+        assert "-af" not in args
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_slow_motion_setpts_above_1(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["transform", "speed", "in.mp4", "out.mp4", "--factor", "0.5"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        vf_idx = args.index("-vf")
+        assert "setpts=2.0*PTS" in args[vf_idx + 1]
+        af_idx = args.index("-af")
+        assert "atempo=0.5" in args[af_idx + 1]
+
+
+@pytest.mark.command_graph
+class TestTransformWatermark:
+    """transform watermark — overlay position, --opacity, --scale."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_default_br_position(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "transform", "watermark", "in.mp4", "out.mp4",
+                "--logo", "logo.png",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-filter_complex" in args
+        fc_idx = args.index("-filter_complex")
+        fc = args[fc_idx + 1]
+        assert "overlay=W-w-10:H-h-10" in fc
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_opacity_adds_colorchannelmixer(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "transform", "watermark", "in.mp4", "out.mp4",
+                "--logo", "logo.png", "--opacity", "0.5",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        fc_idx = args.index("-filter_complex")
+        fc = args[fc_idx + 1]
+        assert "colorchannelmixer=aa=0.5" in fc
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_scale_adds_scale_filter(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "transform", "watermark", "in.mp4", "out.mp4",
+                "--logo", "logo.png", "--scale", "200",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        fc_idx = args.index("-filter_complex")
+        fc = args[fc_idx + 1]
+        assert "scale=200:-1" in fc
+
+
+@pytest.mark.command_graph
+class TestTransformSubtitles:
+    """transform subtitles — subtitles= filter, force_style for font-size."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_subtitles_filter_present(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "transform", "subtitles", "in.mp4", "out.mp4",
+                "--srt", "subs.srt",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-vf" in args
+        vf_idx = args.index("-vf")
+        vf = args[vf_idx + 1]
+        assert "subtitles=" in vf
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_font_size_adds_force_style(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "transform", "subtitles", "in.mp4", "out.mp4",
+                "--srt", "subs.srt", "--font-size", "24",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        vf_idx = args.index("-vf")
+        vf = args[vf_idx + 1]
+        assert "force_style=" in vf
+        assert "FontSize=24" in vf
+
+
+@pytest.mark.command_graph
+class TestTransformFade:
+    """transform fade — fade=t=in/out in -vf, afade in -af."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_fade_in_vf_and_af(self, mock_which, mock_run):
+        probe_response = _make_run(stdout='{"format":{"duration":"30.0"},"streams":[]}')
+        ffmpeg_response = _make_run()
+        mock_run.side_effect = [probe_response, ffmpeg_response]
+        result = runner.invoke(
+            app, ["transform", "fade", "in.mp4", "out.mp4", "--fade-in", "2.0"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-vf" in args
+        vf_idx = args.index("-vf")
+        assert "fade=t=in" in args[vf_idx + 1]
+        assert "-af" in args
+        af_idx = args.index("-af")
+        assert "afade=t=in" in args[af_idx + 1]
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_fade_out_vf_and_af(self, mock_which, mock_run):
+        probe_response = _make_run(stdout='{"format":{"duration":"30.0"},"streams":[]}')
+        ffmpeg_response = _make_run()
+        mock_run.side_effect = [probe_response, ffmpeg_response]
+        result = runner.invoke(
+            app, ["transform", "fade", "in.mp4", "out.mp4", "--fade-out", "3.0"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        vf_idx = args.index("-vf")
+        assert "fade=t=out" in args[vf_idx + 1]
+        af_idx = args.index("-af")
+        assert "afade=t=out" in args[af_idx + 1]
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_no_fade_args_exits(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(app, ["transform", "fade", "in.mp4", "out.mp4"])
+        assert result.exit_code != 0
+
+
+@pytest.mark.command_graph
+class TestAudioDenoise:
+    """audio denoise — afftdn (fft) and arnndn (rnn) filters."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_fft_method_uses_afftdn(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["audio", "denoise", "in.wav", "out.wav", "--method", "fft"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-af" in args
+        af_idx = args.index("-af")
+        af = args[af_idx + 1]
+        assert "afftdn" in af
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_fft_custom_strength(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            ["audio", "denoise", "in.wav", "out.wav", "--method", "fft", "--strength", "20"],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        af_idx = args.index("-af")
+        assert "afftdn=nr=20.0" in args[af_idx + 1]
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_rnn_method_uses_arnndn(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "audio", "denoise", "in.wav", "out.wav",
+                "--method", "rnn", "--model", "model.rnnn",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        af_idx = args.index("-af")
+        af = args[af_idx + 1]
+        assert "arnndn" in af
+        assert "m=model.rnnn" in af
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_rnn_without_model_exits(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["audio", "denoise", "in.wav", "out.wav", "--method", "rnn"]
+        )
+        assert result.exit_code != 0
+
+
+@pytest.mark.command_graph
+class TestAudioDuck:
+    """audio duck — static (volume + amix) and dynamic (sidechaincompress)."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_static_mode_uses_volume_and_amix(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "audio", "duck", "out.wav",
+                "--voice", "voice.wav", "--music", "music.wav",
+                "--music-level", "0.2",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-filter_complex" in args
+        fc_idx = args.index("-filter_complex")
+        fc = args[fc_idx + 1]
+        assert "volume=0.2" in fc
+        assert "amix" in fc
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_dynamic_mode_uses_sidechaincompress(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "audio", "duck", "out.wav",
+                "--voice", "voice.wav", "--music", "music.wav",
+                "--dynamic",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        fc_idx = args.index("-filter_complex")
+        fc = args[fc_idx + 1]
+        assert "sidechaincompress" in fc
+        assert "amix" in fc
+
+
+@pytest.mark.command_graph
+class TestCombineComposite:
+    """combine composite — pip, side-by-side, grid layouts."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_pip_layout(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "combine", "composite", "out.mp4",
+                "--inputs", "a.mp4", "--inputs", "b.mp4",
+                "--layout", "pip",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-filter_complex" in args
+        fc_idx = args.index("-filter_complex")
+        fc = args[fc_idx + 1]
+        assert "overlay=" in fc
+        assert "scale=iw/4" in fc
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_side_by_side_layout(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "combine", "composite", "out.mp4",
+                "--inputs", "a.mp4", "--inputs", "b.mp4",
+                "--layout", "side-by-side",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        fc_idx = args.index("-filter_complex")
+        fc = args[fc_idx + 1]
+        assert "hstack=inputs=2" in fc
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_grid_layout_four_inputs(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "combine", "composite", "out.mp4",
+                "--inputs", "a.mp4", "--inputs", "b.mp4",
+                "--inputs", "c.mp4", "--inputs", "d.mp4",
+                "--layout", "grid",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        fc_idx = args.index("-filter_complex")
+        fc = args[fc_idx + 1]
+        assert "hstack" in fc
+        assert "vstack" in fc
+
+
+@pytest.mark.command_graph
+class TestStreamHls:
+    """stream hls — -f hls, -hls_time, -hls_flags, -var_stream_map."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_hls_format_flags(self, mock_which, mock_run, tmp_path):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "stream", "hls", "in.mp4",
+                "--output-dir", str(tmp_path),
+                "--segment-duration", "4",
+                "--qualities", "720p",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-f" in args
+        f_idx = args.index("-f")
+        assert args[f_idx + 1] == "hls"
+        assert "-hls_time" in args
+        ht_idx = args.index("-hls_time")
+        assert args[ht_idx + 1] == "4"
+        assert "-hls_flags" in args
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_var_stream_map_present(self, mock_which, mock_run, tmp_path):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "stream", "hls", "in.mp4",
+                "--output-dir", str(tmp_path),
+                "--qualities", "1080p,720p",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-var_stream_map" in args
+        vsm_idx = args.index("-var_stream_map")
+        vsm = args[vsm_idx + 1]
+        assert "1080p" in vsm
+        assert "720p" in vsm
+
+
+@pytest.mark.command_graph
+class TestStreamDash:
+    """stream dash — -f dash, -seg_duration, -adaptation_sets."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_dash_format_and_seg_duration(self, mock_which, mock_run, tmp_path):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "stream", "dash", "in.mp4",
+                "--output-dir", str(tmp_path),
+                "--segment-duration", "6",
+                "--qualities", "720p",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-f" in args
+        f_idx = args.index("-f")
+        assert args[f_idx + 1] == "dash"
+        assert "-seg_duration" in args
+        sd_idx = args.index("-seg_duration")
+        assert args[sd_idx + 1] == "6"
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_adaptation_sets_present(self, mock_which, mock_run, tmp_path):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "stream", "dash", "in.mp4",
+                "--output-dir", str(tmp_path),
+                "--qualities", "720p",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-adaptation_sets" in args
+        as_idx = args.index("-adaptation_sets")
+        adaptation = args[as_idx + 1]
+        assert "streams=v" in adaptation
+        assert "streams=a" in adaptation
+
+
+@pytest.mark.command_graph
+class TestStreamLadder:
+    """stream ladder — split filter and per-quality outputs."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_per_quality_ffmpeg_calls(self, mock_which, mock_run, tmp_path):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "stream", "ladder", "in.mp4",
+                "--output-dir", str(tmp_path),
+                "--qualities", "720p,480p",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        # One call per quality
+        assert mock_run.call_count == 2
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_scale_filter_per_quality(self, mock_which, mock_run, tmp_path):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "stream", "ladder", "in.mp4",
+                "--output-dir", str(tmp_path),
+                "--qualities", "720p",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-vf" in args
+        vf_idx = args.index("-vf")
+        assert "scale=1280:720" in args[vf_idx + 1]
+        assert "-movflags" in args
+
+
+@pytest.mark.command_graph
+class TestStreamRestream:
+    """stream restream — -f tee with [f=flv:onfail=ignore] wrapping each URL."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_tee_muxer_format(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "stream", "restream", "in.mp4",
+                "--destinations", "rtmp://a.example/live/key1",
+                "--destinations", "rtmp://b.example/live/key2",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-f" in args
+        f_idx = args.index("-f")
+        assert args[f_idx + 1] == "tee"
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_tee_output_contains_onfail_ignore(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "stream", "restream", "in.mp4",
+                "--destinations", "rtmp://a.example/live/key1",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        # Last arg is the tee output spec
+        tee_spec = args[-1]
+        assert "[f=flv:onfail=ignore]" in tee_spec
+        assert "rtmp://a.example/live/key1" in tee_spec
+
+
+@pytest.mark.command_graph
+class TestStreamFakeLive:
+    """stream fake-live — -re before -i, -f flv to URL."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_re_flag_before_input(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "stream", "fake-live", "in.mp4",
+                "--url", "rtmp://live.example/stream/key",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-re" in args
+        re_idx = args.index("-re")
+        i_idx = args.index("-i")
+        assert re_idx < i_idx
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_flv_format_and_rtmp_url(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        rtmp_url = "rtmp://live.example/stream/key"
+        result = runner.invoke(
+            app,
+            [
+                "stream", "fake-live", "in.mp4",
+                "--url", rtmp_url,
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-f" in args
+        f_idx = args.index("-f")
+        assert args[f_idx + 1] == "flv"
+        assert args[-1] == rtmp_url
+
+
+@pytest.mark.command_graph
+class TestUtilBatch:
+    """util batch — directory walking and per-file ffmpeg calls."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_processes_video_files(self, mock_which, mock_run, tmp_path):
+        mock_run.return_value = _make_run()
+        # Create fake input files
+        in_dir = tmp_path / "input"
+        out_dir = tmp_path / "output"
+        in_dir.mkdir()
+        (in_dir / "clip1.mp4").write_bytes(b"")
+        (in_dir / "clip2.mkv").write_bytes(b"")
+        (in_dir / "readme.txt").write_bytes(b"")  # should be skipped
+        result = runner.invoke(
+            app,
+            [
+                "util", "batch",
+                "--input-dir", str(in_dir),
+                "--output-dir", str(out_dir),
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        # Two video files → two ffmpeg calls
+        assert mock_run.call_count == 2
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_per_file_uses_libx264(self, mock_which, mock_run, tmp_path):
+        mock_run.return_value = _make_run()
+        in_dir = tmp_path / "input"
+        out_dir = tmp_path / "output"
+        in_dir.mkdir()
+        (in_dir / "clip.mp4").write_bytes(b"")
+        result = runner.invoke(
+            app,
+            [
+                "util", "batch",
+                "--input-dir", str(in_dir),
+                "--output-dir", str(out_dir),
+                "--crf", "28",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-c:v" in args
+        cv_idx = args.index("-c:v")
+        assert args[cv_idx + 1] == "libx264"
+        assert "-crf" in args
+        crf_idx = args.index("-crf")
+        assert args[crf_idx + 1] == "28"
+
+
+@pytest.mark.command_graph
+class TestUtilRecord:
+    """util record — platform-specific input device detection."""
+
+    @patch("ffmpeg_cli.sys.platform", "win32")
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_windows_uses_gdigrab(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["util", "record", "--output", "out.mp4"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-f" in args
+        f_idx = args.index("-f")
+        assert args[f_idx + 1] == "gdigrab"
+        assert "desktop" in args
+
+    @patch("ffmpeg_cli.sys.platform", "linux")
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_linux_uses_x11grab(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["util", "record", "--output", "out.mp4"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        f_idx = args.index("-f")
+        assert args[f_idx + 1] == "x11grab"
+
+    @patch("ffmpeg_cli.sys.platform", "darwin")
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_macos_uses_avfoundation(self, mock_which, mock_run):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app, ["util", "record", "--output", "out.mp4"]
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        f_idx = args.index("-f")
+        assert args[f_idx + 1] == "avfoundation"
+
+
+@pytest.mark.command_graph
+class TestUtilSurveillance:
+    """util surveillance — -rtsp_transport tcp, -f segment, -strftime 1."""
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_rtsp_transport_tcp(self, mock_which, mock_run, tmp_path):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "util", "surveillance",
+                "--url", "rtsp://cam.local/stream",
+                "--output-dir", str(tmp_path),
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-rtsp_transport" in args
+        rt_idx = args.index("-rtsp_transport")
+        assert args[rt_idx + 1] == "tcp"
+
+    @patch("ffmpeg_cli.subprocess.run")
+    @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
+    def test_segment_format_and_strftime(self, mock_which, mock_run, tmp_path):
+        mock_run.return_value = _make_run()
+        result = runner.invoke(
+            app,
+            [
+                "util", "surveillance",
+                "--url", "rtsp://cam.local/stream",
+                "--output-dir", str(tmp_path),
+                "--segment-time", "300",
+            ],
+        )
+        assert result.exit_code == 0, result.output
+        args = mock_run.call_args[0][0]
+        assert "-f" in args
+        f_idx = args.index("-f")
+        assert args[f_idx + 1] == "segment"
+        assert "-segment_time" in args
+        st_idx = args.index("-segment_time")
+        assert args[st_idx + 1] == "300"
+        assert "-strftime" in args
+        sf_idx = args.index("-strftime")
+        assert args[sf_idx + 1] == "1"

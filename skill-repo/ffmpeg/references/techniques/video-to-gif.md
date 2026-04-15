@@ -151,8 +151,8 @@ The `-lavfi` flag enables the `lavfi` (libavfilter) virtual device as a filtergr
 ## Sources
 
 - pkh.me — "High quality GIF with FFmpeg" (the definitive GIF guide): http://blog.pkh.me/p/21-high-quality-gif-with-ffmpeg.html
-- ffmpeg.run — "Convert video to GIF": https://ffmpeg.run/
-- ffmpeg.media — "Create GIF from video": https://ffmpeg.media/create-gif/
+- Shotstack — "FFmpeg: MP4 to GIF Guide": https://shotstack.io/learn/convert-video-gif-ffmpeg/
+- Bannerbear — "How to Make a GIF from a Video Using FFmpeg": https://www.bannerbear.com/blog/how-to-make-a-gif-from-a-video-using-ffmpeg/
 - gifgen GitHub — shell script using the two-pass approach: https://github.com/lukechilds/gifgen
 
 ## Learned from Usage
