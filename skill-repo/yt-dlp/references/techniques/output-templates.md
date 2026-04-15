@@ -111,6 +111,21 @@ yt-dlp -P "~/Downloads" -o "%(title)s.%(ext)s" "URL"
 | `%(epoch)s` | Download timestamp |
 | `%(autonumber)s` | Auto-incrementing number |
 
+### Format Properties
+| Variable | Description |
+|----------|-------------|
+| `%(format_id)s` | Format identifier |
+| `%(format_note)s` | Format description |
+| `%(resolution)s` | Resolution string (e.g., 1920x1080) |
+| `%(fps)s` | Frames per second |
+| `%(vcodec)s` | Video codec |
+| `%(acodec)s` | Audio codec |
+| `%(filesize)s` | File size in bytes |
+| `%(filesize_approx)s` | Approximate file size |
+| `%(tbr)s` | Total bitrate |
+| `%(vbr)s` | Video bitrate |
+| `%(abr)s` | Audio bitrate |
+
 ## Formatting Options
 
 ```bash

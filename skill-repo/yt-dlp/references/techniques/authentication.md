@@ -53,8 +53,8 @@ Supported keyring backends: `basictext`, `gnomekeyring`, `kwallet`, `kwallet5`, 
 ### Exporting Cookies to a File
 
 ```bash
-# Extract from browser and save to a cookie file for later use
-yt-dlp --cookies-from-browser chrome --cookies cookies.txt "URL"
+# Extract from browser and save to a cookie file (without downloading)
+yt-dlp --cookies-from-browser chrome --cookies cookies.txt --skip-download "https://www.youtube.com/"
 
 # Use the saved cookie file (doesn't need browser running)
 yt-dlp --cookies cookies.txt "URL"
@@ -83,7 +83,7 @@ Fields: domain, include subdomains, path, secure, expiry, name, value.
 ### Cookie File Requirements
 
 - Must start with `# HTTP Cookie File` or `# Netscape HTTP Cookie File`
-- Use correct line endings for your OS (CRLF on Windows, LF on Unix) — incorrect formatting can trigger HTTP 400 errors
+- Use correct line endings for your OS (CRLF on Windows, LF on Unix) if you encounter HTTP 400 errors with cookie files
 - Can be exported using browser extensions like "Get cookies.txt LOCALLY"
 
 ## Login Credentials

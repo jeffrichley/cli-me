@@ -1,7 +1,5 @@
 """Logic for download video command — builds yt-dlp argument list."""
 
-from pathlib import Path
-
 
 def build_args(
     url: str,

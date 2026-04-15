@@ -1,7 +1,5 @@
 """Logic for config archive commands — builds yt-dlp argument lists."""
 
-DUMMY_URL = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-
 
 def build_check_args(archive_file: str, url: str) -> list[str]:
     """Build yt-dlp argument list for checking if a URL is in an archive.

@@ -5,8 +5,8 @@ description: Video/audio download CLI for yt-dlp. Use when asked to download vid
   get subtitles, get thumbnails, download from YouTube, download from TikTok,
   download from Twitter, download from Instagram, download Instagram reel,
   download from Vimeo, download Twitch clip, rip audio, save video, archive channel, batch download,
-  remove sponsor segments, SponsorBlock, list formats, get video info, download
-  with cookies, convert downloaded video, embed subtitles, embed metadata, or
+  download music, remove sponsor segments, SponsorBlock, list formats, get video info, download
+  with cookies, remux downloaded video, embed subtitles, embed metadata, or
   any media downloading from websites.
 ---
 

@@ -8,7 +8,7 @@ Download multiple URLs from a text file, one URL per line.
 
 ```bash
 # Download all URLs from a file
-yt-dlp -a urls.txt "other options"
+yt-dlp -a urls.txt  # add other options as needed
 
 # Equivalent long form
 yt-dlp --batch-file urls.txt
