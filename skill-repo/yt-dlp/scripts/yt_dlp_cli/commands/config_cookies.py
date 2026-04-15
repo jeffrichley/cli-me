@@ -15,19 +15,14 @@ def build_args(
     """
     args: list[str] = []
 
-    # Build the browser spec: BROWSER[:PROFILE][:KEYRING][::CONTAINER]
+    # Build the browser spec: BROWSER[+KEYRING][:PROFILE][::CONTAINER]
     browser_spec = browser
+    if keyring:
+        browser_spec += f"+{keyring}"
     if profile:
         browser_spec += f":{profile}"
-    elif keyring:
-        # Need empty profile slot before keyring
-        browser_spec += ":"
-    if keyring:
-        browser_spec += f":{keyring}"
     if container:
-        if not profile and not keyring:
-            browser_spec += ":"
-        browser_spec += f":{container}"
+        browser_spec += f"::{container}"
 
     args.extend(["--cookies-from-browser", browser_spec])
 

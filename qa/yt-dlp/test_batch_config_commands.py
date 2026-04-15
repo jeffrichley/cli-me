@@ -244,21 +244,46 @@ class TestConfigCookies:
     def test_container(self):
         args = config_cookies.build_args(browser="firefox", container="Work")
         idx = args.index("--cookies-from-browser")
-        assert "Work" in args[idx + 1]
+        assert args[idx + 1] == "firefox::Work"
 
     def test_profile_and_container(self):
         args = config_cookies.build_args(
             browser="firefox", profile="default-release", container="Shopping"
         )
         idx = args.index("--cookies-from-browser")
-        spec = args[idx + 1]
-        assert spec.startswith("firefox:default-release:")
-        assert "Shopping" in spec
+        assert args[idx + 1] == "firefox:default-release::Shopping"
 
     def test_keyring(self):
         args = config_cookies.build_args(browser="chrome", keyring="gnomekeyring")
         idx = args.index("--cookies-from-browser")
-        assert "gnomekeyring" in args[idx + 1]
+        assert args[idx + 1] == "chrome+gnomekeyring"
+
+    def test_keyring_uses_plus_prefix(self):
+        args = config_cookies.build_args(browser="chrome", keyring="gnomekeyring")
+        idx = args.index("--cookies-from-browser")
+        assert args[idx + 1] == "chrome+gnomekeyring"
+
+    def test_container_uses_double_colon(self):
+        args = config_cookies.build_args(browser="firefox", container="Work")
+        idx = args.index("--cookies-from-browser")
+        assert args[idx + 1] == "firefox::Work"
+
+    def test_profile_and_container_double_colon(self):
+        args = config_cookies.build_args(browser="firefox", profile="default", container="Work")
+        idx = args.index("--cookies-from-browser")
+        assert args[idx + 1] == "firefox:default::Work"
+
+    def test_keyring_plus_profile(self):
+        args = config_cookies.build_args(browser="chrome", keyring="gnomekeyring", profile="Default")
+        idx = args.index("--cookies-from-browser")
+        assert args[idx + 1] == "chrome+gnomekeyring:Default"
+
+    def test_all_fields(self):
+        args = config_cookies.build_args(
+            browser="firefox", keyring="gnomekeyring", profile="default", container="Work"
+        )
+        idx = args.index("--cookies-from-browser")
+        assert args[idx + 1] == "firefox+gnomekeyring:default::Work"
 
     def test_dummy_url_is_last(self):
         args = config_cookies.build_args(
