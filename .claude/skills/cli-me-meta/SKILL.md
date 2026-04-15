@@ -27,8 +27,9 @@ follow the principles and phases below.
 6. **Adversarial review at every phase.** Fresh agents (never the creator) review
    every artifact. Objective failures auto-fix with a 3-strike limit. Judgment calls
    accumulate for human decision at phase boundaries. See
-   `references/adversarial-reviewers.md` for reviewer prompts and the Review Result
-   Handling Protocol.
+   `references/adversarial-reviewers/protocol.md` for the Review Result
+   Handling Protocol and individual reviewer files under
+   `references/adversarial-reviewers/` for each reviewer prompt.
 7. **Thin wrappers, testable logic.** CLI commands parse args and delegate to logic
    functions in `commands/`. Logic functions are independently testable without Typer.
 
@@ -87,7 +88,7 @@ include source URLs.
 
 Dispatch a **fresh reviewer agent** (NOT the research agent) using the
 "Reviewer 1: Wiki Technique Page Reviewer" prompt from
-`references/adversarial-reviewers.md`.
+`references/adversarial-reviewers/r1-wiki-technique.md`.
 
 The reviewer checks: command accuracy, URL verification (fetch every URL),
 completeness, accuracy of claims, and creative edge case hunting.
@@ -177,7 +178,7 @@ appending to the JSON directly:
 ### REVIEW: Scaffold (Adversarial)
 
 Dispatch a **fresh reviewer agent** using the "Reviewer 2: Scaffold Reviewer"
-prompt from `references/adversarial-reviewers.md`.
+prompt from `references/adversarial-reviewers/r2-scaffold.md`.
 
 The reviewer checks: frontmatter validity, body clarity, reproducibility,
 registry consistency, directory structure, and trigger conflict hunting.
@@ -252,14 +253,14 @@ def run_command(args: list[str], check: bool = True) -> subprocess.CompletedProc
 
 7. **REVIEW: Code-Wiki Alignment (Adversarial)**
    Dispatch a **fresh reviewer agent** using "Reviewer 3: Code-Wiki Alignment
-   Reviewer" from `references/adversarial-reviewers.md`. The reviewer
+   Reviewer" from `references/adversarial-reviewers/r3-code-wiki.md`. The reviewer
    cross-references wiki commands against the code, checks thin wrapper
    compliance, error handling, and hunts for silent failures.
    Fix all findings before committing.
 
 8. **REVIEW: Test Quality (Adversarial)**
    Dispatch a **fresh reviewer agent** using "Reviewer 4: Test Quality
-   Reviewer" from `references/adversarial-reviewers.md`. The reviewer
+   Reviewer" from `references/adversarial-reviewers/r4-test-quality.md`. The reviewer
    performs mutation analysis on the tests, checks assertion depth, finds
    coverage gaps, and identifies bugs that would pass all tests.
    Fix all findings before committing.
@@ -271,7 +272,7 @@ def run_command(args: list[str], check: bool = True) -> subprocess.CompletedProc
 ### 3d. REVIEW: Wiki Execution Verification (Adversarial)
 
 Dispatch a **fresh reviewer agent** using "Reviewer 5: Wiki Execution Reviewer"
-from `references/adversarial-reviewers.md`.
+from `references/adversarial-reviewers/r5-wiki-execution.md`.
 
 This reviewer RUNS every command documented in every technique page against
 the real software, verifies outputs, fetches every source URL, and tests

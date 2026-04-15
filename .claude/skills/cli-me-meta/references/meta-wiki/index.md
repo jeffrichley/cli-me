@@ -6,7 +6,12 @@ It self-improves as more skills are built.
 ## Pages
 
 - [Learning Log](log.md) — chronological record of builds and lessons learned (21 entries)
-- [Adversarial Review Prompts](../adversarial-reviewers.md) — 5 reviewer prompts + result handling protocol
+- [Adversarial Review Protocol](../adversarial-reviewers/protocol.md) — finding categories, fix-review loop, phase gate format
+- [R1 Wiki Technique](../adversarial-reviewers/r1-wiki-technique.md) — technique page accuracy reviewer
+- [R2 Scaffold](../adversarial-reviewers/r2-scaffold.md) — SKILL.md, registry, structure reviewer
+- [R3 Code-Wiki](../adversarial-reviewers/r3-code-wiki.md) — code-wiki alignment reviewer
+- [R4 Test Quality](../adversarial-reviewers/r4-test-quality.md) — test mutation/coverage/depth reviewer
+- [R5 Wiki Execution](../adversarial-reviewers/r5-wiki-execution.md) — run every documented command reviewer
 - [Skill Template](../skill-template.md) — SKILL.md generation template
 - [Wiki Template](../wiki-template.md) — wiki initialization template
 - [Technique Page Template](../technique-page-template.md) — three-layer page structure
