@@ -78,21 +78,26 @@ ffmpeg -i input.mp4 \
   youtube_4k_output.mp4
 ```
 
-**Twitter/X — 1080p compliant:**
+**Twitter/X — 720p safe default (recommended):**
 ```bash
 ffmpeg -i input.mp4 \
-  -c:v libx264 -profile:v high -level 4.0 -crf 23 -preset medium \
-  -vf scale=1920:1080 \
+  -c:v libx264 -profile:v high -level:v 4.0 -crf 23 -preset medium \
+  -vf "scale='min(1280,iw)':'min(720,ih)':force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2" \
   -c:a aac -b:a 128k -ar 44100 -ac 2 \
   -pix_fmt yuv420p -movflags +faststart \
   twitter_output.mp4
 ```
 
+720p is the safe default — Twitter's re-compression is less aggressive at this resolution,
+and most Twitter video is consumed on mobile where 720p is indistinguishable from 1080p.
+For 1080p output, use the YouTube preset or encode manually with `scale=1920:1080`.
+
 **Twitter/X — from VFR source (force constant frame rate):**
 ```bash
 ffmpeg -i input.mp4 \
-  -c:v libx264 -profile:v high -level 4.0 -crf 23 -preset medium \
-  -vf scale=1920:1080 -fps_mode cfr -r 30 \
+  -c:v libx264 -profile:v high -level:v 4.0 -crf 23 -preset medium \
+  -vf "scale='min(1280,iw)':'min(720,ih)':force_original_aspect_ratio=decrease,pad=ceil(iw/2)*2:ceil(ih/2)*2" \
+  -fps_mode cfr -r 30 \
   -c:a aac -b:a 128k -ar 44100 -ac 2 \
   -pix_fmt yuv420p -movflags +faststart \
   twitter_output.mp4

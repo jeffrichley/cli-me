@@ -6,7 +6,7 @@ Use this technique when converting a video clip to an animated GIF — for docum
 
 Use the two-pass approach for anything that will be seen by another person. Use the single-pass only as a quick preview to check timing — never for final output.
 
-Scale to 480px wide or less. Target 10–15 fps. GIF files above ~5 MB are impractical for web use; if you cannot get there by reducing size and fps, consider WebP or a short MP4 loop instead.
+Scale to 480px wide or less. Target 10–15 fps (CLI defaults to 15 for smoothness; use 10-12 for smaller files). GIF files above ~5 MB are impractical for web use; if you cannot get there by reducing size and fps, consider WebP or a short MP4 loop instead.
 
 ## Technique
 

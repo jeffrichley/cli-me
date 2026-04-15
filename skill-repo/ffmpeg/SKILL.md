@@ -21,6 +21,7 @@ it does not process media in Python.
   - macOS: `brew install ffmpeg`
   - Linux: `apt install ffmpeg` or `dnf install ffmpeg`
 - Python 3.12+
+- uv (Python package runner): https://docs.astral.sh/uv/getting-started/installation/
 
 ## CLI Commands
 
@@ -56,28 +57,28 @@ uv run ffmpeg_cli.py <group> <command> --help
 
 ```bash
 # Convert MOV to MP4
-uv run scripts/ffmpeg_cli.py convert format input.mov output.mp4
+uv run ffmpeg_cli.py convert format input.mov output.mp4
 
 # Compress for web
-uv run scripts/ffmpeg_cli.py convert compress input.mp4 output.mp4 --crf 23
+uv run ffmpeg_cli.py convert compress input.mp4 output.mp4 --crf 23
 
 # Extract audio as MP3
-uv run scripts/ffmpeg_cli.py extract audio input.mp4 output.mp3
+uv run ffmpeg_cli.py extract audio input.mp4 output.mp3
 
 # Trim a clip
-uv run scripts/ffmpeg_cli.py extract clip input.mp4 output.mp4 --start 00:01:30 --end 00:02:00
+uv run ffmpeg_cli.py extract clip input.mp4 output.mp4 --start 00:01:30 --end 00:02:00
 
 # Resize to 720p
-uv run scripts/ffmpeg_cli.py transform resize input.mp4 output.mp4 --height 720
+uv run ffmpeg_cli.py transform resize input.mp4 output.mp4 --height 720
 
 # Normalize podcast audio
-uv run scripts/ffmpeg_cli.py audio normalize input.wav output.wav --target -16
+uv run ffmpeg_cli.py audio normalize input.wav output.wav --target -16
 
 # Create GIF
-uv run scripts/ffmpeg_cli.py convert to-gif input.mp4 output.gif --fps 15 --width 480
+uv run ffmpeg_cli.py convert to-gif input.mp4 output.gif --fps 15 --width 480
 
 # Probe file info
-uv run scripts/ffmpeg_cli.py util probe input.mp4
+uv run ffmpeg_cli.py util probe input.mp4
 ```
 
 ### Common Task Mapping

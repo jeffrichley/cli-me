@@ -26,7 +26,7 @@ Use subtitle burning when you need captions permanently embedded into the video 
 ```bash
 ffmpeg -i input.mp4 \
   -vf "subtitles=subtitles.srt" \
-  -c:v libx264 -crf 18 -pix_fmt yuv420p \
+  -c:v libx264 -crf 23 -pix_fmt yuv420p \
   -c:a copy \
   output_hardsub.mp4
 ```
@@ -35,7 +35,7 @@ ffmpeg -i input.mp4 \
 ```bash
 ffmpeg -i input.mp4 \
   -vf "subtitles=subtitles.srt:force_style='FontName=Arial,FontSize=24,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,Alignment=2'" \
-  -c:v libx264 -crf 18 -pix_fmt yuv420p \
+  -c:v libx264 -crf 23 -pix_fmt yuv420p \
   -c:a copy \
   output_styled_subs.mp4
 ```
@@ -45,7 +45,7 @@ ffmpeg -i input.mp4 \
 ```bash
 ffmpeg -i input.mp4 \
   -vf "ass=subtitles.ass" \
-  -c:v libx264 -crf 18 -pix_fmt yuv420p \
+  -c:v libx264 -crf 23 -pix_fmt yuv420p \
   -c:a copy \
   output_ass_hardsub.mp4
 ```

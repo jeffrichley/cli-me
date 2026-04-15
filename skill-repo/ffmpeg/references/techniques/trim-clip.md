@@ -58,8 +58,11 @@ ffmpeg -ss 00:01:00 -i input.mp4 -t 30 -c copy output.mp4
 
 **Cut with explicit codec (H.264 re-encode, fast + accurate):**
 ```bash
-ffmpeg -ss 00:01:00 -i input.mp4 -to 00:02:30 -c:v libx264 -c:a aac output.mp4
+ffmpeg -ss 00:01:00 -i input.mp4 -to 00:02:30 -c:v libx264 -crf 18 -pix_fmt yuv420p -c:a aac -b:a 192k output.mp4
 ```
+
+CRF 18 is recommended for trimming — clips are typically short segments the user
+specifically selected, so higher quality is worth the modest file size increase.
 
 **Trim last N seconds (requires knowing duration):**
 ```bash
