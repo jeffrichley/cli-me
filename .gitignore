@@ -9,5 +9,11 @@ wheels/
 # Virtual environments
 .venv
 
-# Source analysis working directory
-tmp/source-analysis/
+# Temporary working directories
+tmp/
+
+# PDFs
+*.pdf
+
+# Local Claude settings
+.claude/settings.local.json
