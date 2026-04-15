@@ -110,17 +110,20 @@ class TestChapters:
     @pytest.mark.command_graph
     def test_output(self):
         args = process_chapters.build_args(URL, output="%(title)s.%(ext)s")
-        assert "-o" in args
+        idx = args.index("-o")
+        assert args[idx + 1] == "%(title)s.%(ext)s"
 
     @pytest.mark.command_graph
     def test_output_dir(self):
         args = process_chapters.build_args(URL, output_dir="/tmp/out")
-        assert "-P" in args
+        idx = args.index("-P")
+        assert args[idx + 1] == "/tmp/out"
 
     @pytest.mark.command_graph
     def test_cookies(self):
         args = process_chapters.build_args(URL, cookies="cookies.txt")
-        assert "--cookies" in args
+        idx = args.index("--cookies")
+        assert args[idx + 1] == "cookies.txt"
 
 
 # ---------------------------------------------------------------------------
@@ -224,17 +227,20 @@ class TestEmbed:
     @pytest.mark.command_graph
     def test_output(self):
         args = process_embed.build_args(URL, output="%(title)s.%(ext)s")
-        assert "-o" in args
+        idx = args.index("-o")
+        assert args[idx + 1] == "%(title)s.%(ext)s"
 
     @pytest.mark.command_graph
     def test_output_dir(self):
         args = process_embed.build_args(URL, output_dir="/tmp/out")
-        assert "-P" in args
+        idx = args.index("-P")
+        assert args[idx + 1] == "/tmp/out"
 
     @pytest.mark.command_graph
     def test_cookies(self):
         args = process_embed.build_args(URL, cookies="cookies.txt")
-        assert "--cookies" in args
+        idx = args.index("--cookies")
+        assert args[idx + 1] == "cookies.txt"
 
     @pytest.mark.command_graph
     def test_all_embeds(self):

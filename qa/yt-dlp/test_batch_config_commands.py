@@ -66,17 +66,19 @@ class TestBatchFromFile:
         args = batch_from_file.build_args(
             self.FILE, concurrent_fragments=4, rate_limit="1M"
         )
-        assert "-N" in args
-        assert "4" in args
-        assert "-r" in args
-        assert "1M" in args
+        idx_n = args.index("-N")
+        assert args[idx_n + 1] == "4"
+        idx_r = args.index("-r")
+        assert args[idx_r + 1] == "1M"
 
     def test_sleep_intervals(self):
         args = batch_from_file.build_args(
             self.FILE, sleep_interval=2.0, max_sleep_interval=5.0
         )
-        assert "--sleep-interval" in args
-        assert "--max-sleep-interval" in args
+        idx_sleep = args.index("--sleep-interval")
+        assert args[idx_sleep + 1] == "2.0"
+        idx_max = args.index("--max-sleep-interval")
+        assert args[idx_max + 1] == "5.0"
 
     def test_max_downloads(self):
         args = batch_from_file.build_args(self.FILE, max_downloads=10)
@@ -151,8 +153,10 @@ class TestBatchSync:
             self.URL, archive=self.ARCHIVE,
             sleep_interval=1.0, max_sleep_interval=3.0,
         )
-        assert "--sleep-interval" in args
-        assert "--max-sleep-interval" in args
+        idx_sleep = args.index("--sleep-interval")
+        assert args[idx_sleep + 1] == "1.0"
+        idx_max = args.index("--max-sleep-interval")
+        assert args[idx_max + 1] == "3.0"
 
     def test_max_downloads(self):
         args = batch_sync.build_args(

@@ -88,10 +88,10 @@ class TestDownloadVideo:
 
     def test_performance_flags(self):
         args = download_video.build_args(self.URL, concurrent_fragments=4, rate_limit="50K")
-        assert "-N" in args
-        assert "4" in args
-        assert "-r" in args
-        assert "50K" in args
+        idx_n = args.index("-N")
+        assert args[idx_n + 1] == "4"
+        idx_r = args.index("-r")
+        assert args[idx_r + 1] == "50K"
 
     def test_max_filesize(self):
         args = download_video.build_args(self.URL, max_filesize="100M")
@@ -196,8 +196,10 @@ class TestDownloadPlaylist:
         args = download_playlist.build_args(
             self.URL, date_after="20240101", date_before="20240131"
         )
-        assert "--dateafter" in args
-        assert "--datebefore" in args
+        idx_after = args.index("--dateafter")
+        assert args[idx_after + 1] == "20240101"
+        idx_before = args.index("--datebefore")
+        assert args[idx_before + 1] == "20240131"
 
     def test_max_downloads(self):
         args = download_playlist.build_args(self.URL, max_downloads=10)
@@ -209,8 +211,30 @@ class TestDownloadPlaylist:
         args = download_playlist.build_args(
             self.URL, sleep_interval=2.0, max_sleep_interval=5.0
         )
-        assert "--sleep-interval" in args
-        assert "--max-sleep-interval" in args
+        idx_sleep = args.index("--sleep-interval")
+        assert args[idx_sleep + 1] == "2.0"
+        idx_max = args.index("--max-sleep-interval")
+        assert args[idx_max + 1] == "5.0"
+
+    def test_cookies(self):
+        args = download_playlist.build_args(self.URL, cookies="cookies.txt")
+        idx = args.index("--cookies")
+        assert args[idx + 1] == "cookies.txt"
+
+    def test_no_overwrites(self):
+        args = download_playlist.build_args(self.URL, no_overwrites=True)
+        assert "--no-overwrites" in args
+        assert "--force-overwrites" not in args
+
+    def test_concurrent_fragments(self):
+        args = download_playlist.build_args(self.URL, concurrent_fragments=4)
+        idx = args.index("-N")
+        assert args[idx + 1] == "4"
+
+    def test_rate_limit(self):
+        args = download_playlist.build_args(self.URL, rate_limit="1M")
+        idx = args.index("-r")
+        assert args[idx + 1] == "1M"
 
     def test_url_is_always_last(self):
         args = download_playlist.build_args(self.URL, archive="a.txt", items="1:3")
@@ -239,7 +263,8 @@ class TestDownloadChannel:
 
     def test_archive(self):
         args = download_channel.build_args(self.URL, archive="channel_archive.txt")
-        assert "--download-archive" in args
+        idx = args.index("--download-archive")
+        assert args[idx + 1] == "channel_archive.txt"
 
     def test_break_on_existing(self):
         args = download_channel.build_args(self.URL, break_on_existing=True)
@@ -249,8 +274,35 @@ class TestDownloadChannel:
         args = download_channel.build_args(
             self.URL, date_after="20240101", date_before="20240630"
         )
-        assert "--dateafter" in args
-        assert "--datebefore" in args
+        idx_after = args.index("--dateafter")
+        assert args[idx_after + 1] == "20240101"
+        idx_before = args.index("--datebefore")
+        assert args[idx_before + 1] == "20240630"
+
+    def test_cookies(self):
+        args = download_channel.build_args(self.URL, cookies="cookies.txt")
+        idx = args.index("--cookies")
+        assert args[idx + 1] == "cookies.txt"
+
+    def test_no_overwrites(self):
+        args = download_channel.build_args(self.URL, no_overwrites=True)
+        assert "--no-overwrites" in args
+        assert "--force-overwrites" not in args
+
+    def test_max_downloads(self):
+        args = download_channel.build_args(self.URL, max_downloads=10)
+        idx = args.index("--max-downloads")
+        assert args[idx + 1] == "10"
+
+    def test_concurrent_fragments(self):
+        args = download_channel.build_args(self.URL, concurrent_fragments=4)
+        idx = args.index("-N")
+        assert args[idx + 1] == "4"
+
+    def test_rate_limit(self):
+        args = download_channel.build_args(self.URL, rate_limit="1M")
+        idx = args.index("-r")
+        assert args[idx + 1] == "1M"
 
     def test_url_is_always_last(self):
         args = download_channel.build_args(self.URL, archive="a.txt")
