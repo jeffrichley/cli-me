@@ -463,6 +463,12 @@ def test_transform_crop_vertical(test_video, tmp_path, ffprobe_path):
     h = int(vs["height"])
     assert h > w, f"Expected portrait (height > width) but got {w}x{h}"
 
+    # Verify actual 9:16 aspect ratio (tolerance for rounding)
+    actual_ratio = w / h
+    expected_ratio = 9 / 16  # 0.5625
+    assert abs(actual_ratio - expected_ratio) < 0.05, \
+        f"Expected 9:16 ratio (~0.5625) but got {actual_ratio:.4f} ({w}x{h})"
+
 
 @pytest.mark.integration
 def test_transform_fade(test_video, tmp_path, ffprobe_path, ffmpeg_path):

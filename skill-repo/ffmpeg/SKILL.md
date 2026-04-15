@@ -1,10 +1,12 @@
 ---
 name: ffmpeg
 description: Media processing CLI for ffmpeg. Use when asked to convert video, compress
-  video, extract audio, trim or clip video, resize video, add subtitles, remove
-  background noise, normalize audio, create gif, stream video, HLS, DASH, RTMP,
-  concatenate or merge videos, add watermark, create timelapse, slow motion, screen
-  capture, ffprobe, podcast audio processing, or any media file manipulation.
+  video, transcode, re-encode, change bitrate, extract audio, trim or clip video,
+  resize video, change aspect ratio, change framerate, add subtitles, remove background
+  noise, normalize audio, create gif, generate thumbnail, stream video, HLS, DASH, RTMP,
+  concatenate or merge videos, add watermark, mute video, strip audio, make video smaller,
+  timelapse (use transform speed or combine from-images), slow motion (use transform speed),
+  screen capture, ffprobe, podcast audio processing, or any media file manipulation.
 ---
 
 # ffmpeg — cli-me skill
@@ -77,6 +79,20 @@ uv run scripts/ffmpeg_cli.py convert to-gif input.mp4 output.gif --fps 15 --widt
 # Probe file info
 uv run scripts/ffmpeg_cli.py util probe input.mp4
 ```
+
+### Common Task Mapping
+
+Some tasks don't have a dedicated command but are handled by existing commands:
+
+| Task | Command | Notes |
+|------|---------|-------|
+| Timelapse from video | `transform speed --factor 4 --no-audio` | Speeds up footage |
+| Timelapse from photos | `combine from-images --pattern "*.jpg" --framerate 24` | Stitches image sequence |
+| Slow motion | `transform speed --factor 0.5` | Add `--interpolate` for smooth slow-mo |
+| Mute video | `extract clip input.mp4 output.mp4 --copy` then strip audio manually | Or use ffmpeg directly: `ffmpeg -i in.mp4 -an -c:v copy out.mp4` |
+| Generate thumbnail | `extract frames input.mp4 --at 00:00:05` | Single frame at timestamp |
+| Change framerate | Use ffmpeg directly: `ffmpeg -i in.mp4 -r 30 out.mp4` | Not yet a CLI command |
+| Change aspect ratio | `transform crop --aspect 16:9` or `transform resize --letterbox` | Crop or letterbox |
 
 ## Knowledge Base
 

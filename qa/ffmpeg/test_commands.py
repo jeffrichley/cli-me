@@ -182,12 +182,19 @@ class TestConvertPlatform:
         )
         assert result.exit_code == 0, result.output
         args = mock_run.call_args[0][0]
-        assert "-crf" in args and "18" in args
-        assert "-bf" in args and "2" in args
-        assert "-b:a" in args
+        # Check flags by index
+        crf_idx = args.index("-crf")
+        assert args[crf_idx + 1] == "18"
+        bf_idx = args.index("-bf")
+        assert args[bf_idx + 1] == "2"
         ba_idx = args.index("-b:a")
         assert args[ba_idx + 1] == "384k"
-        assert "48000" in args
+        ar_idx = args.index("-ar")
+        assert args[ar_idx + 1] == "48000"
+        assert "-profile:v" in args
+        assert args[args.index("-profile:v") + 1] == "high"
+        assert "-ac" in args
+        assert args[args.index("-ac") + 1] == "2"
 
     @patch("ffmpeg_cli.subprocess.run")
     @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
@@ -198,12 +205,21 @@ class TestConvertPlatform:
         )
         assert result.exit_code == 0, result.output
         args = mock_run.call_args[0][0]
-        # Should contain -vf with scale/pad expression
+        # Verify profile and level by index
+        assert "-profile:v" in args
+        assert args[args.index("-profile:v") + 1] == "high"
+        assert "-level:v" in args
+        assert args[args.index("-level:v") + 1] == "4.0"
+        # Verify scale filter contains min() expressions
         assert "-vf" in args
         vf_idx = args.index("-vf")
         vf_value = args[vf_idx + 1]
-        assert "min(1280,iw)" in vf_value or "1280" in vf_value
-        assert "pad=ceil" in vf_value
+        assert "min(1280,iw)" in vf_value
+        assert "min(720,ih)" in vf_value
+        assert "pad=" in vf_value
+        # Verify audio
+        assert "-ac" in args
+        assert args[args.index("-ac") + 1] == "2"
 
     @patch("ffmpeg_cli.subprocess.run")
     @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)
@@ -214,11 +230,25 @@ class TestConvertPlatform:
         )
         assert result.exit_code == 0, result.output
         args = mock_run.call_args[0][0]
+        # Verify profile and level by index
+        assert "-profile:v" in args
+        assert args[args.index("-profile:v") + 1] == "high"
+        assert "-level:v" in args
+        assert args[args.index("-level:v") + 1] == "4.2"
+        # Verify CRF and preset match wiki
+        crf_idx = args.index("-crf")
+        assert args[crf_idx + 1] == "18"
+        preset_idx = args.index("-preset")
+        assert args[preset_idx + 1] == "slow"
+        # Verify scale filter has 1080x1920
         assert "-vf" in args
-        vf_idx = args.index("-vf")
-        vf_value = args[vf_idx + 1]
-        assert "1080" in vf_value
-        assert "1920" in vf_value
+        vf_value = args[args.index("-vf") + 1]
+        assert "1080" in vf_value and "1920" in vf_value
+        # Verify audio bitrate and channels
+        ba_idx = args.index("-b:a")
+        assert args[ba_idx + 1] == "256k"
+        assert "-ac" in args
+        assert args[args.index("-ac") + 1] == "2"
 
     @patch("ffmpeg_cli.subprocess.run")
     @patch("ffmpeg_cli.shutil.which", side_effect=_which_side_effect)

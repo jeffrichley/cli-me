@@ -86,7 +86,7 @@ ffmpeg -i input.mp4 -c:v libx265 -crf 28 -preset medium \
 ```bash
 # Pass 1
 ffmpeg -y -i input.mp4 -c:v libx264 -b:v TARGET_KBPSk -pass 1 \
-  -an -f null /dev/null
+  -an -f null /dev/null    # Windows: use NUL instead of /dev/null
 
 # Pass 2
 ffmpeg -i input.mp4 -c:v libx264 -b:v TARGET_KBPSk -pass 2 \
