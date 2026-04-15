@@ -30,7 +30,8 @@ def build_args(
     if format:
         args.extend(["-f", format])
     elif max_height:
-        args.extend(["-f", f"bv*[height<={max_height}]+ba/b[height<={max_height}]/b"])
+        args.extend(["-f", "bv*+ba/b"])
+        args.extend(["-S", f"res:{max_height}"])
     else:
         args.extend(["-f", "bv*+ba/b"])
 

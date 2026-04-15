@@ -10,6 +10,7 @@ def build_check_args(archive_file: str, url: str) -> list[str]:
 
     args.extend(["--download-archive", archive_file])
     args.append("--simulate")
+    args.extend(["--print", "%(id)s"])
 
     # URL must be last
     args.append(url)

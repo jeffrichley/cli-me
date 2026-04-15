@@ -108,16 +108,16 @@ yt-dlp --extractor-retries 5 "URL"
 yt-dlp --retry-sleep http:5 "URL"
 
 # Linear backoff: start at 1s, increase by 1s each retry
-yt-dlp --retry-sleep "linear=1" "URL"
+yt-dlp --retry-sleep "http:linear=1" "URL"
 
 # Linear backoff: 1s to 10s in steps of 2s
-yt-dlp --retry-sleep "linear=1:10:2" "URL"
+yt-dlp --retry-sleep "http:linear=1:10:2" "URL"
 
 # Exponential backoff: start at 1s, double each retry
-yt-dlp --retry-sleep "exp=1" "URL"
+yt-dlp --retry-sleep "http:exp=1" "URL"
 
 # Exponential backoff with cap at 60s
-yt-dlp --retry-sleep "exp=1:60" "URL"
+yt-dlp --retry-sleep "http:exp=1:60" "URL"
 
 # Different sleep for different retry types
 yt-dlp --retry-sleep "http:exp=1:30" --retry-sleep "fragment:linear=1:5" "URL"
@@ -210,10 +210,13 @@ yt-dlp -N 8 -f "bestvideo+bestaudio" "URL"
 
 # Resilient download: retries + throttle detection
 yt-dlp -N 4 -R infinite --fragment-retries infinite \
-  --throttled-rate 100K --retry-sleep "exp=1:60" "URL"
+  --throttled-rate 100K --retry-sleep "http:exp=1:60" "URL"
 ```
 
 ## Gotchas and Edge Cases
+
+> **Note:** When using `-N` for concurrent fragment downloads, `-r` applies per connection.
+> With `-r 1M -N 4`, total bandwidth can reach ~4 MB/s. See [issue #7878](https://github.com/yt-dlp/yt-dlp/issues/7878) for details.
 
 - **`-r` applies per fragment when using `-N`.** With `-r 1M` and `-N 4`, total bandwidth can reach ~4 MB/s. The rate limit is per-connection, not global.
 - **`--geo-bypass` only fakes the X-Forwarded-For header.** It does not route traffic through a different country. For real geo-unblocking, use `--proxy` with a proxy in the target country.

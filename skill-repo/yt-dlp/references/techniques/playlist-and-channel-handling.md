@@ -34,6 +34,16 @@ yt-dlp -I ::-1 "PLAYLIST_URL"
 
 Index syntax: `START:STOP[:STEP]` -- similar to Python slicing. Negative indices count from the end.
 
+### Ordering
+
+```bash
+# Reverse playlist order (newest first for chronological playlists)
+yt-dlp --playlist-reverse "PLAYLIST_URL"
+
+# Randomize playlist order
+yt-dlp --playlist-random "PLAYLIST_URL"
+```
+
 ## Date Filtering
 
 ```bash

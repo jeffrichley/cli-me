@@ -5,6 +5,7 @@ def build_args(
     url: str,
     *,
     download: bool = False,
+    auto_subs: bool = False,
     langs: str | None = None,
     format: str | None = None,
     cookies: str | None = None,
@@ -20,6 +21,8 @@ def build_args(
 
     if download:
         args.extend(["--write-subs", "--skip-download"])
+        if auto_subs:
+            args.append("--write-auto-subs")
     else:
         args.append("--list-subs")
 

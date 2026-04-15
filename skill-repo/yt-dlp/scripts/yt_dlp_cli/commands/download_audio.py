@@ -30,6 +30,14 @@ def build_args(
 
     Returns the argument list (without the yt-dlp executable).
     """
+    if format not in AUDIO_FORMATS:
+        import typer
+        typer.echo(
+            f"WARNING: '{format}' is not a known audio format. "
+            f"Known formats: {', '.join(AUDIO_FORMATS)}. Passing through to yt-dlp.",
+            err=True,
+        )
+
     args: list[str] = []
 
     # Extract audio flag

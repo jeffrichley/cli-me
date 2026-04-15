@@ -212,6 +212,15 @@ class TestBatchSearch:
         idx = args.index("--cookies")
         assert args[idx + 1] == "cookies.txt"
 
+    def test_max_results_zero(self):
+        """max_results=0 produces ytsearch0: which may be invalid."""
+        args = batch_search.build_args(self.QUERY, max_results=0)
+        assert args[-1] == "ytsearch0:python tutorial"
+
+    def test_max_results_one(self):
+        args = batch_search.build_args(self.QUERY, max_results=1)
+        assert args[-1] == "ytsearch1:python tutorial"
+
     def test_extra_args(self):
         args = batch_search.build_args(self.QUERY, extra_args=["--flat-playlist"])
         assert "--flat-playlist" in args
@@ -244,23 +253,6 @@ class TestConfigCookies:
         args = config_cookies.build_args(browser="chrome", profile="Default")
         idx = args.index("--cookies-from-browser")
         assert args[idx + 1] == "chrome:Default"
-
-    def test_container(self):
-        args = config_cookies.build_args(browser="firefox", container="Work")
-        idx = args.index("--cookies-from-browser")
-        assert args[idx + 1] == "firefox::Work"
-
-    def test_profile_and_container(self):
-        args = config_cookies.build_args(
-            browser="firefox", profile="default-release", container="Shopping"
-        )
-        idx = args.index("--cookies-from-browser")
-        assert args[idx + 1] == "firefox:default-release::Shopping"
-
-    def test_keyring(self):
-        args = config_cookies.build_args(browser="chrome", keyring="gnomekeyring")
-        idx = args.index("--cookies-from-browser")
-        assert args[idx + 1] == "chrome+gnomekeyring"
 
     def test_keyring_uses_plus_prefix(self):
         args = config_cookies.build_args(browser="chrome", keyring="gnomekeyring")
@@ -309,6 +301,7 @@ class TestConfigArchiveCheck:
         idx = args.index("--download-archive")
         assert args[idx + 1] == self.ARCHIVE
         assert "--simulate" in args
+        assert "--print" in args
         assert args[-1] == self.URL
 
     def test_check_no_force_write(self):

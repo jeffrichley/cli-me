@@ -84,6 +84,15 @@ yt-dlp -S "+codec:avc:m4a" "URL"
 yt-dlp -S "+size" "URL"
 ```
 
+### Force Sort Override
+
+```bash
+# Override default sort entirely (force your sort to take full precedence)
+yt-dlp -S "+res:720,+fps" --format-sort-force "URL"
+```
+
+Without `--format-sort-force`, yt-dlp applies your sort on top of its defaults. With it, only your specified fields matter.
+
 ## Default Codec Preferences
 
 **Video codecs (best to worst):** av01 > vp9.2 > vp9 > h265 > h264 > vp8 > h263 > theora > other

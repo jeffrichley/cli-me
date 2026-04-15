@@ -35,14 +35,15 @@ class TestDownloadVideo:
 
     def test_max_height(self):
         args = download_video.build_args(self.URL, max_height=720)
-        idx = args.index("-f")
-        assert "720" in args[idx + 1]
-        assert "height<=" in args[idx + 1]
+        assert "-S" in args
+        idx = args.index("-S")
+        assert args[idx + 1] == "res:720"
 
     def test_format_takes_precedence_over_max_height(self):
         args = download_video.build_args(self.URL, format="22", max_height=720)
         idx = args.index("-f")
         assert args[idx + 1] == "22"
+        assert "-S" not in args
 
     def test_output_template(self):
         args = download_video.build_args(self.URL, output="%(title)s.%(ext)s")

@@ -145,6 +145,19 @@ yt-dlp -o "%(upload_date>%Y-%m-%d)s - %(title)s.%(ext)s" "URL"
 yt-dlp -o "%(autonumber)05d - %(title)s.%(ext)s" "URL"
 ```
 
+### Conditional Expressions
+
+```bash
+# Include channel name only when available (avoids "NA" in filename)
+yt-dlp -o "%(channel&{} - |)s%(title)s.%(ext)s" "URL"
+# Output: "ChannelName - VideoTitle.ext" or just "VideoTitle.ext"
+
+# Include playlist info only in playlist context
+yt-dlp -o "%(playlist_title&{}/|)s%(title)s.%(ext)s" "URL"
+```
+
+The `&` operator: `%(field&replacement|default)s` — if field has a value, use `replacement` (with `{}` as the value placeholder); if empty/missing, use `default`.
+
 ## Organizing Downloads into Folders
 
 ```bash

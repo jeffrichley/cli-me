@@ -36,7 +36,7 @@ def archive_check(
     archive_file: Annotated[str, typer.Argument(help="Path to the archive file")],
     url: Annotated[str, typer.Argument(help="URL to check against the archive")],
 ) -> None:
-    """Check if a URL is already in a download archive."""
+    """Check if a URL is already in a download archive. Prints video ID if NOT in archive (new). Prints nothing if already archived."""
     args = config_archive.build_check_args(archive_file, url)
     run_command(args)
 

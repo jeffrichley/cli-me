@@ -47,6 +47,7 @@ def metadata(
 def subtitles(
     url: Annotated[str, typer.Argument(help="URL to inspect")],
     download: Annotated[bool, typer.Option(help="Download subtitle files instead of listing")] = False,
+    auto_subs: Annotated[bool, typer.Option("--auto-subs", help="Include auto-generated subtitles (requires --download)")] = False,
     langs: Annotated[Optional[str], typer.Option("--langs", help="Subtitle languages to filter (e.g., 'en,es')")] = None,
     format: Annotated[Optional[str], typer.Option("--format", "-f", help="Subtitle format (e.g., 'srt', 'vtt', 'ass')")] = None,
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
@@ -55,6 +56,7 @@ def subtitles(
     args = info_subtitles.build_args(
         url,
         download=download,
+        auto_subs=auto_subs,
         langs=langs,
         format=format,
         cookies=cookies,
