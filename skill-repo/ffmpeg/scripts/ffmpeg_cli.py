@@ -142,7 +142,7 @@ def convert_format(
             "-i", input,
             "-c:v", codec, "-crf", str(crf), "-preset", preset,
             "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "128k",
+            "-c:a", "aac", "-b:a", "192k",
             "-movflags", "+faststart",
             output,
         ]
@@ -165,7 +165,7 @@ def convert_compress(
         if duration <= 0:
             typer.echo("ERROR: Could not determine duration", err=True)
             raise typer.Exit(code=1)
-        video_bitrate = int((target_size * 8192 / duration) - 128)
+        video_bitrate = int((target_size * 8192 / duration) - 192)
         if video_bitrate <= 0:
             typer.echo("ERROR: Target size too small for this duration", err=True)
             raise typer.Exit(code=1)
@@ -182,7 +182,7 @@ def convert_compress(
         args2 = [
             "-y", "-i", input,
             "-c:v", "libx264", "-b:v", f"{video_bitrate}k", "-preset", preset,
-            "-pass", "2", "-c:a", "aac", "-b:a", "128k",
+            "-pass", "2", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
             "-movflags", "+faststart",
             output,
         ]
@@ -193,7 +193,7 @@ def convert_compress(
             "-i", input,
             "-c:v", "libx264", "-crf", str(crf), "-preset", preset,
             "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "128k",
+            "-c:a", "aac", "-b:a", "192k",
             "-movflags", "+faststart",
             output,
         ]
@@ -347,7 +347,7 @@ def convert_hwaccel(
     args = ["-i", input, "-c:v", enc[codec_key], enc["quality_flag"], str(q)]
     if encoder.lower() == "vaapi":
         args = ["-vaapi_device", "/dev/dri/renderD128", "-vf", "format=nv12,hwupload"] + args
-    args += ["-c:a", "aac", "-b:a", "128k", output]
+    args += ["-c:a", "aac", "-b:a", "192k", output]
     typer.echo(f"Running: ffmpeg {' '.join(args)}", err=True)
     run_ffmpeg(args)
     report_success(output)
@@ -368,6 +368,9 @@ def extract_clip(
     copy: bool = typer.Option(False, help="Stream copy (no re-encoding)"),
 ) -> None:
     """Extract a clip from a video."""
+    if end and duration:
+        typer.echo("ERROR: --end and --duration are mutually exclusive; provide only one", err=True)
+        raise typer.Exit(code=1)
     args = ["-ss", start, "-i", input]
     if end:
         args += ["-to", end]
@@ -378,7 +381,7 @@ def extract_clip(
     else:
         args += [
             "-c:v", "libx264", "-crf", "18", "-preset", "medium",
-            "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k",
+            "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "192k",
         ]
     args.append(output)
     typer.echo(f"Running: ffmpeg {' '.join(args)}", err=True)
@@ -500,14 +503,15 @@ def transform_resize(
     h = str(height) if height else "-2"
     if letterbox and width and height:
         vf = (
-            f"scale={width}:{height}:force_original_aspect_ratio=decrease,"
+            f"scale={width}:{height}:force_original_aspect_ratio=decrease:flags=lanczos,"
             f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2"
         )
     else:
-        vf = f"scale={w}:{h}"
+        vf = f"scale={w}:{h}:flags=lanczos"
     args = [
         "-i", input, "-vf", vf,
         "-c:v", "libx264", "-crf", "18", "-preset", "medium",
+        "-pix_fmt", "yuv420p",
         "-c:a", "copy", output,
     ]
     typer.echo(f"Running: ffmpeg {' '.join(args)}", err=True)
@@ -638,7 +642,7 @@ def transform_subtitles(
         vf = f"subtitles='{srt_escaped}':force_style='{style}'"
     else:
         vf = f"subtitles='{srt_escaped}'"
-    args = ["-i", input, "-vf", vf, "-c:a", "copy", output]
+    args = ["-i", input, "-vf", vf, "-c:v", "libx264", "-crf", "23", "-pix_fmt", "yuv420p", "-c:a", "copy", output]
     typer.echo(f"Running: ffmpeg {' '.join(args)}", err=True)
     run_ffmpeg(args)
     report_success(output)
@@ -755,11 +759,12 @@ def audio_normalize(
     mtp = measured["input_tp"]
     mlra = measured["input_lra"]
     mt = measured["input_thresh"]
+    target_offset = measured.get("target_offset", "0")
     # Pass 2: apply
     af2 = (
         f"loudnorm=I={target}:TP={tp}:LRA=11:"
         f"measured_I={mi}:measured_TP={mtp}:measured_LRA={mlra}:"
-        f"measured_thresh={mt}:linear=true"
+        f"measured_thresh={mt}:offset={target_offset}:linear=true"
     )
     args2 = ["-i", input, "-af", af2, "-ar", "48000", output]
     typer.echo(f"Running: ffmpeg {' '.join(args2)}", err=True)
@@ -858,7 +863,13 @@ def combine_concat(
             inputs += ["-i", f]
             filter_inputs += f"[{i}:v:0][{i}:a:0]"
         fc = f"{filter_inputs}concat=n={len(files)}:v=1:a=1[outv][outa]"
-        args = inputs + ["-filter_complex", fc, "-map", "[outv]", "-map", "[outa]", output]
+        args = inputs + [
+            "-filter_complex", fc,
+            "-map", "[outv]", "-map", "[outa]",
+            "-c:v", "libx264", "-crf", "18", "-pix_fmt", "yuv420p",
+            "-c:a", "aac", "-b:a", "192k",
+            output,
+        ]
     else:
         # Demuxer mode: write temp filelist
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False) as tmp:
@@ -1013,7 +1024,7 @@ def stream_hls(
             "-map", f"[v{i}out]", "-map", "0:a",
             f"-c:v:{i}", "libx264", f"-b:v:{i}", preset["bitrate"],
             f"-maxrate:{i}", preset["maxrate"], f"-bufsize:{i}", preset["bufsize"],
-            f"-c:a:{i}", "aac", f"-b:a:{i}", "128k",
+            f"-c:a:{i}", "aac", f"-b:a:{i}", "192k",
         ]
     var_stream_map = " ".join(f"v:{i},a:{i},name:{q}" for i, q in enumerate(qs))
     master_pl = str(Path(output_dir) / "master.m3u8")
@@ -1057,7 +1068,7 @@ def stream_dash(
             f"-c:v:{i}", "libx264", f"-b:v:{i}", preset["bitrate"],
             f"-maxrate:{i}", preset["maxrate"], f"-bufsize:{i}", preset["bufsize"],
         ]
-    args += ["-map", "0:a", "-c:a", "aac", "-b:a", "128k"]
+    args += ["-map", "0:a", "-c:a", "aac", "-b:a", "192k"]
     adaptation_sets = "id=0,streams=v id=1,streams=a"
     manifest = str(Path(output_dir) / "manifest.mpd")
     args += [
@@ -1096,7 +1107,7 @@ def stream_ladder(
         args += [
             "-map", f"[v{i}out]", "-map", "0:a",
             f"-c:v:{i}", "libx264", f"-b:v:{i}", preset["bitrate"],
-            "-c:a", "aac", "-b:a", "128k",
+            "-c:a", "aac", "-b:a", "192k",
             "-movflags", "+faststart",
         ]
     # For separate files, we need to run per quality
@@ -1110,7 +1121,7 @@ def stream_ladder(
             "-vf", f"scale={preset['scale']}",
             "-c:v", "libx264", "-b:v", preset["bitrate"],
             "-maxrate", preset["maxrate"], "-bufsize", preset["bufsize"],
-            "-c:a", "aac", "-b:a", "128k",
+            "-c:a", "aac", "-b:a", "192k",
             "-movflags", "+faststart",
             out_path,
         ]
@@ -1129,7 +1140,7 @@ def stream_restream(
     args = [
         "-re", "-i", input,
         "-c:v", "libx264", "-preset", "veryfast",
-        "-c:a", "aac", "-b:a", "128k",
+        "-c:a", "aac", "-b:a", "192k",
         "-f", "tee", "-map", "0:v", "-map", "0:a",
         tee_parts,
     ]
@@ -1154,7 +1165,7 @@ def stream_fake_live(
         args += ["-i", input]
     args += [
         "-c:v", "libx264", "-preset", "veryfast",
-        "-c:a", "aac", "-b:a", "128k",
+        "-c:a", "aac", "-b:a", "192k",
         "-f", "flv", url,
     ]
     typer.echo(f"Running: ffmpeg {' '.join(args)}", err=True)
@@ -1191,7 +1202,7 @@ def util_batch(
             "-i", str(f),
             "-c:v", "libx264", "-crf", str(crf), "-preset", preset,
             "-pix_fmt", "yuv420p",
-            "-c:a", "aac", "-b:a", "128k",
+            "-c:a", "aac", "-b:a", "192k",
             "-movflags", "+faststart",
             str(output_file),
         ]

@@ -30,7 +30,7 @@ Common positions:
 **Bottom-right watermark with 10px margin:**
 ```bash
 ffmpeg -i input.mp4 -i logo.png \
-  -filter_complex "[1:v][0:v]overlay=W-w-10:H-h-10" \
+  -filter_complex "[0:v][1:v]overlay=W-w-10:H-h-10" \
   -c:v libx264 -crf 18 -pix_fmt yuv420p \
   -c:a copy \
   output_watermarked.mp4

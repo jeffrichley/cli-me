@@ -84,7 +84,6 @@ ffmpeg -i input.wav \
 **arnndn for video with audio track (preserve video stream):**
 ```bash
 ffmpeg -i input.mp4 \
-  -vf copy \
   -af "arnndn=model=/path/to/std.rnnn:mix=0.8" \
   -c:v copy \
   output_denoised.mp4

@@ -9,6 +9,7 @@ Marker: integration
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -464,12 +465,12 @@ def test_transform_crop_vertical(test_video, tmp_path, ffprobe_path):
 
 
 @pytest.mark.integration
-def test_transform_fade(test_video, tmp_path, ffprobe_path):
-    """transform fade -- apply fade-in/out, verify output exists and duration matches."""
+def test_transform_fade(test_video, tmp_path, ffprobe_path, ffmpeg_path):
+    """transform fade -- apply fade-in/out, verify fade was actually applied."""
     output = tmp_path / "faded.mp4"
     result = runner.invoke(app, [
         "transform", "fade", str(test_video), str(output),
-        "--fade-in", "0.5", "--fade-out", "0.5",
+        "--fade-in", "1", "--fade-out", "1",
     ])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
@@ -477,21 +478,56 @@ def test_transform_fade(test_video, tmp_path, ffprobe_path):
     # Duration should match input (~3 seconds) -- fade doesn't change duration
     assert_duration_approx(ffprobe_path, output, expected_seconds=3.0, tolerance=0.5)
 
+    # Verify fade was actually applied: extract first frame and check it's mostly black.
+    # A 1-second fade-in from black means frame 0 should be very dark.
+    # A mostly-black JPEG compresses to a very small file size.
+    first_frame = tmp_path / "first_frame.jpg"
+    subprocess.run(
+        [ffmpeg_path, "-y", "-i", str(output), "-frames:v", "1", "-q:v", "2", str(first_frame)],
+        capture_output=True,
+        check=True,
+    )
+    frame_size = first_frame.stat().st_size
+    assert frame_size < 5000, (
+        f"First frame JPEG is {frame_size} bytes -- expected < 5000 bytes for a "
+        f"mostly-black fade-in frame. Fade may not have been applied."
+    )
+
 
 @pytest.mark.integration
-def test_transform_watermark(test_video, test_logo, tmp_path, ffprobe_path):
-    """transform watermark -- overlay logo on video, verify output has video."""
-    output = tmp_path / "watermarked.mp4"
+def test_transform_watermark(test_video, test_logo, tmp_path, ffprobe_path, ffmpeg_path):
+    """transform watermark -- overlay logo on video, verify watermark was actually applied."""
+    output_wm = tmp_path / "watermarked.mp4"
+    output_plain = tmp_path / "plain.mp4"
+
+    # Encode without watermark as a baseline
+    subprocess.run(
+        [ffmpeg_path, "-y", "-i", str(test_video), "-c:v", "libx264", "-crf", "23", str(output_plain)],
+        capture_output=True,
+        check=True,
+    )
+
+    # Encode with watermark
     result = runner.invoke(app, [
-        "transform", "watermark", str(test_video), str(output),
+        "transform", "watermark", str(test_video), str(output_wm),
         "--logo", str(test_logo),
     ])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
-    assert_file_exists_and_nonzero(output)
+    assert_file_exists_and_nonzero(output_wm)
 
-    data = probe_format(ffprobe_path, output)
+    data = probe_format(ffprobe_path, output_wm)
     video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
     assert len(video_streams) > 0, "No video stream in watermarked output"
+
+    # Verify watermark actually changed pixel content: the watermarked file must
+    # have a different size from the plain re-encode at the same base settings.
+    # A straight copy or identity filter would produce identical (or near-identical) output.
+    wm_size = output_wm.stat().st_size
+    plain_size = output_plain.stat().st_size
+    assert wm_size != plain_size, (
+        f"Watermarked file ({wm_size} bytes) is the same size as plain encode ({plain_size} bytes). "
+        f"Watermark overlay may not have been applied."
+    )
 
 
 @pytest.mark.integration
@@ -499,7 +535,6 @@ def test_combine_mux(test_video, test_audio, tmp_path, ffprobe_path):
     """combine mux -- mux video-only + audio, verify both streams present."""
     # First extract video-only from test_video
     video_only = tmp_path / "video_only.mp4"
-    import subprocess
     import shutil
     ffmpeg_exe = shutil.which("ffmpeg")
     subprocess.run([

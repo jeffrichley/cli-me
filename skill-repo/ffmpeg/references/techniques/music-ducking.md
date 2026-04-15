@@ -78,11 +78,10 @@ Step by step:
 ```bash
 ffmpeg -i voice.wav -i music.wav \
   -filter_complex "\
-[0:a]asplit=2[voice_out][voice_sc];\
-[1:a][voice_sc]sidechaincompress=threshold=0.015:ratio=20:attack=50:release=1000:knee=2[music_ducked];\
-[1:a]volume=0.08[music_floor];\
-[music_ducked][music_floor]amix=inputs=2:normalize=0[music_final];\
-[voice_out][music_final]amix=inputs=2:normalize=0[out]" \
+[1:a]volume=0.4[music_pre];\
+[0:a]asplit=2[voice_out][sidechain];\
+[music_pre][sidechain]sidechaincompress=threshold=0.015:ratio=20:attack=50:release=1000:knee=2[ducked_music];\
+[voice_out][ducked_music]amix=inputs=2:normalize=0[out]" \
   -map "[out]" output_aggressive.wav
 ```
 

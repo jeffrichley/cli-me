@@ -31,7 +31,7 @@ The **TS intermediate method** (encode each clip to MPEG-TS, then `cat` together
 Add a silent audio stream with `anullsrc` for the clip that has no audio before concatenating:
 
 ```
-[1:v]anullsrc=channel_layout=stereo:sample_rate=44100[silence];
+anullsrc=channel_layout=stereo:sample_rate=44100[silence];
 [0:v][0:a][1:v][silence]concat=n=2:v=1:a=1[v][a]
 ```
 
@@ -78,7 +78,7 @@ Or using `anullsrc` with `-shortest` (better for clips where duration is already
 ```bash
 ffmpeg -i clip1.mp4 -i clip2_no_audio.mp4 \
   -filter_complex \
-    "[1:v]anullsrc=channel_layout=stereo:sample_rate=44100[silence];
+    "anullsrc=channel_layout=stereo:sample_rate=44100[silence];
      [0:v][0:a][1:v][silence]concat=n=2:v=1:a=1[v][a]" \
   -map "[v]" -map "[a]" \
   -c:v libx264 -crf 18 -c:a aac -b:a 192k \
