@@ -76,7 +76,18 @@ Search for:
 Write findings as technique pages in `references/techniques/`. Every page must
 include source URLs.
 
-### 1d. Initialize the wiki
+### 1d. REVIEW: Wiki Technique Pages (Adversarial)
+
+Dispatch a **fresh reviewer agent** (NOT the research agent) using the
+"Reviewer 1: Wiki Technique Page Reviewer" prompt from
+`references/adversarial-reviewers.md`.
+
+The reviewer checks: command accuracy, URL verification (fetch every URL),
+completeness, accuracy of claims, and creative edge case hunting.
+
+Fix all findings before proceeding. Re-review if significant changes made.
+
+### 1e. Initialize the wiki
 
 Create the wiki operational files:
 
@@ -100,9 +111,13 @@ skill-repo/<name>/
 │       ├── __init__.py       # Exports `app`
 │       ├── __main__.py       # `python -m <name>_cli` support
 │       ├── backend.py        # find_executable, detect_version, run helpers
-│       ├── convert.py        # Convert command group (example)
-│       ├── extract.py        # Extract command group (example)
-│       └── ...               # One file per command group
+│       ├── convert.py        # Thin CLI wrapper — parses args, delegates
+│       ├── extract.py        # Thin CLI wrapper
+│       └── commands/         # Logic layer — independently testable
+│           ├── __init__.py
+│           ├── convert_format.py   # One function per command
+│           ├── extract_clip.py
+│           └── ...
 └── references/
     ├── index.md
     ├── log.md
@@ -151,6 +166,16 @@ appending to the JSON directly:
   "dependencies": []
 }
 ```
+
+### REVIEW: Scaffold (Adversarial)
+
+Dispatch a **fresh reviewer agent** using the "Reviewer 2: Scaffold Reviewer"
+prompt from `references/adversarial-reviewers.md`.
+
+The reviewer checks: frontmatter validity, body clarity, reproducibility,
+registry consistency, directory structure, and trigger conflict hunting.
+
+Fix all findings before proceeding.
 
 ## Phase 3: QA-First Implementation
 
@@ -218,15 +243,35 @@ def run_command(args: list[str], check: bool = True) -> subprocess.CompletedProc
    - If it fails, fix the command and re-run
    - If the software is not installed, the test skips gracefully
 
-7. **Commit the command + both tests together**
+7. **REVIEW: Code-Wiki Alignment (Adversarial)**
+   Dispatch a **fresh reviewer agent** using "Reviewer 3: Code-Wiki Alignment
+   Reviewer" from `references/adversarial-reviewers.md`. The reviewer
+   cross-references wiki commands against the code, checks thin wrapper
+   compliance, error handling, and hunts for silent failures.
+   Fix all findings before committing.
 
-8. **Repeat for the next command group**
+8. **REVIEW: Test Quality (Adversarial)**
+   Dispatch a **fresh reviewer agent** using "Reviewer 4: Test Quality
+   Reviewer" from `references/adversarial-reviewers.md`. The reviewer
+   performs mutation analysis on the tests, checks assertion depth, finds
+   coverage gaps, and identifies bugs that would pass all tests.
+   Fix all findings before committing.
 
-### 3d. Verify wiki commands
+9. **Commit the command + both tests together**
 
-After all commands are implemented, run the CLI commands documented in the wiki
-technique pages. If any wiki command doesn't work or produces wrong output,
-fix the wiki page. The wiki must contain verified, working commands.
+10. **Repeat for the next command group**
+
+### 3d. REVIEW: Wiki Execution Verification (Adversarial)
+
+Dispatch a **fresh reviewer agent** using "Reviewer 5: Wiki Execution Reviewer"
+from `references/adversarial-reviewers.md`.
+
+This reviewer RUNS every command documented in every technique page against
+the real software, verifies outputs, fetches every source URL, and tests
+adversarial inputs (spaces in filenames, edge durations, unusual resolutions).
+
+Fix all findings. Update wiki pages with corrected commands. Re-run failing
+commands until they pass.
 
 ### 3e. Write Tier 3 manual tests
 
