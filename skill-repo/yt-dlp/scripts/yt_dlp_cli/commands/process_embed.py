@@ -14,6 +14,7 @@ def build_args(
     format: str | None = None,
     sub_langs: str | None = None,
     cookies: str | None = None,
+    no_overwrites: bool = False,
 ) -> list[str]:
     """Build yt-dlp argument list for embedding metadata into downloads.
 
@@ -29,6 +30,7 @@ def build_args(
         format: Format selector.
         sub_langs: Subtitle languages to download (e.g., 'en,es', 'all').
         cookies: Path to cookies file.
+        no_overwrites: Do not overwrite existing files.
 
     Returns the argument list (without the yt-dlp executable).
     """
@@ -36,7 +38,7 @@ def build_args(
         import typer
         typer.echo("WARNING: No embed flags specified. Downloading without embedding anything.", err=True)
 
-    args: list[str] = ["--force-overwrites"]
+    args: list[str] = ["--no-overwrites"] if no_overwrites else ["--force-overwrites"]
 
     # Embed flags
     if subs:

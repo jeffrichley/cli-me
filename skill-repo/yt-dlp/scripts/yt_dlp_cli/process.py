@@ -22,6 +22,7 @@ def sponsorblock(
     format: Annotated[Optional[str], typer.Option("--format", "-f", help="Format selector")] = None,
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
     force_keyframes: Annotated[bool, typer.Option(help="Force keyframes at cuts for precise removal")] = False,
+    no_overwrites: Annotated[bool, typer.Option(help="Do not overwrite existing files")] = False,
 ) -> None:
     """Remove or mark SponsorBlock segments in a video."""
     args = process_sponsorblock.build_args(
@@ -33,6 +34,7 @@ def sponsorblock(
         format=format,
         cookies=cookies,
         force_keyframes=force_keyframes,
+        no_overwrites=no_overwrites,
     )
     run_command(args)
 
@@ -46,6 +48,8 @@ def chapters(
     output_dir: Annotated[Optional[str], typer.Option("--output-dir", "-P", help="Output directory")] = None,
     format: Annotated[Optional[str], typer.Option("--format", "-f", help="Format selector")] = None,
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
+    no_overwrites: Annotated[bool, typer.Option(help="Do not overwrite existing files")] = False,
+    force_keyframes: Annotated[bool, typer.Option(help="Force keyframes at cuts for precise chapter splitting")] = False,
 ) -> None:
     """Split or remove chapters from a video."""
     args = process_chapters.build_args(
@@ -56,6 +60,8 @@ def chapters(
         output_dir=output_dir,
         format=format,
         cookies=cookies,
+        no_overwrites=no_overwrites,
+        force_keyframes=force_keyframes,
     )
     run_command(args)
 
@@ -64,17 +70,21 @@ def chapters(
 def remux(
     url: Annotated[str, typer.Argument(help="URL to process")],
     container: Annotated[str, typer.Option(help="Target container format (e.g., mp4, mkv, webm)")] = "mp4",
+    format: Annotated[Optional[str], typer.Option("--format", "-f", help="Format selector")] = None,
     output: Annotated[Optional[str], typer.Option("--output", "-o", help="Output filename template")] = None,
     output_dir: Annotated[Optional[str], typer.Option("--output-dir", "-P", help="Output directory")] = None,
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
+    no_overwrites: Annotated[bool, typer.Option(help="Do not overwrite existing files")] = False,
 ) -> None:
     """Remux video into a different container format."""
     args = process_remux.build_args(
         url,
         container=container,
+        format=format,
         output=output,
         output_dir=output_dir,
         cookies=cookies,
+        no_overwrites=no_overwrites,
     )
     run_command(args)
 
@@ -92,6 +102,7 @@ def embed(
     format: Annotated[Optional[str], typer.Option("--format", "-f", help="Format selector")] = None,
     sub_langs: Annotated[Optional[str], typer.Option(help="Subtitle languages to download (e.g., 'en,es', 'all')")] = None,
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
+    no_overwrites: Annotated[bool, typer.Option(help="Do not overwrite existing files")] = False,
 ) -> None:
     """Embed metadata, subtitles, thumbnails, or chapters into a download."""
     args = process_embed.build_args(
@@ -106,5 +117,6 @@ def embed(
         format=format,
         sub_langs=sub_langs,
         cookies=cookies,
+        no_overwrites=no_overwrites,
     )
     run_command(args)

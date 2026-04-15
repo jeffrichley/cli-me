@@ -16,12 +16,13 @@ app.add_typer(info_app, name="info")
 def formats(
     url: Annotated[str, typer.Argument(help="URL to inspect")],
     json: Annotated[bool, typer.Option("--json", "-j", help="Output format details as JSON")] = False,
+    cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
 ) -> None:
     """List available formats for a URL."""
     if json:
-        args = info_formats.build_json_args(url)
+        args = info_formats.build_json_args(url, cookies=cookies)
     else:
-        args = info_formats.build_args(url)
+        args = info_formats.build_args(url, cookies=cookies)
     run_command(args)
 
 

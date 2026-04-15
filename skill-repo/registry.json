@@ -18,7 +18,7 @@
       "version": "0.1.0",
       "software_url": "https://github.com/yt-dlp/yt-dlp",
       "source_repo": "https://github.com/yt-dlp/yt-dlp.git",
-      "dependencies": []
+      "dependencies": ["ffmpeg"]
     }
   ]
 }

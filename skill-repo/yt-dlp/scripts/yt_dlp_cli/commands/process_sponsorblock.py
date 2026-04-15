@@ -11,6 +11,7 @@ def build_args(
     format: str | None = None,
     cookies: str | None = None,
     force_keyframes: bool = False,
+    no_overwrites: bool = False,
 ) -> list[str]:
     """Build yt-dlp argument list for SponsorBlock processing.
 
@@ -25,6 +26,7 @@ def build_args(
         format: Format selector.
         cookies: Path to cookies file.
         force_keyframes: Force keyframes at cuts for precise removal.
+        no_overwrites: Do not overwrite existing files.
 
     Returns the argument list (without the yt-dlp executable).
     """
@@ -32,7 +34,7 @@ def build_args(
         import typer
         typer.echo("WARNING: No --remove or --mark specified. Downloading without SponsorBlock processing.", err=True)
 
-    args: list[str] = ["--force-overwrites"]
+    args: list[str] = ["--no-overwrites"] if no_overwrites else ["--force-overwrites"]
 
     # SponsorBlock actions
     if remove:

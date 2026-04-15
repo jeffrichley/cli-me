@@ -10,6 +10,8 @@ def build_args(
     output_dir: str | None = None,
     format: str | None = None,
     cookies: str | None = None,
+    no_overwrites: bool = False,
+    force_keyframes: bool = False,
 ) -> list[str]:
     """Build yt-dlp argument list for chapter processing.
 
@@ -21,6 +23,8 @@ def build_args(
         output_dir: Output directory.
         format: Format selector.
         cookies: Path to cookies file.
+        no_overwrites: Do not overwrite existing files.
+        force_keyframes: Force keyframes at cuts for precise chapter splitting.
 
     Returns the argument list (without the yt-dlp executable).
     """
@@ -28,7 +32,11 @@ def build_args(
         import typer
         typer.echo("WARNING: No --split or --remove specified. Downloading without chapter processing.", err=True)
 
-    args: list[str] = ["--force-overwrites"]
+    args: list[str] = ["--no-overwrites"] if no_overwrites else ["--force-overwrites"]
+
+    # Force keyframes at cuts
+    if force_keyframes:
+        args.append("--force-keyframes-at-cuts")
 
     # Chapter operations
     if split:

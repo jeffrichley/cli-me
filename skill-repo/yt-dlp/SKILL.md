@@ -1,7 +1,7 @@
 ---
 name: yt-dlp
 description: Video/audio download CLI for yt-dlp. Use when asked to download video,
-  download audio, extract audio from video, download playlist, download channel,
+  download audio, extract audio from URL, download playlist, download channel,
   get subtitles, get thumbnails, download from YouTube, download from TikTok,
   download from Twitter, download from Instagram, download Instagram reel,
   download from Vimeo, download Twitch clip, rip audio, save video, archive channel, batch download,
