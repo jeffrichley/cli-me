@@ -1,0 +1,72 @@
+"""Skill registry: load, search, and manage skill-repo/registry.json."""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+
+class Registry:
+    """In-memory representation of the skill registry."""
+
+    def __init__(self, path: Path | str) -> None:
+        self.path = Path(path)
+        with open(self.path) as f:
+            data = json.load(f)
+        self.skills: list[dict] = data.get("skills", [])
+
+    def get(self, name: str) -> dict | None:
+        """Get a skill by exact name."""
+        for skill in self.skills:
+            if skill["name"] == name:
+                return skill
+        return None
+
+    def list_all(self) -> list[dict]:
+        """List all skills, sorted alphabetically by name."""
+        return sorted(self.skills, key=lambda s: s["name"])
+
+    def list_by_category(self, category: str) -> list[dict]:
+        """List skills matching a category."""
+        return sorted(
+            [s for s in self.skills if s.get("category") == category],
+            key=lambda s: s["name"],
+        )
+
+    def search(self, query: str) -> list[dict]:
+        """Search skills by matching query against name, description, and tags."""
+        query_lower = query.lower()
+        terms = query_lower.split()
+        results = []
+        for skill in self.skills:
+            searchable = " ".join([
+                skill.get("name", ""),
+                skill.get("description", ""),
+                skill.get("category", ""),
+                " ".join(skill.get("tags", [])),
+            ]).lower()
+            if all(term in searchable for term in terms):
+                results.append(skill)
+        return sorted(results, key=lambda s: s["name"])
+
+    def add(self, skill: dict) -> None:
+        """Add a skill to the registry. Raises ValueError if name exists."""
+        name = skill.get("name", "")
+        if self.get(name) is not None:
+            raise ValueError(f"Skill '{name}' already exists in registry")
+        self.skills.append(skill)
+
+    def remove(self, name: str) -> None:
+        """Remove a skill by name. Raises ValueError if not found."""
+        for i, skill in enumerate(self.skills):
+            if skill["name"] == name:
+                self.skills.pop(i)
+                return
+        raise ValueError(f"Skill '{name}' not found in registry")
+
+    def save(self) -> None:
+        """Write registry back to disk."""
+        data = {"skills": sorted(self.skills, key=lambda s: s["name"])}
+        with open(self.path, "w") as f:
+            json.dump(data, f, indent=2)
+            f.write("\n")
