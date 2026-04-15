@@ -8,6 +8,7 @@ Marker: integration
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -52,7 +53,26 @@ def test_convert_format_reencode(test_video, tmp_path, ffprobe_path):
     result = runner.invoke(app, ["convert", "format", str(test_video), str(output)])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
-    assert_video_properties(ffprobe_path, output, codec="h264")
+
+    data = probe_format(ffprobe_path, output)
+    video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
+    audio_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "audio"]
+
+    # Verify H.264 video
+    assert len(video_streams) > 0, "No video stream in output"
+    assert video_streams[0]["codec_name"] == "h264", f"Expected h264, got {video_streams[0]['codec_name']}"
+
+    # Verify AAC audio
+    assert len(audio_streams) > 0, "No audio stream in output"
+    assert audio_streams[0]["codec_name"] == "aac", f"Expected aac audio, got {audio_streams[0]['codec_name']}"
+
+    # Verify yuv420p pixel format
+    assert video_streams[0].get("pix_fmt") == "yuv420p", (
+        f"Expected yuv420p pixel format, got {video_streams[0].get('pix_fmt')}"
+    )
+
+    # Verify duration matches input (~3 seconds)
+    assert_duration_approx(ffprobe_path, output, expected_seconds=3.0, tolerance=0.5)
 
 
 @pytest.mark.integration
@@ -62,8 +82,25 @@ def test_convert_format_copy(test_video, tmp_path, ffprobe_path):
     result = runner.invoke(app, ["convert", "format", str(test_video), str(output), "--copy"])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
-    # Should keep the original codec (h264 from test_video fixture)
-    assert_video_properties(ffprobe_path, output, codec="h264")
+
+    # Probe source and output
+    src_data = probe_format(ffprobe_path, test_video)
+    out_data = probe_format(ffprobe_path, output)
+
+    src_video = [s for s in src_data.get("streams", []) if s.get("codec_type") == "video"]
+    out_video = [s for s in out_data.get("streams", []) if s.get("codec_type") == "video"]
+    src_audio = [s for s in src_data.get("streams", []) if s.get("codec_type") == "audio"]
+    out_audio = [s for s in out_data.get("streams", []) if s.get("codec_type") == "audio"]
+
+    # Stream copy should preserve codecs exactly
+    assert len(out_video) > 0, "No video stream in output"
+    assert out_video[0]["codec_name"] == src_video[0]["codec_name"], (
+        f"Video codec mismatch: source={src_video[0]['codec_name']}, output={out_video[0]['codec_name']}"
+    )
+    assert len(out_audio) > 0, "No audio stream in output"
+    assert out_audio[0]["codec_name"] == src_audio[0]["codec_name"], (
+        f"Audio codec mismatch: source={src_audio[0]['codec_name']}, output={out_audio[0]['codec_name']}"
+    )
 
 
 @pytest.mark.integration
@@ -77,9 +114,19 @@ def test_convert_compress_crf(test_video, tmp_path, ffprobe_path):
     ])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
+
+    # Verify output is smaller than input
     assert output.stat().st_size < test_video.stat().st_size, (
         f"Compressed ({output.stat().st_size}) should be smaller than source ({test_video.stat().st_size})"
     )
+
+    # Verify still H.264 with audio
+    data = probe_format(ffprobe_path, output)
+    video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
+    audio_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "audio"]
+    assert len(video_streams) > 0, "No video stream in compressed output"
+    assert video_streams[0]["codec_name"] == "h264", f"Expected h264, got {video_streams[0]['codec_name']}"
+    assert len(audio_streams) > 0, "No audio stream in compressed output"
 
 
 @pytest.mark.integration
@@ -91,6 +138,16 @@ def test_convert_audio(test_audio, tmp_path, ffprobe_path):
     assert_file_exists_and_nonzero(output)
     assert_audio_properties(ffprobe_path, output, codec="mp3")
 
+    # Verify MP3 magic bytes: starts with 0xFF 0xFB, 0xFF 0xF3, or "ID3" tag
+    with open(output, "rb") as f:
+        header = f.read(3)
+    is_mp3_sync = (len(header) >= 2 and header[0] == 0xFF and header[1] in (0xFB, 0xF3, 0xE2, 0xE3))
+    is_id3 = header == b"ID3"
+    assert is_mp3_sync or is_id3, f"Not a valid MP3 file. First 3 bytes: {header.hex()}"
+
+    # Verify duration approximately matches source (~3 seconds)
+    assert_duration_approx(ffprobe_path, output, expected_seconds=3.0, tolerance=0.5)
+
 
 @pytest.mark.integration
 def test_convert_to_gif(test_video, tmp_path):
@@ -99,10 +156,17 @@ def test_convert_to_gif(test_video, tmp_path):
     result = runner.invoke(app, ["convert", "to-gif", str(test_video), str(output)])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
+
     # GIF magic bytes: GIF87a or GIF89a
     with open(output, "rb") as f:
         magic = f.read(6)
     assert magic in (b"GIF87a", b"GIF89a"), f"Not a valid GIF. Magic bytes: {magic!r}"
+
+    # A 3-second GIF with multiple frames should be > 10KB
+    file_size = output.stat().st_size
+    assert file_size > 10 * 1024, (
+        f"GIF is suspiciously small ({file_size} bytes) for a 3-second source -- likely has few/no frames"
+    )
 
 
 # ===========================================================================
@@ -120,7 +184,14 @@ def test_extract_clip(test_video, tmp_path, ffprobe_path):
     ])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
-    assert_duration_approx(ffprobe_path, output, expected_seconds=1.0, tolerance=0.5)
+
+    # Verify duration is approximately 1 second (tight tolerance)
+    assert_duration_approx(ffprobe_path, output, expected_seconds=1.0, tolerance=0.2)
+
+    # Verify it is NOT the full 3 seconds
+    data = probe_format(ffprobe_path, output)
+    duration = float(data.get("format", {}).get("duration", 0))
+    assert duration < 2.0, f"Clip should be ~1s, got {duration}s -- may not have trimmed"
 
 
 @pytest.mark.integration
@@ -130,7 +201,20 @@ def test_extract_audio(test_video, tmp_path, ffprobe_path):
     result = runner.invoke(app, ["extract", "audio", str(test_video), str(output)])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
-    assert_audio_properties(ffprobe_path, output, codec="mp3")
+
+    data = probe_format(ffprobe_path, output)
+    video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
+    audio_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "audio"]
+
+    # Verify NO video stream in output
+    assert len(video_streams) == 0, f"Expected no video streams, found {len(video_streams)}"
+
+    # Verify audio stream exists
+    assert len(audio_streams) > 0, "No audio stream in extracted audio"
+    assert audio_streams[0]["codec_name"] == "mp3", f"Expected mp3, got {audio_streams[0]['codec_name']}"
+
+    # Verify duration matches source (~3 seconds)
+    assert_duration_approx(ffprobe_path, output, expected_seconds=3.0, tolerance=0.5)
 
 
 @pytest.mark.integration
@@ -144,6 +228,13 @@ def test_extract_frames_single(test_video, tmp_path):
     ])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(frame_path)
+
+    # Verify output is a valid JPEG (starts with 0xFF 0xD8) or PNG (starts with 0x89 0x50)
+    with open(frame_path, "rb") as f:
+        header = f.read(2)
+    is_jpeg = header == b"\xff\xd8"
+    is_png = header == b"\x89\x50"
+    assert is_jpeg or is_png, f"Not a valid JPEG or PNG. First 2 bytes: {header.hex()}"
 
 
 # ===========================================================================
@@ -161,7 +252,26 @@ def test_transform_resize(test_video, tmp_path, ffprobe_path):
     ])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
-    assert_video_properties(ffprobe_path, output, width=160)
+
+    data = probe_format(ffprobe_path, output)
+    video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
+    assert len(video_streams) > 0, "No video stream in resized output"
+
+    vs = video_streams[0]
+    actual_width = int(vs["width"])
+    actual_height = int(vs["height"])
+
+    # Verify EXACT width = 160
+    assert actual_width == 160, f"Expected width=160, got {actual_width}"
+
+    # Verify height is even (required for H.264)
+    assert actual_height % 2 == 0, f"Height {actual_height} is odd -- invalid for H.264"
+
+    # For 320x240 scaled to 160 wide, height should be 120
+    assert actual_height == 120, f"Expected height=120 (aspect ratio preserved), got {actual_height}"
+
+    # Verify pixel format is yuv420p
+    assert vs.get("pix_fmt") == "yuv420p", f"Expected yuv420p, got {vs.get('pix_fmt')}"
 
 
 @pytest.mark.integration
@@ -174,8 +284,18 @@ def test_transform_rotate_90(test_video, tmp_path, ffprobe_path):
     ])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
+
+    data = probe_format(ffprobe_path, output)
+    video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
+    assert len(video_streams) > 0, "No video stream in rotated output"
+
+    vs = video_streams[0]
+    actual_width = int(vs["width"])
+    actual_height = int(vs["height"])
+
     # Original is 320x240; after 90deg rotate should be 240x320
-    assert_video_properties(ffprobe_path, output, width=240, height=320)
+    assert actual_width == 240, f"Expected width=240 after rotation, got {actual_width}"
+    assert actual_height == 320, f"Expected height=320 after rotation, got {actual_height}"
 
 
 # ===========================================================================
@@ -184,12 +304,23 @@ def test_transform_rotate_90(test_video, tmp_path, ffprobe_path):
 
 
 @pytest.mark.integration
-def test_audio_normalize(test_audio, tmp_path):
+def test_audio_normalize(test_audio, tmp_path, ffprobe_path):
     """audio normalize -- EBU R128 two-pass normalization produces output."""
     output = tmp_path / "normalized.wav"
     result = runner.invoke(app, ["audio", "normalize", str(test_audio), str(output)])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
+
+    data = probe_format(ffprobe_path, output)
+    audio_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "audio"]
+
+    # Verify audio stream exists
+    assert len(audio_streams) > 0, "No audio stream in normalized output"
+
+    # Verify sample rate is 48000 (per the -ar 48000 flag in normalize command)
+    assert audio_streams[0].get("sample_rate") == "48000", (
+        f"Expected sample_rate=48000, got {audio_streams[0].get('sample_rate')}"
+    )
 
 
 # ===========================================================================
@@ -208,7 +339,9 @@ def test_combine_concat(test_video, tmp_path, ffprobe_path):
     ])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
-    assert_duration_approx(ffprobe_path, output, expected_seconds=6.0, tolerance=1.0)
+
+    # Verify duration is approximately DOUBLE the input (6s for two 3s clips)
+    assert_duration_approx(ffprobe_path, output, expected_seconds=6.0, tolerance=0.5)
 
 
 @pytest.mark.integration
@@ -222,10 +355,21 @@ def test_combine_from_images(test_image_sequence, tmp_path, ffprobe_path):
     ])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
     assert_file_exists_and_nonzero(output)
-    # 10 frames at 10fps = ~1 second
+
     data = probe_format(ffprobe_path, output)
     video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
     assert len(video_streams) > 0, "No video stream found in output"
+
+    # Verify H.264 codec
+    assert video_streams[0]["codec_name"] == "h264", (
+        f"Expected h264, got {video_streams[0]['codec_name']}"
+    )
+
+    # 10 frames at 10fps = ~1 second duration
+    duration = float(data.get("format", {}).get("duration", 0))
+    assert 0.5 <= duration <= 2.0, (
+        f"Expected ~1s duration for 10 frames at 10fps, got {duration}s"
+    )
 
 
 # ===========================================================================
@@ -235,10 +379,146 @@ def test_combine_from_images(test_image_sequence, tmp_path, ffprobe_path):
 
 @pytest.mark.integration
 def test_util_probe(test_video):
-    """util probe -- exit code 0, output contains video info."""
+    """util probe -- exit code 0, output contains video info as valid JSON."""
     result = runner.invoke(app, ["util", "probe", str(test_video), "--json"])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
-    # JSON output should contain stream info
-    assert '"codec_type"' in result.output or "codec_type" in result.output, (
-        f"Expected codec_type in probe output, got:\n{result.output[:500]}"
-    )
+
+    # Parse the output as JSON and verify expected keys
+    # The output may have non-JSON prefix lines, so find the JSON block
+    output_text = result.output
+    json_start = output_text.find("{")
+    assert json_start >= 0, f"No JSON object found in probe output:\n{output_text[:500]}"
+    json_text = output_text[json_start:]
+    data = json.loads(json_text)
+
+    # Verify expected structure
+    assert "streams" in data, "Probe JSON missing 'streams' key"
+    video_streams = [s for s in data["streams"] if s.get("codec_type") == "video"]
+    assert len(video_streams) > 0, "No video stream in probe output"
+
+    vs = video_streams[0]
+    assert "codec_name" in vs, "Video stream missing 'codec_name'"
+    assert "width" in vs, "Video stream missing 'width'"
+    assert "height" in vs, "Video stream missing 'height'"
+    assert int(vs["width"]) == 320, f"Expected width=320, got {vs['width']}"
+    assert int(vs["height"]) == 240, f"Expected height=240, got {vs['height']}"
+
+
+# ===========================================================================
+# NEW TESTS: additional coverage
+# ===========================================================================
+
+
+@pytest.mark.integration
+def test_convert_platform_youtube(test_video, tmp_path, ffprobe_path):
+    """convert platform --platform youtube -- verify H.264 High profile, AAC, yuv420p."""
+    output = tmp_path / "youtube.mp4"
+    result = runner.invoke(app, [
+        "convert", "platform", str(test_video), str(output),
+        "--platform", "youtube",
+    ])
+    assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
+    assert_file_exists_and_nonzero(output)
+
+    data = probe_format(ffprobe_path, output)
+    video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
+    audio_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "audio"]
+
+    assert len(video_streams) > 0, "No video stream in YouTube output"
+    vs = video_streams[0]
+
+    # Verify H.264
+    assert vs["codec_name"] == "h264", f"Expected h264, got {vs['codec_name']}"
+
+    # Verify High profile (YouTube preset uses -preset slow which typically produces High)
+    profile = vs.get("profile", "").lower()
+    assert "high" in profile, f"Expected High profile for YouTube, got '{vs.get('profile')}'"
+
+    # Verify yuv420p pixel format
+    assert vs.get("pix_fmt") == "yuv420p", f"Expected yuv420p, got {vs.get('pix_fmt')}"
+
+    # Verify AAC audio
+    assert len(audio_streams) > 0, "No audio stream in YouTube output"
+    assert audio_streams[0]["codec_name"] == "aac", f"Expected aac, got {audio_streams[0]['codec_name']}"
+
+
+@pytest.mark.integration
+def test_transform_crop_vertical(test_video, tmp_path, ffprobe_path):
+    """transform crop --aspect 9:16 -- verify output is portrait (height > width)."""
+    output = tmp_path / "vertical.mp4"
+    result = runner.invoke(app, [
+        "transform", "crop", str(test_video), str(output),
+        "--aspect", "9:16",
+    ])
+    assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
+    assert_file_exists_and_nonzero(output)
+
+    data = probe_format(ffprobe_path, output)
+    video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
+    assert len(video_streams) > 0, "No video stream in cropped output"
+
+    vs = video_streams[0]
+    w = int(vs["width"])
+    h = int(vs["height"])
+    assert h > w, f"Expected portrait (height > width) but got {w}x{h}"
+
+
+@pytest.mark.integration
+def test_transform_fade(test_video, tmp_path, ffprobe_path):
+    """transform fade -- apply fade-in/out, verify output exists and duration matches."""
+    output = tmp_path / "faded.mp4"
+    result = runner.invoke(app, [
+        "transform", "fade", str(test_video), str(output),
+        "--fade-in", "0.5", "--fade-out", "0.5",
+    ])
+    assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
+    assert_file_exists_and_nonzero(output)
+
+    # Duration should match input (~3 seconds) -- fade doesn't change duration
+    assert_duration_approx(ffprobe_path, output, expected_seconds=3.0, tolerance=0.5)
+
+
+@pytest.mark.integration
+def test_transform_watermark(test_video, test_logo, tmp_path, ffprobe_path):
+    """transform watermark -- overlay logo on video, verify output has video."""
+    output = tmp_path / "watermarked.mp4"
+    result = runner.invoke(app, [
+        "transform", "watermark", str(test_video), str(output),
+        "--logo", str(test_logo),
+    ])
+    assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
+    assert_file_exists_and_nonzero(output)
+
+    data = probe_format(ffprobe_path, output)
+    video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
+    assert len(video_streams) > 0, "No video stream in watermarked output"
+
+
+@pytest.mark.integration
+def test_combine_mux(test_video, test_audio, tmp_path, ffprobe_path):
+    """combine mux -- mux video-only + audio, verify both streams present."""
+    # First extract video-only from test_video
+    video_only = tmp_path / "video_only.mp4"
+    import subprocess
+    import shutil
+    ffmpeg_exe = shutil.which("ffmpeg")
+    subprocess.run([
+        ffmpeg_exe, "-y", "-i", str(test_video),
+        "-an", "-c:v", "copy", str(video_only),
+    ], check=True, capture_output=True)
+
+    output = tmp_path / "muxed.mp4"
+    result = runner.invoke(app, [
+        "combine", "mux", str(output),
+        "--video", str(video_only),
+        "--audio", str(test_audio),
+    ])
+    assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
+    assert_file_exists_and_nonzero(output)
+
+    data = probe_format(ffprobe_path, output)
+    video_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "video"]
+    audio_streams = [s for s in data.get("streams", []) if s.get("codec_type") == "audio"]
+
+    assert len(video_streams) > 0, "No video stream in muxed output"
+    assert len(audio_streams) > 0, "No audio stream in muxed output"
