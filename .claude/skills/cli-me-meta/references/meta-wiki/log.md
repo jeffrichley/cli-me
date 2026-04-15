@@ -4,7 +4,7 @@ Append-only. Newest entries at the bottom.
 
 ---
 
-**2026-04-15** — First skill built: ffmpeg. Lessons learned:
+**2026-04-15** — First skill built: ffmpeg. Initial lessons:
 
 1. **QA must come before implementation, not after.** We shipped 34 commands before
    testing any of them against real ffmpeg. Got lucky — all worked. Won't always be
@@ -37,3 +37,80 @@ Append-only. Newest entries at the bottom.
 7. **Human-in-the-loop catches process gaps.** User caught: use hatchling not setuptools,
    use Rich for output, avoid brittle string tests, QA gap, "runs vs works" distinction.
    Each intervention improved the process permanently via meta-skill updates.
+
+---
+
+**2026-04-15** — Adversarial review system built and battle-tested (3 full rounds).
+
+8. **Adversarial reviews find what build processes miss.** Round 1 found: a runtime crash
+   bug (Twitter filter syntax), 78% dead URLs, 51% untested commands, systemic code-wiki
+   divergence (128k vs 192k audio bitrate), and false-confidence tests. None of these were
+   caught during the build process.
+
+9. **Fresh context is non-negotiable.** Reviewer agents must have ZERO context from the
+   creator's session. The same agent that built the code will rationalize its own mistakes.
+   Different model is even better (creator: Sonnet, reviewer: Opus, or vice versa).
+
+10. **Objective vs judgment split is critical.** Objective failures (wrong flags, dead URLs,
+    crash bugs) get auto-fix loops with a 3-strike limit. Judgment calls (is this best
+    practice actually best?) accumulate for human decision at phase boundaries. Without
+    this split, the process either blocks forever or rubber-stamps everything.
+
+11. **The 3-strike auto-fix loop works.** Reviewer finds issue → fix agent fixes → reviewer
+    re-verifies. If the same issue persists after 3 cycles, escalate to human. This
+    prevented infinite loops while ensuring issues got resolved.
+
+12. **Code-wiki alignment is the highest-value review.** R3 (code-wiki alignment) found
+    the most impactful issues: systemic audio bitrate divergence, missing pix_fmt, missing
+    lanczos, missing profile/level flags. The pattern: agents write code that "works" but
+    uses weaker settings than what the wiki documents. Always cross-reference.
+
+13. **LLM reviewers spot-check. Deterministic tools check everything.** Three rounds of
+    5 LLM reviewers (15 reviews total) caught ~5 dead URLs per round. A single run of
+    `qa/check_urls.py` found all 37. For anything mechanically checkable (URLs, file
+    existence, format validation), use a script. Reserve LLM reviewers for semantic
+    issues (wrong commands, misleading explanations, edge cases).
+
+14. **URL rot is constant and brutal.** The ffmpeg wiki went from 0% dead URLs at
+    creation to 37 dead URLs within hours (the URLs were already dead when the research
+    agents found them — the agents cited URLs they found in search results without
+    verifying them). The deterministic URL checker must run at build time and periodically.
+
+15. **The `-y` flag lesson.** ffmpeg hangs on interactive overwrite confirmation if `-y`
+    is not passed. This was missed through the entire build process and two rounds of
+    adversarial review — only caught in Round 3 by R2 (scaffold reviewer). Agent
+    contexts don't have stdin, so any interactive prompt is a silent hang. Every CLI
+    skill that wraps a tool with interactive prompts needs to suppress them.
+
+16. **Conditional assertions are false-confidence traps.** The normalize test had its
+    loudness assertion inside `if json_start >= 0` — if JSON parsing failed, the test
+    silently passed with no loudness verification. Always assert that prerequisite
+    conditions are met, don't make the real assertion conditional on them.
+
+17. **"Runs" is not "works."** Running without errors proves syntax. Running with shallow
+    assertions proves existence. Running with deep assertions proves correctness. Running
+    with human review proves quality. Each level catches bugs the previous level misses.
+    All four levels are needed.
+
+---
+
+**2026-04-15** — Process and architecture refinements.
+
+18. **Thin wrappers + logic layer.** CLI commands should parse args and delegate to logic
+    functions in a `commands/` module. Logic functions are independently testable without
+    Typer. This separation makes Tier 1 tests cleaner (call the function directly instead
+    of mocking subprocess through CliRunner) and enables reuse.
+
+19. **Voice library doesn't belong in cli-me.** cli-me wraps existing tools. Custom data
+    management (voice profiles, embeddings, LoRA storage) is orchestration, not tool
+    wrapping. This belongs in a separate pipeline system.
+
+20. **Skills that need API keys/config need a framework-level solution.** pyannote needs
+    a HF token, ComfyUI needs a server URL, kohya_ss needs model paths. A central
+    `~/.cli-me/config.toml` with global defaults and per-skill overrides is the right
+    pattern. The `clime` CLI should have a `config` command.
+
+21. **Research agents cite URLs without verifying them.** When agents search the web and
+    write wiki pages, they include URLs from search results — but those URLs may already
+    be dead (the search engine cached them). Always run the deterministic URL checker
+    immediately after wiki pages are written, before any adversarial review.
