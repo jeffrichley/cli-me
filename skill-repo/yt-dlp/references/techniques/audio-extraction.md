@@ -148,7 +148,7 @@ flac/alac > wav/aiff > opus > vorbis > aac > mp4a > mp3 > ac4 > eac3 > ac3 > dts
 - **Converting to FLAC from a lossy source is pointless.** If YouTube serves opus at 128 kbps, converting to FLAC just makes a larger file with no quality improvement. FLAC only helps if the source is already lossless.
 - **`-f bestaudio` and `-x` are different.** `-f bestaudio` downloads the best audio stream as-is. `-x` extracts audio from whatever is downloaded and optionally converts it. You can combine them: `-f bestaudio -x --audio-format mp3`.
 - **YouTube's best audio is typically opus at 128-251 kbps.** You cannot extract higher quality than the source provides. Converting to 320 kbps mp3 will not improve quality.
-- **Thumbnail embedding in mp3 requires mutagen or AtomicParsley.** Install one of these Python packages for reliable thumbnail embedding.
+- **Thumbnail embedding in mp3 requires mutagen or AtomicParsley.** mutagen is a Python package (`pip install mutagen`); AtomicParsley is a separate C++ binary (`brew install atomicparsley` on macOS, or download from [GitHub](https://github.com/wez/atomicparsley)).
 - **m4a is generally the best choice for Apple ecosystems.** It's natively supported on iOS/macOS without transcoding.
 - **opus offers better quality per bitrate than mp3.** At 128 kbps, opus sounds noticeably better than mp3 at the same bitrate.
 

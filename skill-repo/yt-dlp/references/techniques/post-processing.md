@@ -188,7 +188,7 @@ yt-dlp --download-sections "*1:00-1:30" "URL"
 yt-dlp --download-sections "*1:00-" "URL"
 
 # Download first 2 minutes
-yt-dlp --download-sections "*-2:00" "URL"
+yt-dlp --download-sections "*0:00-2:00" "URL"
 
 # Force keyframes for clean cuts
 yt-dlp --download-sections "*1:00-1:30" --force-keyframes-at-cuts "URL"
@@ -197,18 +197,18 @@ yt-dlp --download-sections "*1:00-1:30" --force-keyframes-at-cuts "URL"
 ## Exec: Run Commands After Download
 
 ```bash
-# Run a command after each download
-yt-dlp --exec "echo Downloaded: {}" "URL"
+# Run a command after each download (filepath is auto-appended)
+yt-dlp --exec "echo Downloaded:" "URL"
 
-# Move file to a specific location
-yt-dlp --exec "mv {} /final/location/" "URL"
+# Move file to a specific location using output template
+yt-dlp --exec "mv %(filepath,_filename|)q /final/location/" "URL"
 ```
 
 > **Note:** `--exec` commands are OS-specific. Use `mv` on Unix, `move` on Windows.
 
 ```bash
 # Run after specific post-processing stage
-yt-dlp --exec after_move:"echo Final file: {}" "URL"
+yt-dlp --exec after_move:"echo Final file: %(filepath,_filename|)q" "URL"
 ```
 
 ## Keep or Delete Intermediates
