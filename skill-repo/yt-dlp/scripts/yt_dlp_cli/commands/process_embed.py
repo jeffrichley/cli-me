@@ -32,6 +32,10 @@ def build_args(
 
     Returns the argument list (without the yt-dlp executable).
     """
+    if not any([subs, thumbnail, metadata, chapters, info_json]):
+        import typer
+        typer.echo("WARNING: No embed flags specified. Downloading without embedding anything.", err=True)
+
     args: list[str] = ["--force-overwrites"]
 
     # Embed flags

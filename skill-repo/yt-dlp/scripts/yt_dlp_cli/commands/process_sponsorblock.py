@@ -28,6 +28,10 @@ def build_args(
 
     Returns the argument list (without the yt-dlp executable).
     """
+    if not remove and not mark:
+        import typer
+        typer.echo("WARNING: No --remove or --mark specified. Downloading without SponsorBlock processing.", err=True)
+
     args: list[str] = ["--force-overwrites"]
 
     # SponsorBlock actions

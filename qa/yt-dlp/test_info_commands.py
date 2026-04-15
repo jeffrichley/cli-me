@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 # Add scripts dir to path so we can import the logic layer directly
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "skill-repo" / "yt-dlp" / "scripts"))
 
 from yt_dlp_cli.commands import info_formats, info_metadata, info_subtitles, info_thumbnails
 

@@ -104,6 +104,14 @@ class TestDownloadVideo:
         assert "--verbose" in args
         assert "--write-info-json" in args
 
+    def test_defaults_no_embed_flags(self):
+        args = download_video.build_args(self.URL)
+        assert "--embed-metadata" not in args
+        assert "--embed-subs" not in args
+        assert "--embed-thumbnail" not in args
+        assert "--embed-chapters" not in args
+        assert "--sponsorblock-remove" not in args
+
     def test_url_is_always_last(self):
         args = download_video.build_args(
             self.URL, format="22", output="out.mp4", cookies="c.txt"
@@ -153,6 +161,31 @@ class TestDownloadAudio:
         )
         assert "--embed-metadata" in args
         assert "--embed-thumbnail" in args
+
+    def test_output_template(self):
+        args = download_audio.build_args(self.URL, output="%(title)s.%(ext)s")
+        idx = args.index("-o")
+        assert args[idx + 1] == "%(title)s.%(ext)s"
+
+    def test_output_directory(self):
+        args = download_audio.build_args(self.URL, output_dir="/tmp/audio")
+        idx = args.index("-P")
+        assert args[idx + 1] == "/tmp/audio"
+
+    def test_no_overwrites(self):
+        args = download_audio.build_args(self.URL, no_overwrites=True)
+        assert "--no-overwrites" in args
+        assert "--force-overwrites" not in args
+
+    def test_rate_limit(self):
+        args = download_audio.build_args(self.URL, rate_limit="1M")
+        idx = args.index("-r")
+        assert args[idx + 1] == "1M"
+
+    def test_cookies(self):
+        args = download_audio.build_args(self.URL, cookies="cookies.txt")
+        idx = args.index("--cookies")
+        assert args[idx + 1] == "cookies.txt"
 
     def test_url_is_always_last(self):
         args = download_audio.build_args(self.URL, format="opus", quality="best")
@@ -303,6 +336,28 @@ class TestDownloadChannel:
         args = download_channel.build_args(self.URL, rate_limit="1M")
         idx = args.index("-r")
         assert args[idx + 1] == "1M"
+
+    def test_output_template(self):
+        args = download_channel.build_args(self.URL, output="custom/%(title)s.%(ext)s")
+        idx = args.index("-o")
+        assert args[idx + 1] == "custom/%(title)s.%(ext)s"
+
+    def test_output_directory(self):
+        args = download_channel.build_args(self.URL, output_dir="/tmp/channel")
+        idx = args.index("-P")
+        assert args[idx + 1] == "/tmp/channel"
+
+    def test_format(self):
+        args = download_channel.build_args(self.URL, format="bv*+ba/b")
+        idx = args.index("-f")
+        assert args[idx + 1] == "bv*+ba/b"
+
+    def test_sleep_intervals(self):
+        args = download_channel.build_args(self.URL, sleep_interval=2.0, max_sleep_interval=5.0)
+        idx_s = args.index("--sleep-interval")
+        assert args[idx_s + 1] == "2.0"
+        idx_m = args.index("--max-sleep-interval")
+        assert args[idx_m + 1] == "5.0"
 
     def test_url_is_always_last(self):
         args = download_channel.build_args(self.URL, archive="a.txt")

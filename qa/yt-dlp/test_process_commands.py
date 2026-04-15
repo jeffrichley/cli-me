@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 # Add scripts dir so we can import the logic layer directly.
-_scripts = str(Path(__file__).resolve().parents[2] / "scripts")
+_scripts = str(Path(__file__).resolve().parents[2] / "skill-repo" / "yt-dlp" / "scripts")
 if _scripts not in sys.path:
     sys.path.insert(0, _scripts)
 
@@ -73,6 +73,13 @@ class TestSponsorBlock:
         assert "--cookies" in args
         idx = args.index("--cookies")
         assert args[idx + 1] == "cookies.txt"
+
+    @pytest.mark.command_graph
+    def test_defaults_no_sponsorblock_flags(self):
+        args = process_sponsorblock.build_args(URL)
+        assert "--sponsorblock-remove" not in args
+        assert "--sponsorblock-mark" not in args
+        assert "--force-keyframes-at-cuts" not in args
 
 
 # ---------------------------------------------------------------------------

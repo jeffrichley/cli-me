@@ -24,6 +24,10 @@ def build_args(
 
     Returns the argument list (without the yt-dlp executable).
     """
+    if not split and not remove:
+        import typer
+        typer.echo("WARNING: No --split or --remove specified. Downloading without chapter processing.", err=True)
+
     args: list[str] = ["--force-overwrites"]
 
     # Chapter operations

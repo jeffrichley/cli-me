@@ -58,6 +58,11 @@ class TestDownloadVideoIntegration:
         assert "video" in stream_types, "Downloaded file has no video stream"
         assert "audio" in stream_types, "Downloaded file has no audio stream"
 
+        # Verify max_height was respected
+        video_stream = next(s for s in probe_data["streams"] if s["codec_type"] == "video")
+        height = int(video_stream["height"])
+        assert height <= 360, f"Expected height <= 360, got {height}"
+
         # Verify file is non-trivial size (> 100KB for a 33s video)
         assert output_file.stat().st_size > 100_000, "File too small — likely corrupt"
 
