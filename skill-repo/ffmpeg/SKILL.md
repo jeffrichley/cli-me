@@ -107,6 +107,9 @@ and parameter recommendations.
 
 Before ending, update the knowledge base in `references/`:
 
+**Important:** Always read an existing page before modifying it. Do not create
+new pages that duplicate existing topics — update the existing page instead.
+
 1. If you discovered a technique that worked well, add or update the relevant
    page in `references/techniques/`
 2. If something failed or had unexpected behavior, document it in

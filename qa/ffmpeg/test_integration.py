@@ -305,8 +305,8 @@ def test_transform_rotate_90(test_video, tmp_path, ffprobe_path):
 
 
 @pytest.mark.integration
-def test_audio_normalize(test_audio, tmp_path, ffprobe_path):
-    """audio normalize -- EBU R128 two-pass normalization produces output."""
+def test_audio_normalize(test_audio, tmp_path, ffprobe_path, ffmpeg_path):
+    """audio normalize -- EBU R128 two-pass normalization hits target loudness."""
     output = tmp_path / "normalized.wav"
     result = runner.invoke(app, ["audio", "normalize", str(test_audio), str(output)])
     assert result.exit_code == 0, f"Command failed (exit {result.exit_code}):\n{result.output}"
@@ -322,6 +322,25 @@ def test_audio_normalize(test_audio, tmp_path, ffprobe_path):
     assert audio_streams[0].get("sample_rate") == "48000", (
         f"Expected sample_rate=48000, got {audio_streams[0].get('sample_rate')}"
     )
+
+    # Measure actual loudness of the output using loudnorm analysis pass
+    measure_result = subprocess.run([
+        ffmpeg_path, "-i", str(output),
+        "-af", "loudnorm=I=-16:TP=-1.5:LRA=11:print_format=json",
+        "-f", "null", "-",
+    ], capture_output=True, text=True)
+    # Parse the loudnorm JSON from stderr
+    stderr = measure_result.stderr
+    import json as json_mod
+    json_start = stderr.rfind("{")
+    json_end = stderr.rfind("}") + 1
+    if json_start >= 0 and json_end > json_start:
+        loudness_data = json_mod.loads(stderr[json_start:json_end])
+        measured_i = float(loudness_data.get("input_i", 0))
+        # Output loudness should be within 1.5 LUFS of target (-16)
+        assert abs(measured_i - (-16.0)) < 1.5, (
+            f"Expected loudness ~-16 LUFS, got {measured_i} LUFS"
+        )
 
 
 # ===========================================================================
