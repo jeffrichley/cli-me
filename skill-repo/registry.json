@@ -1,3 +1,14 @@
 {
-  "skills": []
+  "skills": [
+    {
+      "name": "ffmpeg",
+      "description": "Media processing CLI for ffmpeg — convert, compress, trim, transform, process audio, combine, stream, and batch process video/audio files",
+      "category": "media",
+      "tags": ["video", "audio", "ffmpeg", "conversion", "compression", "streaming", "hls", "dash", "gif", "podcast", "encoding"],
+      "version": "0.1.0",
+      "software_url": "https://ffmpeg.org",
+      "source_repo": "https://git.ffmpeg.org/ffmpeg.git",
+      "dependencies": []
+    }
+  ]
 }

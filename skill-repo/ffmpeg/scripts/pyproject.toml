@@ -1,0 +1,11 @@
+[project]
+name = "ffmpeg-cli"
+version = "0.1.0"
+description = "Agent-native CLI for ffmpeg"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15.0",
+]
+
+[project.scripts]
+ffmpeg-cli = "ffmpeg_cli:app"
