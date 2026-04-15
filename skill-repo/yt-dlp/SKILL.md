@@ -32,17 +32,17 @@ it does not download media in Python.
 Run commands from the skill's `scripts/` directory:
 ```bash
 cd <skill-dir>/scripts
-uv run yt_dlp_cli <group> <command> [options]
+uv run yt_dlp_cli.py <group> <command> [options]
 ```
 
 Or from any directory using the full path:
 ```bash
-uv run --project <skill-dir>/scripts <skill-dir>/scripts/yt_dlp_cli <group> <command> [options]
+uv run --project <skill-dir>/scripts <skill-dir>/scripts/yt_dlp_cli.py <group> <command> [options]
 ```
 
 To discover available flags for any command:
 ```bash
-uv run yt_dlp_cli <group> <command> --help
+uv run yt_dlp_cli.py <group> <command> --help
 ```
 
 ### Command Groups
@@ -59,29 +59,29 @@ uv run yt_dlp_cli <group> <command> --help
 
 ```bash
 # Download a video (best quality)
-uv run yt_dlp_cli download video "https://youtube.com/watch?v=..."
+uv run yt_dlp_cli.py download video "https://youtube.com/watch?v=..."
 
 # Download audio only as MP3
-uv run yt_dlp_cli download audio "https://youtube.com/watch?v=..." --format mp3
+uv run yt_dlp_cli.py download audio "https://youtube.com/watch?v=..." --format mp3
 
 # Download playlist
-uv run yt_dlp_cli download playlist "https://youtube.com/playlist?list=..." --output "%(playlist_title)s/%(title)s.%(ext)s"
+uv run yt_dlp_cli.py download playlist "https://youtube.com/playlist?list=..." --output "%(playlist_title)s/%(title)s.%(ext)s"
 
 # List available formats
-uv run yt_dlp_cli info formats "https://youtube.com/watch?v=..."
+uv run yt_dlp_cli.py info formats "https://youtube.com/watch?v=..."
 
 # Get video metadata as JSON
-uv run yt_dlp_cli info metadata "https://youtube.com/watch?v=..."
+uv run yt_dlp_cli.py info metadata "https://youtube.com/watch?v=..."
 
 # Download with SponsorBlock removal
-uv run yt_dlp_cli process sponsorblock "https://youtube.com/watch?v=..." --remove sponsor,selfpromo
+uv run yt_dlp_cli.py process sponsorblock "https://youtube.com/watch?v=..." --remove sponsor,selfpromo
 
 # Batch download from file
-uv run yt_dlp_cli batch from-file urls.txt --archive downloaded.txt
+uv run yt_dlp_cli.py batch from-file urls.txt --archive downloaded.txt
 
 # Download with browser cookies
-uv run yt_dlp_cli config cookies --browser chrome
-uv run yt_dlp_cli download video "https://..." --cookies cookies.txt
+uv run yt_dlp_cli.py config cookies --browser chrome
+uv run yt_dlp_cli.py download video "https://..." --cookies cookies.txt
 ```
 
 ### Common Task Mapping
