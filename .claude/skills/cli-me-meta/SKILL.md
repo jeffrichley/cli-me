@@ -24,6 +24,13 @@ follow the principles and phases below.
 4. **Self-evolving knowledge.** Every generated skill instructs agents to write back
    what they learned to the wiki after each use.
 5. **Attribution always.** Every wiki page links back to source URLs.
+6. **Adversarial review at every phase.** Fresh agents (never the creator) review
+   every artifact. Objective failures auto-fix with a 3-strike limit. Judgment calls
+   accumulate for human decision at phase boundaries. See
+   `references/adversarial-reviewers.md` for reviewer prompts and the Review Result
+   Handling Protocol.
+7. **Thin wrappers, testable logic.** CLI commands parse args and delegate to logic
+   functions in `commands/`. Logic functions are independently testable without Typer.
 
 ## Phase 1: Research
 
