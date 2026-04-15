@@ -1,0 +1,257 @@
+"""Tier 1: Command-graph tests for the download command group.
+
+These tests verify that the logic layer builds the correct yt-dlp argument lists.
+No binary needed — pure unit tests.
+"""
+
+import sys
+import pytest
+
+# Add the scripts directory to the path so we can import the commands module
+sys.path.insert(
+    0, str(__import__("pathlib").Path(__file__).resolve().parents[2] / "skill-repo" / "yt-dlp" / "scripts")
+)
+
+from yt_dlp_cli.commands import download_video, download_audio, download_playlist, download_channel
+
+
+# ─── download_video ──────────────────────────────────────────────────────────
+
+@pytest.mark.command_graph
+class TestDownloadVideo:
+    URL = "https://www.youtube.com/watch?v=TEST123"
+
+    def test_default_args(self):
+        args = download_video.build_args(self.URL)
+        assert "-f" in args
+        assert "bv*+ba/b" in args
+        assert "--force-overwrites" in args
+        assert args[-1] == self.URL
+
+    def test_format_selection(self):
+        args = download_video.build_args(self.URL, format="22")
+        idx = args.index("-f")
+        assert args[idx + 1] == "22"
+
+    def test_max_height(self):
+        args = download_video.build_args(self.URL, max_height=720)
+        idx = args.index("-f")
+        assert "720" in args[idx + 1]
+        assert "height<=" in args[idx + 1]
+
+    def test_format_takes_precedence_over_max_height(self):
+        args = download_video.build_args(self.URL, format="22", max_height=720)
+        idx = args.index("-f")
+        assert args[idx + 1] == "22"
+
+    def test_output_template(self):
+        args = download_video.build_args(self.URL, output="%(title)s.%(ext)s")
+        assert "-o" in args
+        idx = args.index("-o")
+        assert args[idx + 1] == "%(title)s.%(ext)s"
+
+    def test_output_directory(self):
+        args = download_video.build_args(self.URL, output_dir="/tmp/downloads")
+        assert "-P" in args
+        idx = args.index("-P")
+        assert args[idx + 1] == "/tmp/downloads"
+
+    def test_no_overwrites(self):
+        args = download_video.build_args(self.URL, no_overwrites=True)
+        assert "--no-overwrites" in args
+        assert "--force-overwrites" not in args
+
+    def test_cookies(self):
+        args = download_video.build_args(self.URL, cookies="cookies.txt")
+        assert "--cookies" in args
+        idx = args.index("--cookies")
+        assert args[idx + 1] == "cookies.txt"
+
+    def test_embed_all(self):
+        args = download_video.build_args(
+            self.URL,
+            embed_metadata=True,
+            embed_subs=True,
+            embed_thumbnail=True,
+            embed_chapters=True,
+        )
+        assert "--embed-metadata" in args
+        assert "--embed-subs" in args
+        assert "--embed-thumbnail" in args
+        assert "--embed-chapters" in args
+
+    def test_sponsorblock(self):
+        args = download_video.build_args(self.URL, sponsorblock_remove="sponsor,selfpromo")
+        assert "--sponsorblock-remove" in args
+        idx = args.index("--sponsorblock-remove")
+        assert args[idx + 1] == "sponsor,selfpromo"
+
+    def test_performance_flags(self):
+        args = download_video.build_args(self.URL, concurrent_fragments=4, rate_limit="50K")
+        assert "-N" in args
+        assert "4" in args
+        assert "-r" in args
+        assert "50K" in args
+
+    def test_max_filesize(self):
+        args = download_video.build_args(self.URL, max_filesize="100M")
+        assert "--max-filesize" in args
+        idx = args.index("--max-filesize")
+        assert args[idx + 1] == "100M"
+
+    def test_extra_args(self):
+        args = download_video.build_args(self.URL, extra_args=["--verbose", "--write-info-json"])
+        assert "--verbose" in args
+        assert "--write-info-json" in args
+
+    def test_url_is_always_last(self):
+        args = download_video.build_args(
+            self.URL, format="22", output="out.mp4", cookies="c.txt"
+        )
+        assert args[-1] == self.URL
+
+
+# ─── download_audio ──────────────────────────────────────────────────────────
+
+@pytest.mark.command_graph
+class TestDownloadAudio:
+    URL = "https://www.youtube.com/watch?v=AUDIO123"
+
+    def test_default_args(self):
+        args = download_audio.build_args(self.URL)
+        assert "-x" in args
+        assert "--audio-format" in args
+        idx = args.index("--audio-format")
+        assert args[idx + 1] == "mp3"
+        assert "--audio-quality" in args
+        assert "--force-overwrites" in args
+        assert args[-1] == self.URL
+
+    def test_format_flac(self):
+        args = download_audio.build_args(self.URL, format="flac")
+        idx = args.index("--audio-format")
+        assert args[idx + 1] == "flac"
+
+    def test_quality_best(self):
+        args = download_audio.build_args(self.URL, quality="best")
+        idx = args.index("--audio-quality")
+        assert args[idx + 1] == "0"
+
+    def test_quality_worst(self):
+        args = download_audio.build_args(self.URL, quality="worst")
+        idx = args.index("--audio-quality")
+        assert args[idx + 1] == "10"
+
+    def test_quality_raw_kbps(self):
+        args = download_audio.build_args(self.URL, quality="192")
+        idx = args.index("--audio-quality")
+        assert args[idx + 1] == "192"
+
+    def test_embed_metadata_and_thumbnail(self):
+        args = download_audio.build_args(
+            self.URL, embed_metadata=True, embed_thumbnail=True
+        )
+        assert "--embed-metadata" in args
+        assert "--embed-thumbnail" in args
+
+    def test_url_is_always_last(self):
+        args = download_audio.build_args(self.URL, format="opus", quality="best")
+        assert args[-1] == self.URL
+
+
+# ─── download_playlist ───────────────────────────────────────────────────────
+
+@pytest.mark.command_graph
+class TestDownloadPlaylist:
+    URL = "https://www.youtube.com/playlist?list=PLtest123"
+
+    def test_default_args(self):
+        args = download_playlist.build_args(self.URL)
+        assert "--yes-playlist" in args
+        assert "-f" in args
+        assert "-o" in args
+        assert "-i" in args  # ignore errors for playlists
+        assert "--force-overwrites" in args
+        assert args[-1] == self.URL
+
+    def test_default_output_template_contains_playlist(self):
+        args = download_playlist.build_args(self.URL)
+        idx = args.index("-o")
+        assert "playlist_title" in args[idx + 1]
+        assert "playlist_index" in args[idx + 1]
+
+    def test_items_selection(self):
+        args = download_playlist.build_args(self.URL, items="1:5")
+        assert "-I" in args
+        idx = args.index("-I")
+        assert args[idx + 1] == "1:5"
+
+    def test_archive(self):
+        args = download_playlist.build_args(self.URL, archive="archive.txt")
+        assert "--download-archive" in args
+        idx = args.index("--download-archive")
+        assert args[idx + 1] == "archive.txt"
+
+    def test_date_filters(self):
+        args = download_playlist.build_args(
+            self.URL, date_after="20240101", date_before="20240131"
+        )
+        assert "--dateafter" in args
+        assert "--datebefore" in args
+
+    def test_max_downloads(self):
+        args = download_playlist.build_args(self.URL, max_downloads=10)
+        assert "--max-downloads" in args
+        idx = args.index("--max-downloads")
+        assert args[idx + 1] == "10"
+
+    def test_sleep_intervals(self):
+        args = download_playlist.build_args(
+            self.URL, sleep_interval=2.0, max_sleep_interval=5.0
+        )
+        assert "--sleep-interval" in args
+        assert "--max-sleep-interval" in args
+
+    def test_url_is_always_last(self):
+        args = download_playlist.build_args(self.URL, archive="a.txt", items="1:3")
+        assert args[-1] == self.URL
+
+
+# ─── download_channel ────────────────────────────────────────────────────────
+
+@pytest.mark.command_graph
+class TestDownloadChannel:
+    URL = "https://www.youtube.com/@TestChannel"
+
+    def test_default_args(self):
+        args = download_channel.build_args(self.URL)
+        assert "-f" in args
+        assert "-o" in args
+        assert "-i" in args  # ignore errors for channels
+        assert "--force-overwrites" in args
+        assert args[-1] == self.URL
+
+    def test_default_output_template_contains_channel(self):
+        args = download_channel.build_args(self.URL)
+        idx = args.index("-o")
+        assert "channel" in args[idx + 1]
+        assert "upload_date" in args[idx + 1]
+
+    def test_archive(self):
+        args = download_channel.build_args(self.URL, archive="channel_archive.txt")
+        assert "--download-archive" in args
+
+    def test_break_on_existing(self):
+        args = download_channel.build_args(self.URL, break_on_existing=True)
+        assert "--break-on-existing" in args
+
+    def test_date_range(self):
+        args = download_channel.build_args(
+            self.URL, date_after="20240101", date_before="20240630"
+        )
+        assert "--dateafter" in args
+        assert "--datebefore" in args
+
+    def test_url_is_always_last(self):
+        args = download_channel.build_args(self.URL, archive="a.txt")
+        assert args[-1] == self.URL

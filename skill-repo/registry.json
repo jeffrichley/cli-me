@@ -9,6 +9,16 @@
       "software_url": "https://ffmpeg.org",
       "source_repo": "https://git.ffmpeg.org/ffmpeg.git",
       "dependencies": []
+    },
+    {
+      "name": "yt-dlp",
+      "description": "Video/audio download CLI for yt-dlp — download video, extract audio, download playlists and channels, get subtitles, embed metadata, SponsorBlock, batch download",
+      "category": "media",
+      "tags": ["video", "audio", "download", "youtube", "yt-dlp", "playlist", "subtitle", "metadata", "sponsorblock", "batch"],
+      "version": "0.1.0",
+      "software_url": "https://github.com/yt-dlp/yt-dlp",
+      "source_repo": "https://github.com/yt-dlp/yt-dlp.git",
+      "dependencies": []
     }
   ]
 }

@@ -37,6 +37,23 @@ def ffmpeg_path():
 
 
 @pytest.fixture
+def ytdlp_path():
+    """Return yt-dlp path or skip if not installed."""
+    path = shutil.which("yt-dlp")
+    if path is None:
+        # Check common Windows pip install location
+        import sys
+        if sys.platform == "win32":
+            from pathlib import Path as P
+            for scripts_dir in P.home().glob("AppData/Roaming/Python/Python3*/Scripts"):
+                candidate = scripts_dir / "yt-dlp.exe"
+                if candidate.exists():
+                    return str(candidate)
+        pytest.skip("yt-dlp not found in PATH")
+    return path
+
+
+@pytest.fixture
 def ffprobe_path():
     """Return ffprobe path or skip if not installed."""
     path = shutil.which("ffprobe")
