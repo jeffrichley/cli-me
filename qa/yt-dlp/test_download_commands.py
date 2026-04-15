@@ -187,6 +187,21 @@ class TestDownloadAudio:
         idx = args.index("--cookies")
         assert args[idx + 1] == "cookies.txt"
 
+    def test_quality_high(self):
+        args = download_audio.build_args(self.URL, quality="high")
+        idx = args.index("--audio-quality")
+        assert args[idx + 1] == "2"
+
+    def test_quality_low(self):
+        args = download_audio.build_args(self.URL, quality="low")
+        idx = args.index("--audio-quality")
+        assert args[idx + 1] == "8"
+
+    def test_quality_medium_default(self):
+        args = download_audio.build_args(self.URL)
+        idx = args.index("--audio-quality")
+        assert args[idx + 1] == "5"
+
     def test_url_is_always_last(self):
         args = download_audio.build_args(self.URL, format="opus", quality="best")
         assert args[-1] == self.URL

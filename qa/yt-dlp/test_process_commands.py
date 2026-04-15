@@ -250,6 +250,33 @@ class TestEmbed:
         assert args[idx + 1] == "cookies.txt"
 
     @pytest.mark.command_graph
+    def test_subs_only_no_other_embeds(self):
+        args = process_embed.build_args(URL, subs=True)
+        assert "--embed-subs" in args
+        assert "--embed-thumbnail" not in args
+        assert "--embed-metadata" not in args
+        assert "--embed-chapters" not in args
+        assert "--embed-info-json" not in args
+
+    @pytest.mark.command_graph
+    def test_thumbnail_only_no_other_embeds(self):
+        args = process_embed.build_args(URL, thumbnail=True)
+        assert "--embed-thumbnail" in args
+        assert "--embed-subs" not in args
+        assert "--embed-metadata" not in args
+        assert "--embed-chapters" not in args
+        assert "--embed-info-json" not in args
+
+    @pytest.mark.command_graph
+    def test_metadata_only_no_other_embeds(self):
+        args = process_embed.build_args(URL, metadata=True)
+        assert "--embed-metadata" in args
+        assert "--embed-subs" not in args
+        assert "--embed-thumbnail" not in args
+        assert "--embed-chapters" not in args
+        assert "--embed-info-json" not in args
+
+    @pytest.mark.command_graph
     def test_all_embeds(self):
         """All embed flags together."""
         args = process_embed.build_args(
