@@ -83,7 +83,7 @@ Fields: domain, include subdomains, path, secure, expiry, name, value.
 ### Cookie File Requirements
 
 - Must start with `# HTTP Cookie File` or `# Netscape HTTP Cookie File`
-- yt-dlp handles both CRLF and LF line endings regardless of OS
+- Use correct line endings for your OS (CRLF on Windows, LF on Unix) — incorrect formatting can trigger HTTP 400 errors
 - Can be exported using browser extensions like "Get cookies.txt LOCALLY"
 
 ## Login Credentials
