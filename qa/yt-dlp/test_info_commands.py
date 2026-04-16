@@ -150,6 +150,10 @@ class TestInfoSubtitles:
         assert "--write-auto-subs" in args
         assert "--write-subs" in args
 
+    def test_auto_subs_ignored_without_download(self):
+        args = info_subtitles.build_args(URL, auto_subs=True)
+        assert "--write-auto-subs" not in args
+
 
 # ── info_thumbnails ─────────────────────────────────────────────────
 
@@ -182,6 +186,11 @@ class TestInfoThumbnails:
         assert "--convert-thumbnails" in args
         assert args[args.index("--convert-thumbnails") + 1] == "jpg"
         assert args[-1] == URL
+
+    def test_convert_without_download(self):
+        args = info_thumbnails.build_args(URL, convert="jpg")
+        # In list mode, convert is still emitted (yt-dlp ignores it)
+        assert "--list-thumbnails" in args
 
     def test_all_options(self):
         args = info_thumbnails.build_args(

@@ -24,6 +24,9 @@ def build_args(
 
     Returns the argument list (without the yt-dlp executable).
     """
+    if not container:
+        raise ValueError("Container format must not be empty")
+
     args: list[str] = ["--no-overwrites"] if no_overwrites else ["--force-overwrites"]
 
     # Remux to target container

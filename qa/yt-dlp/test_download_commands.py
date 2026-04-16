@@ -119,6 +119,12 @@ class TestDownloadVideo:
         )
         assert args[-1] == self.URL
 
+    def test_concurrent_fragments_zero(self):
+        args = download_video.build_args(self.URL, concurrent_fragments=0)
+        assert "-N" in args
+        idx = args.index("-N")
+        assert args[idx + 1] == "0"
+
 
 # ─── download_audio ──────────────────────────────────────────────────────────
 
@@ -284,6 +290,12 @@ class TestDownloadPlaylist:
         args = download_playlist.build_args(self.URL, rate_limit="1M")
         idx = args.index("-r")
         assert args[idx + 1] == "1M"
+
+    def test_max_downloads_zero(self):
+        args = download_playlist.build_args(self.URL, max_downloads=0)
+        assert "--max-downloads" in args
+        idx = args.index("--max-downloads")
+        assert args[idx + 1] == "0"
 
     def test_url_is_always_last(self):
         args = download_playlist.build_args(self.URL, archive="a.txt", items="1:3")

@@ -203,6 +203,11 @@ class TestRemux:
         idx = args.index("-f")
         assert args[idx + 1] == "bv*+ba/b"
 
+    @pytest.mark.command_graph
+    def test_empty_container_raises(self):
+        with pytest.raises(ValueError, match="Container format must not be empty"):
+            process_remux.build_args(URL, container="")
+
 
 # ---------------------------------------------------------------------------
 # Embed
@@ -316,6 +321,14 @@ class TestEmbed:
         assert "--embed-thumbnail" not in args
         assert "--embed-chapters" not in args
         assert "--embed-info-json" not in args
+
+    @pytest.mark.command_graph
+    def test_sub_langs_without_subs_no_write_subs(self):
+        args = process_embed.build_args(URL, sub_langs="en")
+        assert "--write-subs" not in args
+        assert "--embed-subs" not in args
+        # sub_langs is still emitted even without subs
+        assert "--sub-langs" in args
 
     @pytest.mark.command_graph
     def test_all_embeds(self):
