@@ -38,6 +38,18 @@ class TestInfoFormats:
         args = info_formats.build_json_args(URL)
         assert args[-1] == URL
 
+    def test_cookies(self):
+        args = info_formats.build_args(URL, cookies="cookies.txt")
+        assert "--cookies" in args
+        idx = args.index("--cookies")
+        assert args[idx + 1] == "cookies.txt"
+
+    def test_json_cookies(self):
+        args = info_formats.build_json_args(URL, cookies="cookies.txt")
+        assert "--cookies" in args
+        idx = args.index("--cookies")
+        assert args[idx + 1] == "cookies.txt"
+
 
 # ── info_metadata ───────────────────────────────────────────────────
 
@@ -132,6 +144,11 @@ class TestInfoSubtitles:
         assert "--sub-langs" in args
         assert "--sub-format" in args
         assert args[-1] == URL
+
+    def test_auto_subs(self):
+        args = info_subtitles.build_args(URL, download=True, auto_subs=True)
+        assert "--write-auto-subs" in args
+        assert "--write-subs" in args
 
 
 # ── info_thumbnails ─────────────────────────────────────────────────

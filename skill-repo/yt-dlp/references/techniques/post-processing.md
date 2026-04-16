@@ -133,10 +133,10 @@ Accepted remux formats: `avi`, `flv`, `gif`, `mkv`, `mov`, `mp4`, `webm`, `aac`,
 Re-encoding transcodes the video/audio streams. Slower than remuxing but allows codec changes.
 
 ```bash
-# Re-encode to MP4 (h264)
+# Re-encode to MP4 (typically h264, depends on ffmpeg config)
 yt-dlp --recode-video mp4 "URL"
 
-# Re-encode to WebM (vp9)
+# Re-encode to WebM (typically vp9, depends on ffmpeg config)
 yt-dlp --recode-video webm "URL"
 
 # Re-encode to MKV
@@ -251,6 +251,7 @@ yt-dlp --fixup force "URL"
 - **Post-processor order matters.** yt-dlp runs post-processors in a fixed order. If you need a specific ordering, check issue #10056 on GitHub for workarounds.
 - **`--postprocessor-args` syntax changed from youtube-dl.** yt-dlp uses `NAME:ARGS` syntax to target specific post-processors. The old `--postprocessor-args "ARGS"` still works but applies to all ffmpeg invocations.
 - **`--download-sections` timestamps use `*` prefix.** The asterisk is required: `"*1:00-2:00"` not `"1:00-2:00"`.
+- **`--download-sections` requires ffmpeg.** The section cutting uses ffmpeg for stream manipulation.
 - **`process sponsorblock` requires `--sponsorblock-remove` or `--sponsorblock-mark`.** Running the command without either flag downloads the video with no SponsorBlock action — a silent no-op.
 
 ## Sources

@@ -77,10 +77,10 @@ yt-dlp -S "res:720,fps,codec" "URL"
 # Prefer mp4 extension
 yt-dlp -S "ext:mp4:m4a" "URL"
 
-# Prefer h264 video and m4a audio (prefix + means prefer)
+# Prefer h264 video and m4a audio (prefix + reverses sort to prefer lower/smaller values)
 yt-dlp -S "+codec:avc:m4a" "URL"
 
-# Smallest file first
+# Smallest file first (+ reverses sort to prefer lower/smaller values)
 yt-dlp -S "+size" "URL"
 ```
 

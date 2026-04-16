@@ -42,6 +42,7 @@ def build_args(
 
     # Embed flags
     if subs:
+        args.append("--write-subs")
         args.append("--embed-subs")
     if thumbnail:
         args.append("--embed-thumbnail")

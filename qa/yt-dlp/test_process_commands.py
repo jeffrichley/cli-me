@@ -75,6 +75,12 @@ class TestSponsorBlock:
         assert args[idx + 1] == "cookies.txt"
 
     @pytest.mark.command_graph
+    def test_no_overwrites(self):
+        args = process_sponsorblock.build_args(URL, no_overwrites=True)
+        assert "--no-overwrites" in args
+        assert "--force-overwrites" not in args
+
+    @pytest.mark.command_graph
     def test_defaults_no_sponsorblock_flags(self):
         args = process_sponsorblock.build_args(URL)
         assert "--sponsorblock-remove" not in args
@@ -132,6 +138,17 @@ class TestChapters:
         idx = args.index("--cookies")
         assert args[idx + 1] == "cookies.txt"
 
+    @pytest.mark.command_graph
+    def test_no_overwrites(self):
+        args = process_chapters.build_args(URL, no_overwrites=True)
+        assert "--no-overwrites" in args
+        assert "--force-overwrites" not in args
+
+    @pytest.mark.command_graph
+    def test_force_keyframes(self):
+        args = process_chapters.build_args(URL, force_keyframes=True)
+        assert "--force-keyframes-at-cuts" in args
+
 
 # ---------------------------------------------------------------------------
 # Remux
@@ -173,6 +190,18 @@ class TestRemux:
         assert "--cookies" in args
         idx = args.index("--cookies")
         assert args[idx + 1] == "cookies.txt"
+
+    @pytest.mark.command_graph
+    def test_no_overwrites(self):
+        args = process_remux.build_args(URL, no_overwrites=True)
+        assert "--no-overwrites" in args
+        assert "--force-overwrites" not in args
+
+    @pytest.mark.command_graph
+    def test_format(self):
+        args = process_remux.build_args(URL, format="bv*+ba/b")
+        idx = args.index("-f")
+        assert args[idx + 1] == "bv*+ba/b"
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +277,18 @@ class TestEmbed:
         args = process_embed.build_args(URL, cookies="cookies.txt")
         idx = args.index("--cookies")
         assert args[idx + 1] == "cookies.txt"
+
+    @pytest.mark.command_graph
+    def test_no_overwrites(self):
+        args = process_embed.build_args(URL, no_overwrites=True)
+        assert "--no-overwrites" in args
+        assert "--force-overwrites" not in args
+
+    @pytest.mark.command_graph
+    def test_subs_also_writes_subs(self):
+        args = process_embed.build_args(URL, subs=True)
+        assert "--write-subs" in args
+        assert "--embed-subs" in args
 
     @pytest.mark.command_graph
     def test_subs_only_no_other_embeds(self):

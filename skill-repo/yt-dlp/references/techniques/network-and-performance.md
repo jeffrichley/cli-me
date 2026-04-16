@@ -215,16 +215,13 @@ yt-dlp -N 4 -R infinite --fragment-retries infinite \
 
 ## Gotchas and Edge Cases
 
-> **Note:** When using `-N` for concurrent fragment downloads, `-r` applies per connection.
-> With `-r 1M -N 4`, total bandwidth can reach ~4 MB/s. See [issue #7878](https://github.com/yt-dlp/yt-dlp/issues/7878) for details.
-
-- **`-r` applies per fragment when using `-N`.** With `-r 1M` and `-N 4`, total bandwidth can reach ~4 MB/s. The rate limit is per-connection, not global.
+- **`-r` applies per connection when using `-N`.** With `-r 1M` and `-N 4`, total bandwidth can reach ~4 MB/s. The rate limit is per-connection, not global. See [issue #7878](https://github.com/yt-dlp/yt-dlp/issues/7878) for details.
 - **`--geo-bypass` only fakes the X-Forwarded-For header.** It does not route traffic through a different country. For real geo-unblocking, use `--proxy` with a proxy in the target country.
 - **`-N` (concurrent fragments) only works with DASH/HLS streams.** Regular HTTP downloads are single-threaded regardless of this setting.
 - **High `-N` values may trigger rate limiting.** Some CDNs will throttle or block you if you open too many concurrent connections. Start with `-N 4` and increase if stable.
 - **`--throttled-rate` is YouTube-specific in practice.** While technically site-agnostic, it's primarily useful for YouTube's throttling behavior.
 - **`--source-address` must be a local IP.** It binds the socket to a local network interface. It doesn't change your public IP.
-- **`--impersonate` requires `curl_cffi` or `requests` with TLS fingerprint support.** Not all yt-dlp installations support this. Check with `--list-impersonate-targets`.
+- **`--impersonate` requires `curl_cffi`.** Not all yt-dlp installations support this. Check with `--list-impersonate-targets`.
 - **Retry sleep expressions don't use spaces.** It's `linear=1:10:2` not `linear = 1 : 10 : 2`.
 - **Socket timeout affects the entire connection.** A too-low value will cause slow connections to fail. The default is usually fine.
 

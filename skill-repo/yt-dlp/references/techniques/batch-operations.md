@@ -39,9 +39,10 @@ Store default options in a config file so you don't repeat them every time.
 ### Config File Locations (checked in order)
 
 1. **Portable config:** `yt-dlp.conf` in the same directory as the yt-dlp binary
-2. **User config (XDG):** `~/.config/yt-dlp/config` (Linux/macOS)
-3. **User config (AppData):** `%APPDATA%\yt-dlp\config.txt` (Windows)
-4. **System config:** `/etc/yt-dlp.conf` (Linux)
+2. **Home config:** `yt-dlp.conf` in the home path set by `-P home:`
+3. **User config (XDG):** `~/.config/yt-dlp/config` (Linux/macOS)
+4. **User config (AppData):** `%APPDATA%\yt-dlp\config.txt` (Windows)
+5. **System config:** `/etc/yt-dlp.conf` (Linux)
 
 ### Custom Config Location
 
