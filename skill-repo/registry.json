@@ -1,34 +1,94 @@
 {
   "skills": [
     {
-      "name": "ffmpeg",
-      "description": "Media processing CLI for ffmpeg — convert, compress, trim, transform, process audio, combine, stream, and batch process video/audio files",
+      "name": "demucs",
+      "description": "Music source separation CLI for Demucs \u2014 separate audio into stems (vocals, drums, bass, other), extract vocals, isolate instruments, karaoke, acapella, stem splitting",
       "category": "media",
-      "tags": ["video", "audio", "ffmpeg", "conversion", "compression", "streaming", "hls", "dash", "gif", "podcast", "encoding"],
+      "tags": [
+        "audio",
+        "music",
+        "separation",
+        "stems",
+        "vocals",
+        "drums",
+        "bass",
+        "demucs",
+        "karaoke",
+        "acapella",
+        "instrumental"
+      ],
+      "version": "0.1.0",
+      "software_url": "https://github.com/facebookresearch/demucs",
+      "source_repo": "https://github.com/facebookresearch/demucs.git",
+      "dependencies": [
+        "ffmpeg"
+      ]
+    },
+    {
+      "name": "ffmpeg",
+      "description": "Media processing CLI for ffmpeg \u2014 convert, compress, trim, transform, process audio, combine, stream, and batch process video/audio files",
+      "category": "media",
+      "tags": [
+        "video",
+        "audio",
+        "ffmpeg",
+        "conversion",
+        "compression",
+        "streaming",
+        "hls",
+        "dash",
+        "gif",
+        "podcast",
+        "encoding"
+      ],
       "version": "0.1.0",
       "software_url": "https://ffmpeg.org",
       "source_repo": "https://git.ffmpeg.org/ffmpeg.git",
       "dependencies": []
     },
     {
+      "name": "pyannote",
+      "description": "Speaker diarization and audio analysis CLI for pyannote.audio \u2014 diarize speakers, detect speech activity, verify speakers, extract embeddings",
+      "category": "audio",
+      "tags": [
+        "audio",
+        "speaker",
+        "diarization",
+        "speech",
+        "vad",
+        "embedding",
+        "verification",
+        "pyannote"
+      ],
+      "version": "0.1.0",
+      "software_url": "https://github.com/pyannote/pyannote-audio",
+      "source_repo": "https://github.com/pyannote/pyannote-audio.git",
+      "dependencies": [
+        "ffmpeg"
+      ]
+    },
+    {
       "name": "yt-dlp",
-      "description": "Video/audio download CLI for yt-dlp — download video, extract audio, download playlists and channels, get subtitles, embed metadata, SponsorBlock, batch download",
+      "description": "Video/audio download CLI for yt-dlp \u2014 download video, extract audio, download playlists and channels, get subtitles, embed metadata, SponsorBlock, batch download",
       "category": "media",
-      "tags": ["video", "audio", "download", "youtube", "yt-dlp", "playlist", "subtitle", "metadata", "sponsorblock", "batch"],
+      "tags": [
+        "video",
+        "audio",
+        "download",
+        "youtube",
+        "yt-dlp",
+        "playlist",
+        "subtitle",
+        "metadata",
+        "sponsorblock",
+        "batch"
+      ],
       "version": "0.1.0",
       "software_url": "https://github.com/yt-dlp/yt-dlp",
       "source_repo": "https://github.com/yt-dlp/yt-dlp.git",
-      "dependencies": ["ffmpeg"]
-    },
-    {
-      "name": "demucs",
-      "description": "Music source separation CLI for Demucs — separate audio into stems (vocals, drums, bass, other), extract vocals, isolate instruments, karaoke, acapella, stem splitting",
-      "category": "media",
-      "tags": ["audio", "music", "separation", "stems", "vocals", "drums", "bass", "demucs", "karaoke", "acapella", "instrumental"],
-      "version": "0.1.0",
-      "software_url": "https://github.com/facebookresearch/demucs",
-      "source_repo": "https://github.com/facebookresearch/demucs.git",
-      "dependencies": ["ffmpeg"]
+      "dependencies": [
+        "ffmpeg"
+      ]
     }
   ]
 }

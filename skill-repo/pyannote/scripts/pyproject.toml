@@ -1,0 +1,12 @@
+[project]
+name = "pyannote-cli"
+version = "0.1.0"
+description = "Agent-native CLI for pyannote.audio"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15.0",
+    "pyannote.audio>=4.0.0",
+]
+
+[project.scripts]
+pyannote-cli = "pyannote_cli:app"
