@@ -19,6 +19,16 @@
       "software_url": "https://github.com/yt-dlp/yt-dlp",
       "source_repo": "https://github.com/yt-dlp/yt-dlp.git",
       "dependencies": ["ffmpeg"]
+    },
+    {
+      "name": "demucs",
+      "description": "Music source separation CLI for Demucs — separate audio into stems (vocals, drums, bass, other), extract vocals, isolate instruments, karaoke, acapella, stem splitting",
+      "category": "media",
+      "tags": ["audio", "music", "separation", "stems", "vocals", "drums", "bass", "demucs", "karaoke", "acapella", "instrumental"],
+      "version": "0.1.0",
+      "software_url": "https://github.com/facebookresearch/demucs",
+      "source_repo": "https://github.com/facebookresearch/demucs.git",
+      "dependencies": ["ffmpeg"]
     }
   ]
 }

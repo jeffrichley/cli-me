@@ -54,6 +54,27 @@ def ytdlp_path():
 
 
 @pytest.fixture
+def demucs_path():
+    """Return demucs path or skip if not installed."""
+    path = shutil.which("demucs")
+    if path is None:
+        # Check common Windows pip install locations
+        import sys
+        if sys.platform == "win32":
+            from pathlib import Path as P
+            for scripts_dir in P.home().glob("AppData/Roaming/Python/Python3*/Scripts"):
+                candidate = scripts_dir / "demucs.exe"
+                if candidate.exists():
+                    return str(candidate)
+            for scripts_dir in P.home().glob("AppData/Local/Programs/Python/Python3*/Scripts"):
+                candidate = scripts_dir / "demucs.exe"
+                if candidate.exists():
+                    return str(candidate)
+        pytest.skip("demucs not found in PATH")
+    return path
+
+
+@pytest.fixture
 def ffprobe_path():
     """Return ffprobe path or skip if not installed."""
     path = shutil.which("ffprobe")
