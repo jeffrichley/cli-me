@@ -10,3 +10,4 @@ app = typer.Typer(
 
 # Register command modules — import triggers @app.command() decoration
 import pyannote_cli.info  # noqa: E402, F401
+import pyannote_cli.diarize  # noqa: E402, F401
