@@ -118,3 +118,150 @@ class TestFormatTxt:
         assert len(lines) == 3
         assert "SPEAKER_00" in lines[0]
         assert "-->" in lines[0]
+
+
+from pyannote_cli.commands.vad import run_vad, format_rttm as vad_format_rttm, format_json as vad_format_json, format_txt as vad_format_txt
+
+
+@pytest.fixture
+def vad_output():
+    tracks = [
+        (FakeSegment(0.5, 2.0), "A", "SPEECH"),
+        (FakeSegment(3.0, 5.5), "B", "SPEECH"),
+        (FakeSegment(7.0, 8.0), "C", "SPEECH"),
+    ]
+    return FakeAnnotation(tracks)
+
+
+@pytest.fixture
+def mock_vad_pipeline(vad_output):
+    pipeline = MagicMock()
+    pipeline.return_value = vad_output
+    return pipeline
+
+
+@pytest.mark.command_graph
+class TestRunVad:
+    def test_calls_pipeline(self, mock_vad_pipeline):
+        run_vad(mock_vad_pipeline, Path("test.wav"))
+        mock_vad_pipeline.assert_called_once_with("test.wav")
+
+    def test_returns_annotation(self, mock_vad_pipeline, vad_output):
+        result = run_vad(mock_vad_pipeline, Path("test.wav"))
+        assert result is vad_output
+
+
+@pytest.mark.command_graph
+class TestVadFormatRttm:
+    def test_produces_speech_labels(self, vad_output):
+        rttm = vad_format_rttm(vad_output)
+        assert "SPEECH" in rttm
+        assert rttm.count("\n") == 2  # 3 lines
+
+
+@pytest.mark.command_graph
+class TestVadFormatJson:
+    def test_produces_valid_json(self, vad_output):
+        data = json.loads(vad_format_json(vad_output))
+        assert "speech_regions" in data
+        assert len(data["speech_regions"]) == 3
+
+
+@pytest.mark.command_graph
+class TestVadFormatTxt:
+    def test_includes_total_speech(self, vad_output):
+        txt = vad_format_txt(vad_output)
+        assert "Total speech:" in txt
+
+
+import numpy as np
+from pyannote_cli.commands.verify import extract_embedding, cosine_similarity, verify_speakers
+
+
+@pytest.mark.command_graph
+class TestExtractEmbedding:
+    def test_normalizes_embedding(self):
+        inference = MagicMock()
+        inference.return_value = np.array([3.0, 4.0])
+        emb = extract_embedding(inference, Path("test.wav"))
+        assert np.allclose(np.linalg.norm(emb), 1.0)
+
+    def test_calls_inference_with_file(self):
+        inference = MagicMock()
+        inference.return_value = np.array([1.0, 0.0])
+        extract_embedding(inference, Path("test.wav"))
+        inference.assert_called_once_with("test.wav")
+
+
+@pytest.mark.command_graph
+class TestCosineSimilarity:
+    def test_identical_vectors(self):
+        a = np.array([1.0, 0.0])
+        assert cosine_similarity(a, a) == pytest.approx(1.0)
+
+    def test_orthogonal_vectors(self):
+        a = np.array([1.0, 0.0])
+        b = np.array([0.0, 1.0])
+        assert cosine_similarity(a, b) == pytest.approx(0.0)
+
+    def test_opposite_vectors(self):
+        a = np.array([1.0, 0.0])
+        b = np.array([-1.0, 0.0])
+        assert cosine_similarity(a, b) == pytest.approx(-1.0)
+
+    def test_zero_vector_returns_zero(self):
+        a = np.array([0.0, 0.0])
+        b = np.array([1.0, 0.0])
+        assert cosine_similarity(a, b) == 0.0
+
+
+@pytest.mark.command_graph
+class TestVerifySpeakers:
+    def test_same_speaker(self):
+        inference = MagicMock()
+        inference.side_effect = [np.array([1.0, 0.0]), np.array([0.95, 0.05])]
+        result = verify_speakers(inference, Path("a.wav"), Path("b.wav"), threshold=0.7)
+        assert result["same_speaker"] is True
+        assert result["score"] > 0.7
+
+    def test_different_speakers(self):
+        inference = MagicMock()
+        inference.side_effect = [np.array([1.0, 0.0]), np.array([0.0, 1.0])]
+        result = verify_speakers(inference, Path("a.wav"), Path("b.wav"), threshold=0.7)
+        assert result["same_speaker"] is False
+        assert result["score"] < 0.7
+
+
+from pyannote_cli.commands.embed import run_embed, format_json as embed_format_json
+
+
+@pytest.mark.command_graph
+class TestRunEmbed:
+    def test_calls_inference(self):
+        inference = MagicMock()
+        inference.return_value = np.array([1.0, 2.0, 3.0])
+        run_embed(inference, Path("test.wav"))
+        inference.assert_called_once_with("test.wav")
+
+    def test_squeezes_2d_to_1d(self):
+        inference = MagicMock()
+        inference.return_value = np.array([[1.0, 2.0, 3.0]])
+        result = run_embed(inference, Path("test.wav"))
+        assert result.ndim == 1
+        assert len(result) == 3
+
+    def test_keeps_1d(self):
+        inference = MagicMock()
+        inference.return_value = np.array([1.0, 2.0, 3.0])
+        result = run_embed(inference, Path("test.wav"))
+        assert result.ndim == 1
+
+
+@pytest.mark.command_graph
+class TestEmbedFormatJson:
+    def test_valid_json(self):
+        emb = np.array([1.0, 2.0, 3.0])
+        data = json.loads(embed_format_json(emb, Path("test.wav")))
+        assert data["dimension"] == 3
+        assert data["embedding"] == [1.0, 2.0, 3.0]
+        assert data["file"] == "test.wav"
