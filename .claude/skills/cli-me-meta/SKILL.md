@@ -188,21 +188,21 @@ dependencies = [
 <name>-cli = "<name>_cli:app"
 ```
 
-Add an entry to `skill-repo/registry.json` using the Registry class or by
-appending to the JSON directly:
+Add an entry to the registry using the concurrent-safe CLI:
 
-```json
-{
-  "name": "<name>",
-  "description": "<one-line description>",
-  "category": "<category>",
-  "tags": ["<tag1>", "<tag2>"],
-  "version": "0.1.0",
-  "software_url": "<software homepage>",
-  "source_repo": "<git clone url>",
-  "dependencies": []
-}
+```bash
+clime registry add \
+  --name "<name>" \
+  --description "<one-line description>" \
+  --category "<category>" \
+  --tags "<tag1>,<tag2>" \
+  --version "0.1.0" \
+  --software-url "<software homepage>" \
+  --source-repo "<git clone url>"
 ```
+
+**Do NOT write to `skill-repo/registry.json` directly.** The CLI uses file
+locking to prevent data loss when multiple agents build skills concurrently.
 
 ### REVIEW: Scaffold (Adversarial)
 
@@ -391,7 +391,7 @@ Extract a protocol/strategy pattern only when branching justifies it.
 3. Run Tier 3: `uv run pytest qa/<name>/test_manual.py -v -m manual -s`
 4. Have a human review Tier 3 outputs
 5. Fix any failures found
-6. Document test results in `references/log.md`
+6. Document test results via: `clime log append --skill <name> --message "<results summary>"`
 
 ## Phase 5: Write-back Instruction
 
@@ -401,7 +401,7 @@ text from `references/write-back-instructions.md` and append it verbatim.
 ## After You (the Meta-Skill) Complete a Build
 
 Update your own wiki at `references/meta-wiki/`:
-1. Append to `references/meta-wiki/log.md` what you learned about building this skill
+1. Log what you learned: `clime log append --skill <name> --message "<what you learned>"`
 2. If you discovered a better research strategy, pattern, or pitfall, update the
    relevant reference file
 3. Update `references/meta-wiki/index.md` if you added new pages
