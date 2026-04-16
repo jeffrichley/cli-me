@@ -212,3 +212,7 @@ yt-dlp --client-certificate cert.pem --client-certificate-key key.pem \
 - [yt-dlp man page (Arch)](https://man.archlinux.org/man/extra/yt-dlp/yt-dlp.1.en)
 - [yt-dlp FAQ](https://github.com/yt-dlp/yt-dlp/wiki/FAQ)
 - [Authentication - yt-dlp Mintlify](https://mintlify.wiki/yt-dlp/yt-dlp/core-concepts/authentication)
+
+## Learned from Usage
+
+(No usage notes yet.)

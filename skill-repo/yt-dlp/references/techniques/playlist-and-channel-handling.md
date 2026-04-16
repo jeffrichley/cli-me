@@ -207,3 +207,7 @@ yt-dlp --ignore-errors --continue --no-overwrites \
 - [yt-dlp FAQ](https://github.com/yt-dlp/yt-dlp/wiki/FAQ)
 - [yt-dlp cheat sheet - Ditig](https://www.ditig.com/yt-dlp-cheat-sheet)
 - [RapidSeedbox yt-dlp Guide](https://www.rapidseedbox.com/blog/yt-dlp-complete-guide)
+
+## Learned from Usage
+
+(No usage notes yet.)

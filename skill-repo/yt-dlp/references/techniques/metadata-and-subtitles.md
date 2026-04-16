@@ -216,3 +216,7 @@ This only works with MKV/MKA containers.
 - [yt-dlp FAQ](https://github.com/yt-dlp/yt-dlp/wiki/FAQ)
 - [Embed all subtitles, thumbnails, metadata - issue #3316](https://github.com/yt-dlp/yt-dlp/issues/3316)
 - [yt-dlp cheat sheet - Ditig](https://www.ditig.com/yt-dlp-cheat-sheet)
+
+## Learned from Usage
+
+(No usage notes yet.)

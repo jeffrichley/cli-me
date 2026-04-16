@@ -93,3 +93,7 @@ yt-dlp -f "worst" "URL"
 - [yt-dlp man page (Arch)](https://man.archlinux.org/man/extra/yt-dlp/yt-dlp.1.en)
 - [Arch Wiki - yt-dlp](https://wiki.archlinux.org/title/Yt-dlp)
 - [RapidSeedbox yt-dlp Guide](https://www.rapidseedbox.com/blog/yt-dlp-complete-guide)
+
+## Learned from Usage
+
+(No usage notes yet.)

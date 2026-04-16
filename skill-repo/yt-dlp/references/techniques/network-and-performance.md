@@ -233,3 +233,7 @@ yt-dlp -N 4 -R infinite --fragment-retries infinite \
 - [How to use Proxies for yt-dlp - HuntAPI](https://www.huntapi.com/blog/yt-dlp-proxy-guide)
 - [yt-dlp FAQ](https://github.com/yt-dlp/yt-dlp/wiki/FAQ)
 - [RapidSeedbox yt-dlp Guide](https://www.rapidseedbox.com/blog/yt-dlp-complete-guide)
+
+## Learned from Usage
+
+(No usage notes yet.)

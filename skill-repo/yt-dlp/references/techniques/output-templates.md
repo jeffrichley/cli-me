@@ -243,3 +243,7 @@ yt-dlp --windows-filenames -o "%(title)s.%(ext)s" "URL"
 - [How to set a custom output filename in yt-dlp - Ditig](https://www.ditig.com/set-yt-dlp-output-filename)
 - [yt-dlp FAQ](https://github.com/yt-dlp/yt-dlp/wiki/FAQ)
 - [Arch Wiki - yt-dlp](https://wiki.archlinux.org/title/Yt-dlp)
+
+## Learned from Usage
+
+(No usage notes yet.)

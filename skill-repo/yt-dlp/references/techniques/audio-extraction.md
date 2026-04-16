@@ -71,6 +71,14 @@ yt-dlp -x --audio-format mp3 --audio-quality 320K "URL"
 yt-dlp -x --audio-format mp3 --audio-quality 128K "URL"
 ```
 
+> **Warning: VBR quality scale is codec-dependent.**
+> - **mp3 (libmp3lame):** 0 = best quality, 10 = worst quality
+> - **opus (libopus):** 0 = worst quality, 10 = best quality — the opposite of mp3
+>
+> Using `--audio-quality 0 --audio-format opus` produces the lowest quality opus output.
+> For opus, use a fixed bitrate instead to avoid this confusion:
+> `yt-dlp -x --audio-format opus --audio-quality 256K "URL"`
+
 ## Download Audio-Only Without Conversion
 
 ```bash
@@ -160,3 +168,7 @@ flac/alac > wav/aiff > opus > vorbis > aac > mp4a > mp3 > ac4 > eac3 > ac3 > dts
 - [yt-dlp audio quality issue #9690](https://github.com/yt-dlp/yt-dlp/issues/9690)
 - [yt-dlp audio quality default issue #13807](https://github.com/yt-dlp/yt-dlp/issues/13807)
 - [Spacebar: How to download audio-only with yt-dlp](https://www.spacebar.news/how-to-download-audio-only-media-files-with-yt-dlp/)
+
+## Learned from Usage
+
+(No usage notes yet.)

@@ -151,7 +151,7 @@ yt-dlp --postprocessor-args "ffmpeg:-vcodec libx264 -crf 18" "URL"
 
 # Custom audio bitrate during extraction
 yt-dlp -x --audio-format mp3 \
-  --postprocessor-args "ffmpeg:-ab 256k" "URL"
+  --postprocessor-args "ffmpeg:-b:a 256k" "URL"
 
 # Custom video scaling
 yt-dlp --postprocessor-args "ffmpeg:-vf scale=1280:720" "URL"
@@ -261,3 +261,7 @@ yt-dlp --fixup force "URL"
 - [SponsorBlock Integration - yt-dlp Mintlify](https://mintlify.wiki/yt-dlp/yt-dlp/guides/sponsorblock)
 - [yt-dlp cheat sheet - Ditig](https://www.ditig.com/yt-dlp-cheat-sheet)
 - [Post-processor order issue #10056](https://github.com/yt-dlp/yt-dlp/issues/10056)
+
+## Learned from Usage
+
+(No usage notes yet.)

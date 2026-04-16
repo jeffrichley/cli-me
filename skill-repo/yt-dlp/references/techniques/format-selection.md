@@ -77,8 +77,8 @@ yt-dlp -S "res:720,fps,codec" "URL"
 # Prefer mp4 extension
 yt-dlp -S "ext:mp4:m4a" "URL"
 
-# Prefer h264 video and m4a audio (prefix + reverses sort to prefer lower/smaller values)
-yt-dlp -S "+codec:avc:m4a" "URL"
+# Prefer h264 video and m4a audio
+yt-dlp -S "codec:avc:m4a" "URL"
 
 # Smallest file first (+ reverses sort to prefer lower/smaller values)
 yt-dlp -S "+size" "URL"
@@ -88,7 +88,7 @@ yt-dlp -S "+size" "URL"
 
 ```bash
 # Override default sort entirely (force your sort to take full precedence)
-yt-dlp -S "+res:720,+fps" --format-sort-force "URL"
+yt-dlp -S "res:720,fps" --format-sort-force "URL"
 ```
 
 Without `--format-sort-force`, yt-dlp applies your sort on top of its defaults. With it, only your specified fields matter.
@@ -131,3 +131,7 @@ Accepted merge formats: `avi`, `flv`, `mkv`, `mov`, `mp4`, `webm`.
 - [Format Selection and Sorting - DeepWiki](https://deepwiki.com/yt-dlp/yt-dlp/2.3-format-selection-and-sorting)
 - [Format Selection - yt-dlp Mintlify](https://mintlify.wiki/yt-dlp/yt-dlp/core-concepts/format-selection)
 - [yt-dlp cheat sheet - Ditig](https://www.ditig.com/yt-dlp-cheat-sheet)
+
+## Learned from Usage
+
+(No usage notes yet.)
