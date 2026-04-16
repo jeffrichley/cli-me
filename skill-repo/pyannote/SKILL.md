@@ -12,7 +12,8 @@ diarization, voice activity detection, speaker verification, and embedding extra
 ## Prerequisites
 
 - pyannote.audio must be installed: `pip install pyannote.audio`
-- A HuggingFace token with model access: set `HF_TOKEN` environment variable
+- ffmpeg must be installed (used internally for audio decoding of MP3, M4A, etc.)
+- A HuggingFace token with model access: set `HF_TOKEN` env var or run `huggingface-cli login`
 - Accept model terms at https://huggingface.co/pyannote/speaker-diarization-community-1
 - Python 3.12+
 
@@ -35,13 +36,13 @@ uv run scripts/pyannote_cli.py <command> [options]
 
 **verify** — Speaker verification (same speaker?)
 - `verify FILE_A FILE_B` — compare two audio samples
-- Options: `--threshold`, `--device`, `--token`
+- Options: `--threshold`, `--model {resnet34,embedding}`, `--device`, `--token`
 
 **embed** — Extract speaker embeddings
 - `embed FILE` — extract embedding vector from audio
-- Options: `--output`, `--model {resnet34,resnet152}`, `--device`, `--token`
+- Options: `--output`, `--model {resnet34,embedding}`, `--device`, `--token`
 
-**info** — Show audio file information and available models
+**info** — Show audio file information
 - `info FILE` — show duration, sample rate, channels
 
 ## Default Behavior

@@ -38,6 +38,7 @@ def embed(
     embedding = run_embed(inference, file)
 
     if output and output.suffix == ".npy":
+        output.parent.mkdir(parents=True, exist_ok=True)
         format_numpy(embedding, output)
         typer.echo(f"Saved {len(embedding)}-dim embedding to {output}")
     elif output:
