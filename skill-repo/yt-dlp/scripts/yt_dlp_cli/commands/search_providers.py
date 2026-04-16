@@ -3,7 +3,6 @@
 PROVIDERS: dict[str, str] = {
     "youtube": "ytsearch",
     "youtube-music": "ytmsearch",
-    "youtube-videos": "yvsearch",
     "soundcloud": "scsearch",
 }
 

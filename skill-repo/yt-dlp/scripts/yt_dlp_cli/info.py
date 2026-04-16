@@ -1,5 +1,6 @@
 """Info command group — query/inspect without downloading."""
 
+import subprocess
 from typing import Annotated, Optional
 
 import typer
@@ -91,22 +92,19 @@ def search(
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
 ) -> None:
     """Search for videos without downloading. Outputs JSON by default."""
-    import json
-
     args = info_search.build_args(
         query,
         max_results=max_results,
         provider=provider,
         cookies=cookies,
     )
-    result = run_command(args, capture=True)
-
-    # yt-dlp --dump-json outputs one JSON object per line
-    lines = [line for line in result.stdout.strip().splitlines() if line.strip()]
-    results = [json.loads(line) for line in lines]
-
-    if pretty:
-        for i, item in enumerate(results, 1):
-            typer.echo(f"\n[{i}] {info_search.format_pretty(item)}")
-    else:
-        typer.echo(json.dumps(results, indent=2))
+    try:
+        result = run_command(args, capture=True)
+    except subprocess.CalledProcessError as e:
+        typer.echo(e.stderr or f"Search failed (exit {e.returncode})", err=True)
+        raise typer.Exit(code=e.returncode)
+    output = info_search.format_output(
+        info_search.parse_results(result.stdout),
+        pretty=pretty,
+    )
+    typer.echo(output)

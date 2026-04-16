@@ -101,7 +101,6 @@ The `info search` and `batch search` commands accept a `--provider` flag to sele
 |----------|-------------|
 | `youtube` | YouTube (default) — general video search |
 | `youtube-music` | YouTube Music — music-focused results |
-| `youtube-videos` | YouTube Videos — filters to video content only |
 | `soundcloud` | SoundCloud — music and audio tracks |
 
 `info search` outputs JSON by default (machine-readable). Use `--pretty` for human-readable output.

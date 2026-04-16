@@ -1,7 +1,7 @@
 """Tests for info search command arg building."""
 
 import json
-from yt_dlp_cli.commands.info_search import build_args, format_pretty
+from yt_dlp_cli.commands.info_search import build_args, format_output, format_pretty, parse_results
 
 
 def test_default_args_include_no_download():
@@ -54,3 +54,34 @@ def test_format_pretty_missing_fields():
     result = {"title": "Minimal"}
     output = format_pretty(result)
     assert "Minimal" in output
+
+
+def test_parse_results_single_line():
+    stdout = '{"title": "Test"}\n'
+    results = parse_results(stdout)
+    assert len(results) == 1
+    assert results[0]["title"] == "Test"
+
+
+def test_parse_results_multiple_lines():
+    stdout = '{"title": "A"}\n{"title": "B"}\n'
+    results = parse_results(stdout)
+    assert len(results) == 2
+
+
+def test_parse_results_empty():
+    assert parse_results("") == []
+    assert parse_results("\n") == []
+
+
+def test_format_output_json():
+    results = [{"title": "Test"}]
+    output = format_output(results, pretty=False)
+    assert json.loads(output) == [{"title": "Test"}]
+
+
+def test_format_output_pretty():
+    results = [{"title": "My Video", "webpage_url": "http://example.com", "duration_string": "3:45", "uploader": "Chan"}]
+    output = format_output(results, pretty=True)
+    assert "My Video" in output
+    assert "[1]" in output
