@@ -6,7 +6,8 @@ import typer
 
 from . import app
 from .backend import run_command
-from .commands import info_formats, info_metadata, info_subtitles, info_thumbnails
+from .commands import info_formats, info_metadata, info_subtitles, info_thumbnails, info_search
+from .commands.search_providers import provider_names
 
 info_app = typer.Typer(help="Query video info, formats, subtitles, and metadata.", no_args_is_help=True)
 app.add_typer(info_app, name="info")
@@ -79,3 +80,33 @@ def thumbnails(
         convert=convert,
     )
     run_command(args)
+
+
+@info_app.command()
+def search(
+    query: Annotated[str, typer.Argument(help="Search query")],
+    max_results: Annotated[int, typer.Option(help="Maximum number of results")] = 5,
+    provider: Annotated[str, typer.Option(help=f"Search provider ({', '.join(provider_names())})")] = "youtube",
+    pretty: Annotated[bool, typer.Option("--pretty", help="Human-readable output instead of JSON")] = False,
+    cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
+) -> None:
+    """Search for videos without downloading. Outputs JSON by default."""
+    import json
+
+    args = info_search.build_args(
+        query,
+        max_results=max_results,
+        provider=provider,
+        cookies=cookies,
+    )
+    result = run_command(args, capture=True)
+
+    # yt-dlp --dump-json outputs one JSON object per line
+    lines = [line for line in result.stdout.strip().splitlines() if line.strip()]
+    results = [json.loads(line) for line in lines]
+
+    if pretty:
+        for i, item in enumerate(results, 1):
+            typer.echo(f"\n[{i}] {info_search.format_pretty(item)}")
+    else:
+        typer.echo(json.dumps(results, indent=2))
