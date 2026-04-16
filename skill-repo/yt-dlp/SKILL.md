@@ -74,16 +74,37 @@ uv run yt_dlp_cli.py info formats "https://youtube.com/watch?v=..."
 # Get video metadata as JSON
 uv run yt_dlp_cli.py info metadata "https://youtube.com/watch?v=..."
 
+# Search for videos without downloading (JSON output by default)
+uv run yt_dlp_cli.py info search "lo-fi beats" --max-results 10
+uv run yt_dlp_cli.py info search "lo-fi beats" --pretty
+uv run yt_dlp_cli.py info search "lo-fi beats" --provider youtube-music
+
 # Download with SponsorBlock removal
 uv run yt_dlp_cli.py process sponsorblock "https://youtube.com/watch?v=..." --remove sponsor,selfpromo
 
 # Batch download from file
 uv run yt_dlp_cli.py batch from-file urls.txt --archive downloaded.txt
 
+# Batch search and download
+uv run yt_dlp_cli.py batch search "lofi hip hop" --max-results 5 --provider youtube-music --format mp3
+
 # Download with browser cookies
 uv run yt_dlp_cli.py config cookies --browser chrome
 uv run yt_dlp_cli.py download video "https://..." --cookies cookies.txt
 ```
+
+### Search Providers
+
+The `info search` and `batch search` commands accept a `--provider` flag to select the search backend:
+
+| Provider | Description |
+|----------|-------------|
+| `youtube` | YouTube (default) — general video search |
+| `youtube-music` | YouTube Music — music-focused results |
+| `youtube-videos` | YouTube Videos — filters to video content only |
+| `soundcloud` | SoundCloud — music and audio tracks |
+
+`info search` outputs JSON by default (machine-readable). Use `--pretty` for human-readable output.
 
 ### Common Task Mapping
 
@@ -96,6 +117,9 @@ uv run yt_dlp_cli.py download video "https://..." --cookies cookies.txt
 | Get subtitles only | `info subtitles URL --download --langs en` | Downloads subtitle files |
 | Remove sponsors | `process sponsorblock URL --remove sponsor` | Requires SponsorBlock API |
 | Archive playlist | `batch sync URL --archive archive.txt` | Skip already-downloaded |
+| Search without downloading | `info search QUERY --pretty` | JSON by default, `--pretty` for readable |
+| Search by music provider | `info search QUERY --provider youtube-music` | See Search Providers table |
+| Search and download | `batch search QUERY --provider soundcloud` | Downloads all results |
 
 ### Default Behavior
 
