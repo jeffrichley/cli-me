@@ -1,10 +1,13 @@
 """Logic for batch search command — builds yt-dlp argument list."""
 
+from .search_providers import get_search_prefix
+
 
 def build_args(
     query: str,
     *,
     max_results: int = 5,
+    provider: str = "youtube",
     output: str | None = None,
     output_dir: str | None = None,
     format: str | None = None,
@@ -15,6 +18,7 @@ def build_args(
 
     Returns the argument list (without the yt-dlp executable).
     """
+    prefix = get_search_prefix(provider)
     args: list[str] = []
 
     # Format selection
@@ -39,5 +43,5 @@ def build_args(
         args.extend(extra_args)
 
     # Search query must be last
-    args.append(f"ytsearch{max_results}:{query}")
+    args.append(f"{prefix}{max_results}:{query}")
     return args

@@ -7,6 +7,7 @@ import typer
 from . import app
 from .backend import run_command
 from .commands import batch_from_file, batch_sync, batch_search
+from .commands.search_providers import provider_names
 
 batch_app = typer.Typer(help="Batch downloads, incremental sync, and search.", no_args_is_help=True)
 app.add_typer(batch_app, name="batch")
@@ -76,15 +77,17 @@ def sync(
 def search(
     query: Annotated[str, typer.Argument(help="Search query")],
     max_results: Annotated[int, typer.Option(help="Maximum number of results")] = 5,
+    provider: Annotated[str, typer.Option(help=f"Search provider ({', '.join(provider_names())})")] = "youtube",
     output: Annotated[Optional[str], typer.Option("--output", "-o", help="Output filename template")] = None,
     output_dir: Annotated[Optional[str], typer.Option("--output-dir", "-P", help="Output directory")] = None,
     format: Annotated[Optional[str], typer.Option("--format", "-f", help="Format selector")] = None,
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
 ) -> None:
-    """Search YouTube and download the results."""
+    """Search and download the results."""
     args = batch_search.build_args(
         query,
         max_results=max_results,
+        provider=provider,
         output=output,
         output_dir=output_dir,
         format=format,
