@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Callable
+
+from filelock import FileLock
 
 from cli_me.filelock import locked_write
 
@@ -16,6 +19,42 @@ class Registry:
         with open(self.path) as f:
             data = json.load(f)
         self.skills: list[dict] = data.get("skills", [])
+
+    @classmethod
+    def locked_modify(
+        cls,
+        path: Path | str,
+        modifier: Callable[["Registry"], None],
+        timeout: float = 30.0,
+    ) -> "Registry":
+        """Read-modify-write the registry under a single lock.
+
+        This prevents TOCTOU races: the lock is held for the entire
+        read → modify → write cycle, so concurrent agents can't lose
+        each other's updates.
+
+        *modifier* receives a Registry instance and mutates it in place.
+        The modified registry is saved and returned.
+        """
+        path = Path(path)
+        lock_path = path.with_suffix(path.suffix + ".lock")
+        lock = FileLock(lock_path, timeout=timeout)
+
+        with lock:
+            reg = cls.__new__(cls)
+            reg.path = path
+            with open(path) as f:
+                data = json.load(f)
+            reg.skills = data.get("skills", [])
+
+            modifier(reg)
+
+            out = {"skills": sorted(reg.skills, key=lambda s: s["name"])}
+            with open(path, "w") as f:
+                json.dump(out, f, indent=2)
+                f.write("\n")
+
+        return reg
 
     def get(self, name: str) -> dict | None:
         """Get a skill by exact name."""
