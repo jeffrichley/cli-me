@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from cli_me.filelock import locked_write
+
 
 class Registry:
     """In-memory representation of the skill registry."""
@@ -65,8 +67,12 @@ class Registry:
         raise ValueError(f"Skill '{name}' not found in registry")
 
     def save(self) -> None:
-        """Write registry back to disk."""
+        """Write registry back to disk with file locking and atomic write."""
         data = {"skills": sorted(self.skills, key=lambda s: s["name"])}
-        with open(self.path, "w") as f:
-            json.dump(data, f, indent=2)
-            f.write("\n")
+
+        def writer(path: Path) -> None:
+            with open(path, "w") as f:
+                json.dump(data, f, indent=2)
+                f.write("\n")
+
+        locked_write(self.path, writer)
