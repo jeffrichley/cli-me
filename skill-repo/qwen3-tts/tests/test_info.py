@@ -13,7 +13,7 @@ def test_get_device_info_cuda():
         mock_torch.cuda.is_available.return_value = True
         mock_torch.cuda.get_device_name.return_value = "NVIDIA RTX 4090"
         mock_props = MagicMock()
-        mock_props.total_mem = 24 * 1024**3
+        mock_props.total_memory = 24 * 1024**3
         mock_torch.cuda.get_device_properties.return_value = mock_props
         info = get_device_info()
         assert info["device"] == "cuda"

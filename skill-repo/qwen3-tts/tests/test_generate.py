@@ -20,8 +20,8 @@ def test_generate_speech_returns_audio_and_sr():
     assert len(audio) == 24000
     mock_model.generate_custom_voice.assert_called_once_with(
         "Hello world",
-        "English",
         "Aiden",
+        language="English",
         instruct=None,
     )
 
@@ -38,8 +38,8 @@ def test_generate_speech_with_instruct():
     )
     mock_model.generate_custom_voice.assert_called_once_with(
         "I can't believe it!",
-        "English",
         "Aiden",
+        language="English",
         instruct="Speak with excitement",
     )
 
@@ -49,7 +49,8 @@ def test_generate_speech_defaults_language_to_auto():
     mock_model.generate_custom_voice.return_value = ([np.zeros(24000)], 24000)
     generate_speech(mock_model, text="Hello", speaker="Aiden")
     call_args = mock_model.generate_custom_voice.call_args
-    assert call_args[0][1] == "Auto"
+    assert call_args[0][1] == "Aiden"  # speaker is second positional arg
+    assert call_args[1]["language"] == "Auto"
 
 
 def test_generate_speech_empty_text_raises():

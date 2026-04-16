@@ -12,7 +12,7 @@ def get_device_info() -> dict:
         return {
             "device": "cuda",
             "gpu_name": torch.cuda.get_device_name(0),
-            "vram_gb": round(props.total_mem / 1024**3, 1),
+            "vram_gb": round(props.total_memory / 1024**3, 1),
         }
     if torch.backends.mps.is_available():
         return {

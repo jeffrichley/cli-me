@@ -21,7 +21,7 @@ def design_speech(
 
     wavs, sr = model.generate_voice_design(
         text,
-        language,
         description,
+        language=language,
     )
     return wavs[0], sr

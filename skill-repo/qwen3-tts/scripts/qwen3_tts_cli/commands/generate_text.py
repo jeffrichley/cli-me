@@ -22,8 +22,8 @@ def generate_speech(
 
     wavs, sr = model.generate_custom_voice(
         text,
-        language,
         speaker,
+        language=language,
         instruct=instruct,
     )
     return wavs[0], sr
