@@ -141,6 +141,27 @@ skill-repo/<name>/
         └── (pages from Phase 1)
 ```
 
+### Scaffold Entry Point
+
+Create a shim script at `scripts/<name>_cli.py` so `uv run` can invoke the CLI
+directly. Package directories cannot be invoked with `uv run <dir>` — a top-level
+script is required:
+
+```python
+"""Entry point for uv run <name>_cli.py"""
+from <name>_cli import app
+
+if __name__ == "__main__":
+    app()
+```
+
+**Verify the scaffold works before proceeding:**
+```bash
+cd skill-repo/<name>/scripts
+uv run <name>_cli.py --help
+```
+If this fails, fix the entry point before moving to Phase 3.
+
 Generate the SKILL.md using the template at `references/skill-template.md`.
 
 Generate the scripts/pyproject.toml so the CLI is self-contained:
@@ -190,6 +211,11 @@ Fix all findings before proceeding.
 **CRITICAL: Write tests BEFORE implementing commands. Test each command as you
 build it. Never implement all commands and test later.**
 
+**This applies to ALL code changes, not just initial implementation.** When
+adding a new parameter to an existing command (e.g., adding `--no-overwrites`
+during a fix round), write the test FIRST. The test-first discipline applies
+equally to new features and to fixes.
+
 ### 3a. Write the QA playbook
 
 Create `qa/<name>/playbook.md` FIRST — before any implementation. Document:
@@ -223,6 +249,20 @@ def run_command(args: list[str], check: bool = True) -> subprocess.CompletedProc
     """Run a software command and return the result."""
     ...
 ```
+
+### 3b.1 Interactive Prompt Suppression
+
+Agent contexts have no stdin. If the wrapped software has interactive prompts
+(overwrite confirmation, yes/no questions, license acceptance), the CLI will
+hang silently with no error.
+
+**Every `build_args` function MUST include a flag that suppresses interactive
+prompts by default.** Research what flag the wrapped software uses (e.g., `-y`,
+`--force`, `--yes`, `--force-overwrites`, `--batch`, `--non-interactive`).
+
+Add a `no_overwrites: bool = False` parameter (or equivalent) so agents can
+opt into the safer behavior, but the default MUST be non-interactive. Document
+this default in the skill's SKILL.md and gotchas.md.
 
 ### 3c. For EACH command group, follow this cycle:
 
@@ -296,6 +336,19 @@ HTTP status codes. No LLM judgment — pure HTTP status. Fix all dead URLs
 This catches URL rot that adversarial reviewers miss because they spot-check.
 The script checks ALL URLs. Run it after every round of URL replacements
 until the output is clean.
+
+### 3d.2 Deterministic Link Check
+
+Run the link/orphan checker against the skill's wiki pages:
+
+```bash
+uv run qa/check_links.py <name>
+```
+
+This checks that all relative markdown links resolve to existing files and
+that no `.md` files are orphaned (unreferenced by any other `.md` file).
+An orphaned file is invisible to agents — they'll never discover it.
+Fix all broken links and investigate orphan files before proceeding.
 
 ### 3e. Write Tier 3 manual tests
 

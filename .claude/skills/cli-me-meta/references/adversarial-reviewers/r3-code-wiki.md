@@ -24,6 +24,16 @@ For EVERY command in the wiki's "CLI Commands" section:
 - Report any divergence as: "Wiki line N says X, code line M does Y"
 - Check that default parameter values in code match wiki recommendations
 
+### 1b. Prerequisite Flag Chains
+Some CLI tools have flags that require other flags to work. For example:
+- Embedding subtitles requires downloading them first
+- Embedding thumbnails requires thumbnails to exist
+- Post-processing flags may require their input to be prepared
+
+For each post-processing or embedding flag in the code, check: does the
+implementation also add the prerequisite flags? If not, the command silently
+does nothing. Report as OBJECTIVE divergence.
+
 ### 2. Thin Wrapper Verification
 - Does the CLI wrapper (Typer command) ONLY parse args and delegate?
 - Is all logic in the commands/ module, not in the wrapper?

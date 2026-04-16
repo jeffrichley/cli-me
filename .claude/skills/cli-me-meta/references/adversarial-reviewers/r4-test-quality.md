@@ -40,6 +40,14 @@ For EACH test, ask: "What broken implementation would still pass this test?"
 - Are error paths tested? (binary not found, bad input, permission denied)
 - Is the "copy" vs "re-encode" path tested for commands that support both?
 
+### 3b. Parameter Coverage Audit
+For EACH `build_args` function in the commands/ directory:
+- Read the function signature — list every parameter
+- For each parameter, search the test file for a test that exercises it
+- Report any parameter with ZERO test coverage as an OBJECTIVE finding
+- A parameter that exists in code but has no test means a mutation that
+  ignores that parameter passes the entire suite undetected
+
 ### 4. Test Independence
 - Does each test create its own fixtures, or do tests share mutable state?
 - Could test order affect results?

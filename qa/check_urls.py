@@ -40,6 +40,23 @@ GET_ONLY_DOMAINS = {
     "support.google.com",  # Returns 404 on HEAD, 200 on GET
 }
 
+# Skip obvious placeholder/example URLs that aren't real
+EXAMPLE_PATTERNS = [
+    "example.com", "example.org", "example.net",
+    "PLAYLIST_ID", "VIDEO_ID", "CHANNEL_ID", "USER_ID",
+    "proxy.example", "localhost",
+    "your_", "SECRET", "API_KEY",
+    "/123456789",  # Fake numeric IDs (e.g., vimeo.com/123456789)
+    "@Channel1", "@Channel2", "@Channel3",  # Placeholder channel names
+    "@ChannelName",
+]
+
+
+def is_example_url(url: str) -> bool:
+    """Check if a URL is an example/placeholder that shouldn't be verified."""
+    return any(pattern in url for pattern in EXAMPLE_PATTERNS)
+
+
 # SSL context that doesn't verify (some sites have bad certs)
 SSL_CTX = ssl.create_default_context()
 SSL_CTX.check_hostname = False
@@ -106,6 +123,14 @@ def check_skill(skill_name: str) -> list[dict]:
 
         rel_path = md_file.relative_to(SKILL_REPO / skill_name)
         for url in urls:
+            if is_example_url(url):
+                results.append({
+                    "file": str(rel_path),
+                    "url": url,
+                    "status": -2,
+                    "description": "EXAMPLE (placeholder URL, not checked)",
+                })
+                continue
             status, desc = check_url(url)
             results.append({
                 "file": str(rel_path),
@@ -154,6 +179,8 @@ def main():
 
             if status == 200:
                 print(f"    ✓ {status} {url_short}")
+            elif status == -2:
+                print(f"    ⊘ EXAMPLE {url_short}")
             elif status == -1:
                 print(f"    ⊘ SKIP {url_short} ({r['description']})")
             elif 300 <= status < 400:
@@ -167,19 +194,24 @@ def main():
     print(f"\n{'='*60}")
     print(f"SUMMARY")
     print(f"{'='*60}")
-    print(f"  URLs checked:  {total_checked}")
+    examples = sum(1 for r in all_results if r['status'] == -2)
+    real_checked = total_checked - examples
+    real_dead = sum(1 for r in all_results if r['status'] not in (200, -1, -2) and not (300 <= r['status'] < 400))
+    print(f"  URLs found:    {total_checked}")
+    print(f"  Examples:      {examples} (placeholder URLs, not checked)")
+    print(f"  URLs checked:  {real_checked}")
     print(f"  Live (200):    {sum(1 for r in all_results if r['status'] == 200)}")
     print(f"  Redirects:     {sum(1 for r in all_results if 300 <= r['status'] < 400)}")
-    print(f"  Dead/Error:    {sum(1 for r in all_results if r['status'] != 200 and r['status'] != -1 and not (300 <= r['status'] < 400))}")
+    print(f"  Dead/Error:    {real_dead}")
     print(f"  Skipped:       {sum(1 for r in all_results if r['status'] == -1)}")
 
     if total_dead > 0:
         print(f"\n  DEAD/REDIRECT URLs:")
         for r in all_results:
-            if r["status"] != 200 and r["status"] != -1:
+            if r["status"] not in (200, -1, -2) and r["status"] >= 0:
                 print(f"    [{r['status']}] {r['file']}: {r['url']}")
 
-    return 1 if total_dead > 0 else 0
+    return 1 if real_dead > 0 else 0
 
 
 if __name__ == "__main__":

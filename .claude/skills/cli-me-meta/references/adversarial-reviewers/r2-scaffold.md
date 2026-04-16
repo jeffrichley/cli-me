@@ -53,7 +53,17 @@ incorrectly, or confuse an agent trying to use it.
 - Is references/ populated with index.md, log.md, gotchas.md?
 - Are source-analysis/ pages present?
 
-### 6. Creative Hunt — Trigger Conflicts
+### 6. Smoke Test
+Run the CLI and verify it loads:
+```bash
+cd skill-repo/<name>/scripts
+uv run <name>_cli.py --help
+```
+- Does it show all expected command groups?
+- Does each group's `--help` show the expected subcommands?
+- If any command fails to load, report as OBJECTIVE failure.
+
+### 7. Creative Hunt — Trigger Conflicts
 - Could this skill's description trigger on queries meant for a
   different skill? (e.g., "convert audio" triggering both ffmpeg
   and a dedicated audio skill)
