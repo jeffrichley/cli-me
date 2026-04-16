@@ -13,15 +13,15 @@ Speaker embeddings are the foundation for:
 ## Basic Extraction
 
 ```python
-from pyannote.audio import Inference
+from pyannote.audio import Model, Inference
 import os
 
-# Load the embedding model
-inference = Inference(
+# Load the embedding model (two-step pattern)
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet34-voxceleb",
-    use_auth_token=os.environ["HF_TOKEN"],
-    window="whole"  # treat the entire file as one segment
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model, window="whole")  # treat the entire file as one segment
 
 # Extract embedding from a file
 embedding = inference("audio.wav")
@@ -33,16 +33,18 @@ print(f"Embedding dtype: {embedding.dtype}")  # float32
 
 ```python
 # Lightweight — fast, good for most use cases
-inference = Inference(
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet34-voxceleb",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model)
 
 # High-quality — more accurate, slower, larger
-inference = Inference(
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet152-voxceleb",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model)
 ```
 
 | Model | Architecture | Embedding dim | Speed | Accuracy |
@@ -53,14 +55,14 @@ inference = Inference(
 ## Extracting from a Specific Time Range
 
 ```python
-from pyannote.audio import Inference
+from pyannote.audio import Model, Inference
 from pyannote.core import Segment
 
-inference = Inference(
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet34-voxceleb",
-    use_auth_token=os.environ["HF_TOKEN"],
-    window="whole"
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model, window="whole")
 
 # Crop to a specific segment before extracting
 segment = Segment(5.0, 12.0)  # 5s to 12s
@@ -73,15 +75,13 @@ print(f"Shape: {embedding.shape}")  # (1, 256)
 For long files, extract embeddings over a sliding window:
 
 ```python
-from pyannote.audio import Inference
+from pyannote.audio import Model, Inference
 
-inference = Inference(
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet34-voxceleb",
-    use_auth_token=os.environ["HF_TOKEN"],
-    window="sliding",
-    duration=3.0,   # each window is 3 seconds
-    step=1.0        # slide by 1 second
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model, window="sliding", duration=3.0, step=1.0)
 
 # Returns SlidingWindowFeature: (num_windows, embedding_dim)
 embeddings = inference("audio.wav")
@@ -101,7 +101,7 @@ from pyannote.audio import Pipeline
 
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 
 output = pipeline("audio.wav")
@@ -123,16 +123,16 @@ for i, speaker in enumerate(labels):
 Group audio segments by speaker identity without a reference database:
 
 ```python
-from pyannote.audio import Inference
+from pyannote.audio import Model, Inference
 from pyannote.core import Segment
 import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 
-inference = Inference(
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet34-voxceleb",
-    use_auth_token=os.environ["HF_TOKEN"],
-    window="whole"
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model, window="whole")
 
 # Segments to cluster (e.g., from VAD output)
 segments = [
@@ -182,11 +182,11 @@ similarity = float(np.dot(emb_a, emb_b))
 ```python
 import torch
 
-inference = Inference(
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet34-voxceleb",
-    use_auth_token=os.environ["HF_TOKEN"],
-    window="whole"
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model, window="whole")
 
 # Move to GPU
 inference.to(torch.device("cuda"))
@@ -207,5 +207,4 @@ embedding = inference("audio.wav")
 - pyannote.audio GitHub: https://github.com/pyannote/pyannote-audio
 - wespeaker-resnet34-voxceleb: https://huggingface.co/pyannote/wespeaker-resnet34-voxceleb
 - wespeaker-resnet152-voxceleb: https://huggingface.co/pyannote/wespeaker-resnet152-voxceleb
-- WeSpeaker paper: https://arxiv.org/abs/2210.17493
-- pyannote Inference API: https://github.com/pyannote/pyannote-audio/blob/develop/pyannote/audio/core/inference.py
+- pyannote Inference API: https://github.com/pyannote/pyannote-audio/blob/develop/src/pyannote/audio/core/inference.py

@@ -40,7 +40,7 @@ from pyannote.audio import Pipeline
 
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 output = pipeline("audio.wav")
 
@@ -112,9 +112,16 @@ Output structure:
     {"start": 0.5,  "end": 2.3,  "speaker": "SPEAKER_00"},
     {"start": 2.8,  "end": 5.1,  "speaker": "SPEAKER_01"},
     {"start": 5.5,  "end": 7.0,  "speaker": "SPEAKER_00"}
+  ],
+  "exclusive_diarization": [
+    {"start": 0.5,  "end": 2.3,  "speaker": "SPEAKER_00"},
+    {"start": 2.8,  "end": 5.1,  "speaker": "SPEAKER_01"},
+    {"start": 5.5,  "end": 7.0,  "speaker": "SPEAKER_00"}
   ]
 }
 ```
+
+The `"diarization"` key contains all speaker turns (including overlapping speech). The `"exclusive_diarization"` key contains the same turns with overlaps resolved so each time point has at most one speaker.
 
 ### Parsing JSON Output
 
@@ -224,5 +231,5 @@ for speaker, duration in sorted(durations.items()):
 
 - pyannote.audio GitHub: https://github.com/pyannote/pyannote-audio
 - pyannote.core source (Annotation): https://github.com/pyannote/pyannote-core
-- RTTM format specification: https://catalog.ldc.upenn.edu/docs/LDC2004T12/RTTM-format-v13.pdf
+- RTTM format specification: NIST RT evaluations (search "NIST RT evaluation RTTM format" for the spec)
 - HuggingFace pyannote models: https://huggingface.co/pyannote

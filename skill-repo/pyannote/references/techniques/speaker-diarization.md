@@ -19,14 +19,14 @@ import torch
 # Load the pipeline (downloads ~500MB on first run)
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    use_auth_token="hf_your_token_here"
+    token="hf_your_token_here"
 )
 
 # Or use the HF_TOKEN environment variable (recommended)
 import os
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 
 # Run diarization
@@ -95,8 +95,13 @@ print(json.dumps(data, indent=2))
 #   "diarization": [
 #     {"start": 0.5, "end": 1.7, "speaker": "SPEAKER_00"},
 #     ...
+#   ],
+#   "exclusive_diarization": [
+#     {"start": 0.5, "end": 1.7, "speaker": "SPEAKER_00"},
+#     ...
 #   ]
 # }
+# "diarization" may include overlapping turns; "exclusive_diarization" resolves overlaps.
 ```
 
 ### Direct Annotation Iteration
@@ -158,4 +163,4 @@ with ProgressHook() as hook:
 - pyannote.audio GitHub: https://github.com/pyannote/pyannote-audio
 - Model card (speaker diarization): https://huggingface.co/pyannote/speaker-diarization-community-1
 - pyannote.audio documentation: https://github.com/pyannote/pyannote-audio/blob/develop/tutorials/
-- RTTM format spec: https://catalog.ldc.upenn.edu/docs/LDC2004T12/RTTM-format-v13.pdf
+- RTTM format specification: NIST RT evaluations (search "NIST RT evaluation RTTM format" for the spec)

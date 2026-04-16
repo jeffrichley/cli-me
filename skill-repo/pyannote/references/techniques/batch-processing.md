@@ -12,7 +12,7 @@ from pathlib import Path
 # Load pipeline ONCE outside the loop
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 
 input_dir = Path("/path/to/audio/files")
@@ -44,7 +44,7 @@ from pyannote.audio import Pipeline
 
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 
 input_root = Path("/data/audio")
@@ -98,7 +98,7 @@ for audio_path in audio_files:
 
 ## Multiprocessing (True Parallelism)
 
-The pipeline is **not thread-safe**, but works fine with `multiprocessing`:
+The pipeline is **not thread-safe**, but works fine with `multiprocessing`. Use a worker **initializer** so each worker process loads the pipeline once, not once per file:
 
 ```python
 import os
@@ -106,22 +106,25 @@ import multiprocessing as mp
 from pathlib import Path
 from pyannote.audio import Pipeline
 
-def process_file(args):
-    """Each worker process loads its own pipeline instance."""
-    audio_path, output_dir, hf_token = args
+# Module-level variable; each worker gets its own copy after fork
+_worker_pipeline = None
+_worker_output_dir = None
 
-    # Each worker must load its own pipeline
-    pipeline = Pipeline.from_pretrained(
+def worker_init(hf_token, output_dir_str):
+    """Called once when each worker process starts."""
+    global _worker_pipeline, _worker_output_dir
+    _worker_pipeline = Pipeline.from_pretrained(
         "pyannote/speaker-diarization-community-1",
-        use_auth_token=hf_token
+        token=hf_token
     )
+    _worker_output_dir = output_dir_str
 
-    output_path = Path(output_dir) / Path(audio_path).with_suffix(".rttm").name
-    output = pipeline(audio_path)
-
+def process_file(audio_path):
+    """Runs in worker process — pipeline is already loaded."""
+    output_path = Path(_worker_output_dir) / Path(audio_path).with_suffix(".rttm").name
+    output = _worker_pipeline(audio_path)
     with open(output_path, "w") as f:
         output.speaker_diarization.write_rttm(f)
-
     return audio_path, str(output_path)
 
 if __name__ == "__main__":
@@ -129,11 +132,13 @@ if __name__ == "__main__":
     output_dir = "/data/rttm"
     hf_token = os.environ["HF_TOKEN"]
 
-    args = [(f, output_dir, hf_token) for f in audio_files]
-
     # Use 2–4 workers (GPU VRAM is the bottleneck, not CPU cores)
-    with mp.Pool(processes=2) as pool:
-        for audio, rttm in pool.imap_unordered(process_file, args):
+    with mp.Pool(
+        processes=2,
+        initializer=worker_init,
+        initargs=(hf_token, output_dir)
+    ) as pool:
+        for audio, rttm in pool.imap_unordered(process_file, audio_files):
             print(f"Done: {Path(audio).name} -> {rttm}")
 ```
 
@@ -150,7 +155,7 @@ import os
 
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 
 input_dir = Path("/data/audio")
@@ -234,5 +239,5 @@ for audio_path in audio_files:
 
 - pyannote.audio GitHub: https://github.com/pyannote/pyannote-audio
 - pyannote model hub: https://huggingface.co/pyannote
-- ProgressHook source: https://github.com/pyannote/pyannote-audio/blob/develop/pyannote/audio/pipelines/utils/hook.py
+- ProgressHook source: https://github.com/pyannote/pyannote-audio/blob/develop/src/pyannote/audio/pipelines/utils/hook.py
 - PyTorch multiprocessing: https://pytorch.org/docs/stable/multiprocessing.html

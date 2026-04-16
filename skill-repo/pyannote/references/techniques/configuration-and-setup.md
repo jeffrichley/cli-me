@@ -31,13 +31,13 @@ import os
 # In code — reads from environment
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 
 # Or pass directly (avoid hardcoding in scripts)
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    use_auth_token="hf_your_token_here"
+    token="hf_your_token_here"
 )
 ```
 
@@ -53,7 +53,7 @@ from pyannote.audio import Pipeline
 
 pipeline = Pipeline.from_pretrained(
     "pyannote/speaker-diarization-community-1",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 
 # Auto-detect best available device
@@ -166,7 +166,7 @@ from pyannote.audio import Pipeline
 
 pipeline = Pipeline.from_pretrained(
     "/path/to/config.yaml",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 ```
 

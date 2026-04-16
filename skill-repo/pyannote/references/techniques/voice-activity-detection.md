@@ -15,7 +15,7 @@ import os
 # Load the VAD pipeline
 pipeline = Pipeline.from_pretrained(
     "pyannote/voice-activity-detection",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 
 # Run VAD — returns an Annotation object
@@ -77,51 +77,24 @@ from pyannote.core import Segment
 # Step 1: Detect speech
 vad_pipeline = Pipeline.from_pretrained(
     "pyannote/voice-activity-detection",
-    use_auth_token=os.environ["HF_TOKEN"]
+    token=os.environ["HF_TOKEN"]
 )
 vad_output = vad_pipeline("audio.wav")
 
 # Step 2: Use speech timeline for targeted embedding extraction
-from pyannote.audio import Inference
+from pyannote.audio import Model, Inference
 
-inference = Inference(
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet34-voxceleb",
-    window="sliding",
-    duration=2.0,
-    step=0.5
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model, window="sliding", duration=2.0, step=0.5)
 
 # Only process speech regions
 for segment, _, _ in vad_output.itertracks(yield_label=True):
     if segment.duration > 1.0:  # skip very short segments
         embedding = inference.crop("audio.wav", segment)
         print(f"Embedding for {segment}: shape {embedding.shape}")
-```
-
-## Finer Control with the Segmentation Model
-
-The `Inference` class gives direct access to the underlying segmentation model:
-
-```python
-from pyannote.audio import Inference
-import numpy as np
-
-# Load segmentation model directly
-inference = Inference(
-    "pyannote/segmentation-3.0",
-    use_auth_token=os.environ["HF_TOKEN"],
-    window="sliding",
-    duration=10.0,
-    step=2.5
-)
-
-# Get raw frame-level speech probabilities
-segmentation = inference("audio.wav")
-# segmentation is a SlidingWindowFeature: (num_frames, num_classes)
-
-# Threshold to get binary speech/non-speech
-speech_probs = segmentation.data[:, 0]  # first class is speech
-speech_mask = speech_probs > 0.5
 ```
 
 ## Export VAD Results

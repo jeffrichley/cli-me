@@ -5,62 +5,40 @@ Determine whether two audio samples contain the same speaker. Speaker verificati
 ## Overview
 
 Verification workflow:
-1. Extract speaker embeddings from each audio sample
-2. Compute cosine similarity between the two embeddings
-3. Apply a threshold to make the same/different decision
+1. Load an embedding model via `Model.from_pretrained()`
+2. Create an `Inference` wrapper
+3. Extract speaker embeddings from each audio sample
+4. Compute cosine similarity between the two embeddings
+5. Apply a threshold to make the same/different decision
 
 This is distinct from diarization (which segments a single file) and identification (which matches against a known set). Verification requires only two samples and no enrollment database.
 
-## Using the SpeakerVerification Pipeline
+> **Note**: pyannote.audio v4.x does not include a `SpeakerVerification` pipeline class. The correct approach is manual embedding comparison using `Model.from_pretrained()` and `Inference`, as shown below.
+
+## Basic Verification
 
 ```python
-from pyannote.audio.pipelines import SpeakerVerification
+from pyannote.audio import Model, Inference
+from numpy.linalg import norm
+import numpy as np
 import os
 
-# Load the verification pipeline
-pipeline = SpeakerVerification(
-    segmentation="pyannote/segmentation",
-    embedding="pyannote/embedding",
-    use_auth_token=os.environ["HF_TOKEN"]
-)
-
-# Compare two audio files
-score, prediction = pipeline(
-    {"audio": "speaker_a_sample.wav"},
-    {"audio": "speaker_b_sample.wav"}
-)
-
-print(f"Similarity score: {score:.3f}")
-print(f"Same speaker: {prediction}")  # True or False
-```
-
-## Manual Embedding Comparison
-
-For more control, extract embeddings yourself and compare:
-
-```python
-from pyannote.audio import Inference
-from pyannote.core import Segment
-import numpy as np
-
-# Load embedding model
-inference = Inference(
+# Load the embedding model (two-step pattern)
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet34-voxceleb",
-    use_auth_token=os.environ["HF_TOKEN"],
-    window="whole"
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model, window="whole")
 
 # Extract embeddings from both samples
 embedding_a = inference("speaker_a.wav")  # shape: (1, embedding_dim)
 embedding_b = inference("speaker_b.wav")
 
 # Compute cosine similarity
-from numpy.linalg import norm
-
 def cosine_similarity(a, b):
     a = a.flatten()
     b = b.flatten()
-    return np.dot(a, b) / (norm(a) * norm(b))
+    return float(np.dot(a, b) / (norm(a) * norm(b)))
 
 score = cosine_similarity(embedding_a, embedding_b)
 print(f"Cosine similarity: {score:.4f}")
@@ -76,14 +54,15 @@ print(f"Same speaker: {is_same_speaker}")
 When comparing specific speech regions (not whole files):
 
 ```python
-from pyannote.audio import Inference
+from pyannote.audio import Model, Inference
 from pyannote.core import Segment
+import os
 
-inference = Inference(
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet34-voxceleb",
-    use_auth_token=os.environ["HF_TOKEN"],
-    window="whole"
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model, window="whole")
 
 # Crop to a specific time range before extracting
 segment_a = Segment(1.5, 5.0)  # 1.5s to 5.0s
@@ -101,13 +80,14 @@ Compare a query speaker against multiple known speakers:
 
 ```python
 import numpy as np
-from pyannote.audio import Inference
+from pyannote.audio import Model, Inference
+import os
 
-inference = Inference(
+model = Model.from_pretrained(
     "pyannote/wespeaker-resnet34-voxceleb",
-    use_auth_token=os.environ["HF_TOKEN"],
-    window="whole"
+    token=os.environ["HF_TOKEN"]
 )
+inference = Inference(model, window="whole")
 
 def cosine_similarity(a, b):
     a, b = a.flatten(), b.flatten()
@@ -177,5 +157,4 @@ Use a held-out validation set from your target domain to tune the threshold.
 - pyannote.audio GitHub: https://github.com/pyannote/pyannote-audio
 - wespeaker-resnet34 model: https://huggingface.co/pyannote/wespeaker-resnet34-voxceleb
 - wespeaker-resnet152 model: https://huggingface.co/pyannote/wespeaker-resnet152-voxceleb
-- pyannote embedding model: https://huggingface.co/pyannote/embedding
 - VoxCeleb dataset: https://www.robots.ox.ac.uk/~vgg/data/voxceleb/
