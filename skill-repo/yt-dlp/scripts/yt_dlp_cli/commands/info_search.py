@@ -17,7 +17,7 @@ def build_args(
     Returns the argument list (without the yt-dlp executable).
     """
     prefix = get_search_prefix(provider)
-    args: list[str] = ["--dump-json", "--no-download"]
+    args: list[str] = ["--dump-json", "--skip-download"]
 
     if cookies:
         args.extend(["--cookies", cookies])

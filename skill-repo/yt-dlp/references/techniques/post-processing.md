@@ -253,6 +253,8 @@ yt-dlp --fixup force "URL"
 - **`--download-sections` timestamps use `*` prefix.** The asterisk is required: `"*1:00-2:00"` not `"1:00-2:00"`.
 - **`--download-sections` requires ffmpeg.** The section cutting uses ffmpeg for stream manipulation.
 - **SponsorBlock is opt-in.** Running `--sponsorblock-remove` or `--sponsorblock-mark` without specifying categories will use default SponsorBlock categories. Running neither flag downloads the video with no SponsorBlock action.
+- **`process chapters` with no action flags is a no-op download.** Calling `process chapters URL` without `--split` or `--remove` will download the video with no chapter processing (exits 0, may print a warning). Always pass at least one of `--split` or `--remove <pattern>`.
+- **`process embed` with no embed flags is a no-op download.** Calling `process embed URL` without any embed flags (`--metadata`, `--thumbnail`, `--subs`, `--chapters`) will download the video with no embedding (exits 0, warning only). Always specify what to embed.
 
 ## Sources
 

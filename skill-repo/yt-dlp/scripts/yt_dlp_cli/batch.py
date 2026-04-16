@@ -21,8 +21,8 @@ def from_file(
     output_dir: Annotated[Optional[str], typer.Option("--output-dir", "-P", help="Output directory")] = None,
     archive: Annotated[Optional[str], typer.Option(help="Archive file to track downloaded videos")] = None,
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
-    concurrent_fragments: Annotated[Optional[int], typer.Option("-N", help="Concurrent fragment downloads")] = None,
-    rate_limit: Annotated[Optional[str], typer.Option("-r", help="Rate limit (e.g., '50K', '1M')")] = None,
+    concurrent_fragments: Annotated[Optional[int], typer.Option("--concurrent-fragments", "-N", help="Concurrent fragment downloads")] = None,
+    rate_limit: Annotated[Optional[str], typer.Option("--rate-limit", "-r", help="Rate limit (e.g., '50K', '1M')")] = None,
     sleep_interval: Annotated[Optional[float], typer.Option(help="Sleep seconds between downloads")] = None,
     max_sleep_interval: Annotated[Optional[float], typer.Option(help="Max random sleep seconds")] = None,
     max_downloads: Annotated[Optional[int], typer.Option(help="Stop after N downloads")] = None,
@@ -84,13 +84,17 @@ def search(
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
 ) -> None:
     """Search and download the results."""
-    args = batch_search.build_args(
-        query,
-        max_results=max_results,
-        provider=provider,
-        output=output,
-        output_dir=output_dir,
-        format=format,
-        cookies=cookies,
-    )
+    try:
+        args = batch_search.build_args(
+            query,
+            max_results=max_results,
+            provider=provider,
+            output=output,
+            output_dir=output_dir,
+            format=format,
+            cookies=cookies,
+        )
+    except ValueError as e:
+        typer.echo(str(e), err=True)
+        raise typer.Exit(code=1)
     run_command(args)

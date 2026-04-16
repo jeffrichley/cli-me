@@ -7,7 +7,7 @@ from yt_dlp_cli.commands.info_search import build_args, format_output, format_pr
 def test_default_args_include_no_download():
     args = build_args("test query")
     assert "--dump-json" in args
-    assert "--no-download" in args
+    assert "--skip-download" in args
 
 
 def test_default_provider_is_youtube():

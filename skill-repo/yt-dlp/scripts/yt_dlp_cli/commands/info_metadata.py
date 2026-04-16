@@ -20,7 +20,7 @@ def build_args(
     if write_json:
         args.extend(["--write-info-json", "--skip-download"])
     else:
-        args.extend(["--dump-json", "--no-download"])
+        args.extend(["--dump-json", "--skip-download"])
 
     if output_dir:
         args.extend(["-P", output_dir])

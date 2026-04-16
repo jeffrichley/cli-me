@@ -24,9 +24,8 @@ def build_args(
     # Archive file — core to sync
     args.extend(["--download-archive", archive])
 
-    # Format selection
-    if format:
-        args.extend(["-f", format])
+    # Format selection — default to best video+audio if not specified
+    args.extend(["-f", format if format else "bv*+ba/b"])
 
     # Output template
     if output:

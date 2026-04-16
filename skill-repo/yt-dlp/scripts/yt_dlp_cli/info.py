@@ -17,7 +17,7 @@ app.add_typer(info_app, name="info")
 @info_app.command()
 def formats(
     url: Annotated[str, typer.Argument(help="URL to inspect")],
-    json: Annotated[bool, typer.Option("--json", "-j", help="Output format details as JSON")] = False,
+    json: Annotated[bool, typer.Option("--json", "-j", help="Output full video metadata as JSON (instead of the human-readable format table)")] = False,
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
 ) -> None:
     """List available formats for a URL."""

@@ -143,7 +143,10 @@ The CLI wrapper accepts named quality levels that map to yt-dlp's 0-10 scale:
 | low | 8 | ~64-96 kbps |
 | worst | 10 | ~32-48 kbps |
 
-You can also pass raw bitrate values: `--quality 192` or `--quality 192K`.
+You can also pass a fixed bitrate using the `K` suffix: `--quality 192K`, `--quality 320K`.
+**Do not** use bare numbers like `--quality 192` — yt-dlp interprets those as VBR quality
+levels (0–10 scale), not kbps. `--quality 192` would be treated as a VBR level far outside
+the valid range, not as 192 kbps. Always use the `K` suffix for fixed-bitrate values.
 
 ## Default Codec Quality Hierarchy
 

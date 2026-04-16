@@ -26,8 +26,8 @@ def video(
     embed_thumbnail: Annotated[bool, typer.Option(help="Embed thumbnail")] = False,
     embed_chapters: Annotated[bool, typer.Option(help="Embed chapter markers")] = False,
     sponsorblock_remove: Annotated[Optional[str], typer.Option(help="SponsorBlock categories to remove (comma-separated)")] = None,
-    concurrent_fragments: Annotated[Optional[int], typer.Option("-N", help="Concurrent fragment downloads")] = None,
-    rate_limit: Annotated[Optional[str], typer.Option("-r", help="Rate limit (e.g., '50K', '1M')")] = None,
+    concurrent_fragments: Annotated[Optional[int], typer.Option("--concurrent-fragments", "-N", help="Concurrent fragment downloads")] = None,
+    rate_limit: Annotated[Optional[str], typer.Option("--rate-limit", "-r", help="Rate limit (e.g., '50K', '1M')")] = None,
     max_filesize: Annotated[Optional[str], typer.Option(help="Skip files larger than (e.g., '100M')")] = None,
 ) -> None:
     """Download a video from a URL."""
@@ -62,7 +62,7 @@ def audio(
     no_overwrites: Annotated[bool, typer.Option(help="Never overwrite existing files")] = False,
     embed_metadata: Annotated[bool, typer.Option(help="Embed metadata tags")] = False,
     embed_thumbnail: Annotated[bool, typer.Option(help="Embed thumbnail as cover art")] = False,
-    rate_limit: Annotated[Optional[str], typer.Option("-r", help="Rate limit (e.g., '50K', '1M')")] = None,
+    rate_limit: Annotated[Optional[str], typer.Option("--rate-limit", "-r", help="Rate limit (e.g., '50K', '1M')")] = None,
 ) -> None:
     """Download and extract audio from a URL."""
     args = download_audio.build_args(
@@ -90,8 +90,8 @@ def playlist(
     archive: Annotated[Optional[str], typer.Option(help="Archive file to track downloaded videos")] = None,
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
     no_overwrites: Annotated[bool, typer.Option(help="Never overwrite existing files")] = False,
-    concurrent_fragments: Annotated[Optional[int], typer.Option("-N", help="Concurrent fragment downloads")] = None,
-    rate_limit: Annotated[Optional[str], typer.Option("-r", help="Rate limit")] = None,
+    concurrent_fragments: Annotated[Optional[int], typer.Option("--concurrent-fragments", "-N", help="Concurrent fragment downloads")] = None,
+    rate_limit: Annotated[Optional[str], typer.Option("--rate-limit", "-r", help="Rate limit")] = None,
     sleep_interval: Annotated[Optional[float], typer.Option(help="Sleep seconds between downloads")] = None,
     max_sleep_interval: Annotated[Optional[float], typer.Option(help="Max random sleep seconds")] = None,
     date_after: Annotated[Optional[str], typer.Option(help="Only videos uploaded after date (YYYYMMDD)")] = None,
@@ -129,8 +129,8 @@ def channel(
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
     no_overwrites: Annotated[bool, typer.Option(help="Never overwrite existing files")] = False,
     break_on_existing: Annotated[bool, typer.Option(help="Stop on already-downloaded video")] = False,
-    concurrent_fragments: Annotated[Optional[int], typer.Option("-N", help="Concurrent fragment downloads")] = None,
-    rate_limit: Annotated[Optional[str], typer.Option("-r", help="Rate limit")] = None,
+    concurrent_fragments: Annotated[Optional[int], typer.Option("--concurrent-fragments", "-N", help="Concurrent fragment downloads")] = None,
+    rate_limit: Annotated[Optional[str], typer.Option("--rate-limit", "-r", help="Rate limit")] = None,
     sleep_interval: Annotated[Optional[float], typer.Option(help="Sleep seconds between downloads")] = None,
     max_sleep_interval: Annotated[Optional[float], typer.Option(help="Max random sleep seconds")] = None,
     date_after: Annotated[Optional[str], typer.Option(help="Only videos uploaded after date (YYYYMMDD)")] = None,

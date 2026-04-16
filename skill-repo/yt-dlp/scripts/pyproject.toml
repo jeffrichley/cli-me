@@ -11,6 +11,10 @@ dependencies = [
 [project.scripts]
 yt-dlp-cli = "yt_dlp_cli:app"
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [tool.uv]
 dev-dependencies = [
     "pytest>=8.0.0",

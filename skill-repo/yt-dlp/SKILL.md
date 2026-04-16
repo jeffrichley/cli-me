@@ -15,6 +15,11 @@ description: Video/audio download CLI for yt-dlp. Use when asked to download vid
 Intent-based CLI for yt-dlp. This skill wraps the real yt-dlp binary —
 it does not download media in Python.
 
+> **yt-dlp vs ffmpeg:** yt-dlp downloads and processes media **from URLs**.
+> ffmpeg processes **local media files**. Rule of thumb:
+> - "extract audio from a URL" → use this skill (`download audio URL`)
+> - "extract audio from a local file" → use ffmpeg directly
+
 ## Prerequisites
 
 - yt-dlp must be installed and in PATH
@@ -88,9 +93,15 @@ uv run yt_dlp_cli.py batch from-file urls.txt --archive downloaded.txt
 # Batch search and download
 uv run yt_dlp_cli.py batch search "lofi hip hop" --max-results 5 --provider youtube-music --format mp3
 
-# Download with browser cookies
-uv run yt_dlp_cli.py config cookies --browser chrome
-uv run yt_dlp_cli.py download video "https://..." --cookies cookies.txt
+# Download with browser cookies (use absolute paths to avoid cwd dependency)
+uv run yt_dlp_cli.py config cookies --browser chrome --output /path/to/cookies.txt
+uv run yt_dlp_cli.py download video "https://..." --cookies /path/to/cookies.txt
+
+# Check if a URL is already in a download archive
+uv run yt_dlp_cli.py config archive-check archive.txt "https://youtube.com/watch?v=..."
+
+# Manually add a URL to a download archive (mark as downloaded without downloading)
+uv run yt_dlp_cli.py config archive-add archive.txt "https://youtube.com/watch?v=..."
 ```
 
 ### Search Providers
@@ -119,6 +130,8 @@ The `info search` and `batch search` commands accept a `--provider` flag to sele
 | Search without downloading | `info search QUERY --pretty` | JSON by default, `--pretty` for readable |
 | Search by music provider | `info search QUERY --provider youtube-music` | See Search Providers table |
 | Search and download | `batch search QUERY --provider soundcloud` | Downloads all results |
+| Check if URL is archived | `config archive-check archive.txt URL` | Returns 0 if present, 1 if not |
+| Manually mark URL as downloaded | `config archive-add archive.txt URL` | Adds to archive without downloading |
 
 ### Default Behavior
 
