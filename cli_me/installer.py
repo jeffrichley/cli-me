@@ -55,7 +55,13 @@ class Installer:
             shutil.rmtree(dest)
 
         dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(source, dest)
+        shutil.copytree(
+            source,
+            dest,
+            ignore=shutil.ignore_patterns(
+                ".venv", "__pycache__", "*.pyc", ".pytest_cache",
+            ),
+        )
         return dest
 
     def uninstall(

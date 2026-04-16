@@ -1,0 +1,6 @@
+# Dev artifacts — created by uv run during development/testing
+# Agents recreate these on first run via uv
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/.pytest_cache/
