@@ -99,6 +99,28 @@ In ICL mode (`x_vector_only_mode=False`), mismatches between `ref_text` and the 
 
 ---
 
+### Voice design only available with the 1.7B model
+
+There is no 0.6B VoiceDesign model. `generate_voice_design` (and the `design` CLI command) requires `Qwen3-TTS-12Hz-1.7B-VoiceDesign`. Passing `--model 0.6b` to the `design` command must be rejected or overridden with an error, because the 0.6B variant simply does not exist for VoiceDesign.
+
+### Clone uses Base model; design uses VoiceDesign model
+
+The three generation paths each download a different model checkpoint:
+
+| Command  | Model loaded automatically              |
+|----------|-----------------------------------------|
+| `generate` | `Qwen3-TTS-12Hz-{size}-CustomVoice` |
+| `clone`    | `Qwen3-TTS-12Hz-{size}-Base`         |
+| `design`   | `Qwen3-TTS-12Hz-1.7B-VoiceDesign`   |
+
+This matters for disk space planning: `clone` and `generate` share the same size suffix but are separate downloads (~3.4 GB each for 1.7B, ~1.2 GB each for 0.6B).
+
+### `info speakers` and `info languages` require loading the full model
+
+The supported speakers and languages lists are queried from the loaded `Qwen3TTSModel` instance via `get_supported_speakers()` and `get_supported_languages()`. This means the model must be loaded before these commands can return results, which takes **30-60 seconds on first run** (including the initial model download if not cached). Plan for this in scripts or user-facing workflows.
+
+---
+
 ## Learned from Usage
 
 (No usage notes yet.)

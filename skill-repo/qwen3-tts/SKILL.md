@@ -63,6 +63,9 @@ uv run qwen3_tts_cli.py design text "Good morning" --description "A warm, deep m
 # List speakers
 uv run qwen3_tts_cli.py info speakers --pretty
 
+# List supported languages
+uv run qwen3_tts_cli.py info languages
+
 # Check GPU status
 uv run qwen3_tts_cli.py info device
 
@@ -83,7 +86,7 @@ uv run qwen3_tts_cli.py finetune generate "Hello" --model-dir ./my-voice/ -o fin
 | Generate speech | `generate text "..." --speaker Aiden -o out.wav` | 9 built-in speakers available |
 | Generate with emotion | `generate text "..." --instruct "whisper softly" -o out.wav` | Natural language style control |
 | Clone a voice | `clone text "..." --reference ref.wav --ref-text "transcript" -o out.wav` | 3+ seconds clean reference audio |
-| Design a voice | `design text "..." --description "young female, cheerful" -o out.wav` | Describe the voice you want |
+| Design a voice | `design text "..." --description "young female, cheerful" -o out.wav` | Requires `--model 1.7b`; no 0.6B VoiceDesign model exists |
 | List speakers | `info speakers --pretty` | JSON by default |
 | Check hardware | `info device` | Shows GPU/CPU and VRAM |
 | Use smaller model | `generate text "..." --model 0.6b -o out.wav` | Lower VRAM, faster, slightly lower quality |

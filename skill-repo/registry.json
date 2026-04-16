@@ -68,6 +68,25 @@
       ]
     },
     {
+      "name": "qwen3-tts",
+      "description": "Text-to-speech generation, voice cloning, and voice design using Qwen3-TTS — generate speech, TTS, clone voice, voice cloning, design a voice, create voiceover, narrate, read aloud, synthesize speech",
+      "category": "audio",
+      "tags": [
+        "tts",
+        "speech",
+        "voice",
+        "cloning",
+        "synthesis",
+        "ai"
+      ],
+      "version": "0.1.0",
+      "software_url": "https://github.com/QwenLM/Qwen3-TTS",
+      "source_repo": "https://github.com/QwenLM/Qwen3-TTS.git",
+      "dependencies": [
+        "ffmpeg"
+      ]
+    },
+    {
       "name": "yt-dlp",
       "description": "Video/audio download CLI for yt-dlp \u2014 download video, extract audio, download playlists and channels, get subtitles, embed metadata, SponsorBlock, batch download",
       "category": "media",
