@@ -33,6 +33,11 @@ def test_detect_device_force_overrides():
     assert detect_device(force="cuda") == "cuda"
 
 
+def test_detect_device_force_mps():
+    from qwen3_tts_cli.backend import detect_device
+    assert detect_device(force="mps") == "mps"
+
+
 def test_model_name_from_size_1_7b():
     from qwen3_tts_cli.backend import model_name_from_size
     assert model_name_from_size("1.7b") == "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"
@@ -61,6 +66,17 @@ def test_base_model_name_invalid_size():
         base_model_name_from_size("99b")
 
 
+def test_design_model_name_from_size():
+    from qwen3_tts_cli.backend import design_model_name_from_size
+    assert design_model_name_from_size("1.7b") == "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign"
+
+
+def test_design_model_name_invalid_size():
+    from qwen3_tts_cli.backend import design_model_name_from_size
+    with pytest.raises(ValueError, match="Unknown model size"):
+        design_model_name_from_size("0.6b")
+
+
 def test_save_audio_wav(tmp_path):
     import numpy as np
     from qwen3_tts_cli.backend import save_audio
@@ -77,6 +93,6 @@ def test_save_audio_non_wav_without_ffmpeg(tmp_path):
     from qwen3_tts_cli.backend import save_audio
     audio = np.random.randn(24000).astype(np.float32)
     out = tmp_path / "test.mp3"
-    with patch("shutil.which", return_value=None):
+    with patch("qwen3_tts_cli.backend.shutil.which", return_value=None):
         with pytest.raises((SystemExit, click.exceptions.Exit)):
             save_audio(audio, 24000, str(out), format="mp3")

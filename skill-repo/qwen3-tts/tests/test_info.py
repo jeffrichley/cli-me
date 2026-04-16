@@ -54,6 +54,40 @@ def test_format_device_info_json():
     assert parsed["device"] == "cpu"
 
 
+def test_get_speakers_delegates_to_model():
+    from qwen3_tts_cli.commands.info_speakers import get_speakers
+    mock_model = MagicMock()
+    mock_model.get_supported_speakers.return_value = ["Aiden", "Bella"]
+    result = get_speakers(mock_model)
+    assert result == ["Aiden", "Bella"]
+    mock_model.get_supported_speakers.assert_called_once()
+
+
+def test_get_speakers_handles_none():
+    from qwen3_tts_cli.commands.info_speakers import get_speakers
+    mock_model = MagicMock()
+    mock_model.get_supported_speakers.return_value = None
+    result = get_speakers(mock_model)
+    assert result == []
+
+
+def test_get_languages_delegates_to_model():
+    from qwen3_tts_cli.commands.info_languages import get_languages
+    mock_model = MagicMock()
+    mock_model.get_supported_languages.return_value = ["English", "Chinese"]
+    result = get_languages(mock_model)
+    assert result == ["English", "Chinese"]
+    mock_model.get_supported_languages.assert_called_once()
+
+
+def test_get_languages_handles_none():
+    from qwen3_tts_cli.commands.info_languages import get_languages
+    mock_model = MagicMock()
+    mock_model.get_supported_languages.return_value = None
+    result = get_languages(mock_model)
+    assert result == []
+
+
 def test_format_speakers_pretty():
     speakers = ["Aiden", "Bella", "Carlos"]
     output = format_speakers(speakers, pretty=True)

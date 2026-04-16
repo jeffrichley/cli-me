@@ -83,6 +83,13 @@ def test_generate_from_finetuned_returns_audio():
     )
     assert sr == 24000
     assert len(audio) == 24000
+    # Verify correct arg order: (text, speaker, language=..., instruct=...)
+    mock_model.generate_custom_voice.assert_called_once_with(
+        "Hello",
+        "custom_speaker",
+        language="English",
+        instruct=None,
+    )
 
 
 def test_generate_from_finetuned_with_instruct():
@@ -93,8 +100,30 @@ def test_generate_from_finetuned_with_instruct():
         text="Hello",
         instruct="Speak softly",
     )
-    call_args = mock_model.generate_custom_voice.call_args
-    assert call_args[1]["instruct"] == "Speak softly"
+    mock_model.generate_custom_voice.assert_called_once_with(
+        "Hello",
+        "custom_speaker",
+        language="Auto",
+        instruct="Speak softly",
+    )
+
+
+def test_build_train_args_model_follows_flag():
+    args = build_train_args(dataset="/data/t.jsonl", output_dir="/out", base_model="1.7b")
+    idx = args.index("--init_model_path")
+    assert args[idx + 1] == "Qwen/Qwen3-TTS-12Hz-1.7B-Base"
+
+
+def test_build_train_args_speaker_name_default():
+    args = build_train_args(dataset="/data/t.jsonl", output_dir="/out")
+    idx = args.index("--speaker_name")
+    assert args[idx + 1] == "custom_speaker"
+
+
+def test_build_train_args_custom_speaker():
+    args = build_train_args(dataset="/data/t.jsonl", output_dir="/out", speaker_name="jeff")
+    idx = args.index("--speaker_name")
+    assert args[idx + 1] == "jeff"
 
 
 def test_generate_from_finetuned_empty_text():
