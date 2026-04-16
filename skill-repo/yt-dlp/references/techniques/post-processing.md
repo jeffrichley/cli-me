@@ -252,7 +252,7 @@ yt-dlp --fixup force "URL"
 - **`--postprocessor-args` syntax changed from youtube-dl.** yt-dlp uses `NAME:ARGS` syntax to target specific post-processors. The old `--postprocessor-args "ARGS"` still works but applies to all ffmpeg invocations.
 - **`--download-sections` timestamps use `*` prefix.** The asterisk is required: `"*1:00-2:00"` not `"1:00-2:00"`.
 - **`--download-sections` requires ffmpeg.** The section cutting uses ffmpeg for stream manipulation.
-- **`process sponsorblock` requires `--sponsorblock-remove` or `--sponsorblock-mark`.** Running the command without either flag downloads the video with no SponsorBlock action — a silent no-op.
+- **SponsorBlock is opt-in.** Running `--sponsorblock-remove` or `--sponsorblock-mark` without specifying categories will use default SponsorBlock categories. Running neither flag downloads the video with no SponsorBlock action.
 
 ## Sources
 

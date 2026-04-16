@@ -38,6 +38,7 @@ Store default options in a config file so you don't repeat them every time.
 
 ### Config File Locations (checked in order)
 
+0. **CLI override:** `--config-locations PATH` — supersedes all other config file paths when specified
 1. **Portable config:** `yt-dlp.conf` in the same directory as the yt-dlp binary
 2. **Home config:** `yt-dlp.conf` in the home path set by `-P home:`
 3. **User config (XDG):** `~/.config/yt-dlp/config` (Linux/macOS)

@@ -201,6 +201,7 @@ This only works with MKV/MKA containers.
 ## Gotchas and Edge Cases
 
 - **`--embed-subs` only works with mp4, webm, and mkv containers.** Other formats silently skip subtitle embedding.
+- **`--embed-subs` with ASS subtitles into mp4 may fail silently.** The mp4 container only reliably supports SRT/VTT-compatible subtitle formats. If you need ASS subtitles, use MKV (`--merge-output-format mkv`), which supports all subtitle formats.
 - **`--embed-metadata` also embeds chapters and infojson by default.** Use `--no-embed-chapters` or `--no-embed-info-json` to disable.
 - **`--embed-thumbnail` in mp3 requires mutagen or AtomicParsley.** Without these dependencies, thumbnail embedding may fail silently for mp3 files.
 - **WebP thumbnails can cause issues.** Some players don't support WebP cover art. Use `--convert-thumbnails jpg` or `--convert-thumbnails png` to convert before embedding.

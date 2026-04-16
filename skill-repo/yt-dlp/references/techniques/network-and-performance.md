@@ -47,22 +47,22 @@ yt-dlp --geo-verification-proxy "http://proxy.example.com:8080" "URL"
 ## Geo Bypass
 
 ```bash
-# Enable geo bypass via X-Forwarded-For header (enabled by default)
-yt-dlp --geo-bypass "URL"
+# Apply XFF only when known to work (yt-dlp's default behavior)
+yt-dlp --xff default "URL"
 
-# Bypass with a specific country code
-yt-dlp --geo-bypass-country US "URL"
-yt-dlp --geo-bypass-country GB "URL"
-yt-dlp --geo-bypass-country DE "URL"
+# Fake a US IP via X-Forwarded-For header
+yt-dlp --xff US "URL"
 
-# Bypass with a specific IP block (CIDR notation)
-yt-dlp --geo-bypass-ip-block "198.51.100.0/24" "URL"
+# Fake an IP from a specific CIDR block
+yt-dlp --xff "198.51.100.0/24" "URL"
 
-# Disable geo bypass
-yt-dlp --no-geo-bypass "URL"
+# Disable geo bypass entirely
+yt-dlp --xff never "URL"
 ```
 
-The `--geo-bypass` flag works by adding an `X-Forwarded-For` header with an IP address from the target country. This only works if the server trusts this header (many don't).
+The `--xff` flag controls X-Forwarded-For header injection. It works by adding an `X-Forwarded-For` header with an IP address from the target country or CIDR block. This only works if the server trusts this header (many don't).
+
+> **Note:** The older `--geo-bypass`, `--geo-bypass-country`, `--geo-bypass-ip-block`, and `--no-geo-bypass` flags have been removed from yt-dlp. Use `--xff` instead.
 
 ## Concurrent Fragment Downloads
 
@@ -193,12 +193,15 @@ yt-dlp --add-headers "Authorization:Bearer TOKEN" "URL"
 
 ## Resuming Interrupted Downloads
 
+Continuation of partially downloaded files is the **default behavior** in yt-dlp. You don't need to add any flag.
+
 ```bash
-# Continue partially downloaded files (default behavior)
+# These are equivalent to the default — continuation happens automatically
+yt-dlp "URL"
 yt-dlp -c "URL"
 yt-dlp --continue "URL"
 
-# Force restart (don't continue)
+# Force restart from scratch (overrides default continuation)
 yt-dlp --no-continue "URL"
 ```
 
@@ -216,7 +219,7 @@ yt-dlp -N 4 -R infinite --fragment-retries infinite \
 ## Gotchas and Edge Cases
 
 - **`-r` applies per connection when using `-N`.** With `-r 1M` and `-N 4`, total bandwidth can reach ~4 MB/s. The rate limit is per-connection, not global. See [issue #7878](https://github.com/yt-dlp/yt-dlp/issues/7878) for details.
-- **`--geo-bypass` only fakes the X-Forwarded-For header.** It does not route traffic through a different country. For real geo-unblocking, use `--proxy` with a proxy in the target country.
+- **`--xff` only fakes the X-Forwarded-For header.** It does not route traffic through a different country. For real geo-unblocking, use `--proxy` with a proxy in the target country.
 - **`-N` (concurrent fragments) only works with DASH/HLS streams.** Regular HTTP downloads are single-threaded regardless of this setting.
 - **High `-N` values may trigger rate limiting.** Some CDNs will throttle or block you if you open too many concurrent connections. Start with `-N 4` and increase if stable.
 - **`--throttled-rate` is YouTube-specific in practice.** While technically site-agnostic, it's primarily useful for YouTube's throttling behavior.

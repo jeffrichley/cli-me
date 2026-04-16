@@ -16,7 +16,7 @@ The `-f` / `--format` flag controls which video and audio streams yt-dlp downloa
 | `wa` / `worstaudio` | Worst audio-only stream |
 | `all` | Download all formats separately |
 
-The default is `bv*+ba/b` -- best video (possibly with audio) plus best audio, falling back to best single file.
+The default is `bestvideo*+bestaudio/best` -- best video (possibly with audio) plus best audio, falling back to best single file. The short alias `bv*+ba/b` is equivalent.
 
 ## Combining Formats
 
@@ -91,7 +91,7 @@ yt-dlp -S "+size" "URL"
 yt-dlp -S "res:720,fps" --format-sort-force "URL"
 ```
 
-Without `--format-sort-force`, yt-dlp applies your sort on top of its defaults. With it, only your specified fields matter.
+Without `--format-sort-force`, yt-dlp applies your sort fields first, then falls back to built-in defaults for tiebreaking. With it, your sort fields take full precedence and built-in defaults are not used as tiebreakers.
 
 ## Default Codec Preferences
 
@@ -117,7 +117,7 @@ Accepted merge formats: `avi`, `flv`, `mkv`, `mov`, `mp4`, `webm`.
 
 ## Gotchas and Edge Cases
 
-- **`-f best` is NOT the default.** The default is `bv*+ba/b`. Using `-f best` gets the best pre-merged file, which is often lower quality than merging separate streams.
+- **`-f best` is NOT the default.** The default is `bestvideo*+bestaudio/best`. Using `-f best` gets the best pre-merged file, which is often lower quality than merging separate streams.
 - **Merging requires ffmpeg.** Without it, yt-dlp falls back to the best single-file format.
 - **Numeric fields use numeric comparison.** `[height<=720]` compares numerically. Use `?` suffix (e.g., `[filesize<=?50M]`) when values might be missing — without it, formats with unknown values are excluded.
 - **Codec filters use internal names.** Use `-F` to see what codec names a site reports (e.g., `avc1.64001F` for h264 on YouTube).

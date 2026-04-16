@@ -106,10 +106,12 @@ yt-dlp -x --audio-format mp3 --audio-quality 0 \
 yt-dlp -x --audio-format mp3 --audio-quality 0 \
   --embed-metadata --embed-thumbnail \
   --write-subs --sub-langs "en" --embed-subs "URL"
+```
 
 > **Note:** `--embed-subs` is silently ignored for audio-only containers (mp3, m4a, etc.)
 > since subtitles cannot be embedded in audio files.
 
+```bash
 # FLAC with all metadata
 yt-dlp -x --audio-format flac \
   --embed-metadata --embed-thumbnail "URL"

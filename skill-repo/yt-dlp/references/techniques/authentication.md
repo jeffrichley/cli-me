@@ -191,8 +191,8 @@ yt-dlp --client-certificate cert.pem --client-certificate-key key.pem \
 | `--netrc-cmd CMD` | Command that outputs netrc-format credentials |
 | `--video-password PASS` | Video-specific password |
 | `--ap-mso MSO` | Adobe Pass TV provider |
-| `--no-cookies` | Don't use any cookies |
-| `--no-cookies-from-browser` | Don't extract from browser |
+| `--no-cookies` | Don't use any cookies (negation of `--cookies`) |
+| `--no-cookies-from-browser` | Don't extract from browser (negation of `--cookies-from-browser`) |
 
 ## Gotchas and Edge Cases
 

@@ -59,7 +59,7 @@ yt-dlp -P "~/Downloads" -o "%(title)s.%(ext)s" "URL"
 | Variable | Description |
 |----------|-------------|
 | `%(duration)s` | Duration in seconds |
-| `%(duration_string)s` | Duration as `HH:MM:SS` |
+| `%(duration_string)s` | Duration as `HH:MM:SS` (or `MM:SS` for videos under 1 hour) |
 | `%(age_limit)s` | Age restriction |
 | `%(is_live)s` | Whether it's a live stream |
 | `%(was_live)s` | Whether it was a live stream |
