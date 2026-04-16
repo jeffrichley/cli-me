@@ -45,7 +45,7 @@ print(f"Cosine similarity: {score:.4f}")
 
 # Apply threshold (tune this for your use case)
 THRESHOLD = 0.7
-is_same_speaker = score > THRESHOLD
+is_same_speaker = score >= THRESHOLD
 print(f"Same speaker: {is_same_speaker}")
 ```
 
@@ -114,7 +114,7 @@ best_score = scores[best_match]
 print(f"Best match: {best_match} (score={best_score:.3f})")
 
 THRESHOLD = 0.65
-if best_score > THRESHOLD:
+if best_score >= THRESHOLD:
     print(f"Identified as: {best_match}")
 else:
     print("Unknown speaker (below threshold)")

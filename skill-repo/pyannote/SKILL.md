@@ -31,7 +31,7 @@ uv run scripts/pyannote_cli.py <command> [options]
 - Options: `--output`, `--format {rttm,json,txt}`, `--num-speakers`, `--min-speakers`, `--max-speakers`, `--device`, `--token`
 
 **vad** — Voice activity detection (speech regions)
-- `vad FILE` — detect speech regions in audio
+- `vad FILE` — detect speech regions in audio (runs diarization internally)
 - Options: `--output`, `--format {rttm,json,txt}`, `--device`, `--token`
 
 **verify** — Speaker verification (same speaker?)

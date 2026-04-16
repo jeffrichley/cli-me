@@ -6,6 +6,8 @@ Detect speech regions in an audio file without identifying who is speaking. VAD 
 
 Voice activity detection answers: "where is there speech?" It returns time segments labeled as `SPEECH`, with no speaker identity. This is faster and lighter than full diarization.
 
+> **Note:** The `pyannote/voice-activity-detection` pipeline is incompatible with pyannote.audio v4.x (uses deprecated `@`-revision syntax). The CLI's `vad` command works around this by running the diarization pipeline and collapsing all speaker labels into "SPEECH" regions. Results are equivalent but processing is heavier than a dedicated VAD model.
+
 ## Basic Usage
 
 ```python
@@ -13,6 +15,8 @@ from pyannote.audio import Pipeline
 import os
 
 # Load the VAD pipeline
+# NOTE: pyannote/voice-activity-detection is incompatible with pyannote.audio v4.x.
+# The CLI vad command uses the diarization pipeline instead (see Note above).
 pipeline = Pipeline.from_pretrained(
     "pyannote/voice-activity-detection",
     token=os.environ["HF_TOKEN"]
@@ -75,6 +79,7 @@ from pyannote.audio import Pipeline
 from pyannote.core import Segment
 
 # Step 1: Detect speech
+# NOTE: pyannote/voice-activity-detection is incompatible with pyannote.audio v4.x.
 vad_pipeline = Pipeline.from_pretrained(
     "pyannote/voice-activity-detection",
     token=os.environ["HF_TOKEN"]

@@ -111,6 +111,8 @@ speaker_embeddings = output.speaker_embeddings
 print(f"Speakers found: {len(output.speaker_diarization.labels())}")
 print(f"Embeddings shape: {speaker_embeddings.shape}")  # e.g. (3, 256)
 
+import numpy as np
+
 # Map speaker labels to their embeddings
 labels = output.speaker_diarization.labels()
 for i, speaker in enumerate(labels):
@@ -157,6 +159,8 @@ for seg, label in zip(segments, labels):
 ```
 
 ## Normalizing Embeddings
+
+> **Note:** The CLI's `embed` command outputs raw (unnormalized) embeddings. The `verify` command normalizes internally before comparison. If comparing embeddings from `embed` manually, L2-normalize them first.
 
 L2-normalize before cosine similarity for consistent behavior:
 

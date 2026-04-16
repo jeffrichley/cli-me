@@ -174,19 +174,20 @@ pipeline = Pipeline.from_pretrained(
 
 The `pyannote-audio` executable is **not on the system PATH** by default when installed with `pip install --user`.
 
-On Windows, it is installed at:
+On Windows, it is installed at a path like:
 ```
-C:\Users\jeffr\AppData\Roaming\Python\Python313\Scripts\pyannote-audio.exe
+<Python-Scripts-dir>/pyannote-audio.exe
 ```
+where `<Python-Scripts-dir>` is system-dependent (e.g. `C:\Users\<username>\AppData\Roaming\Python\Python313\Scripts` for a user install).
 
 The cli-me skill uses the Python API directly (`from pyannote.audio import Pipeline`) to avoid this issue entirely. If you need the CLI directly:
 
 ```bash
-# Windows — run with full path
-"C:/Users/jeffr/AppData/Roaming/Python/Python313/Scripts/pyannote-audio.exe" --help
+# Windows — run with full path (adjust to your actual Scripts directory)
+"<Python-Scripts-dir>/pyannote-audio.exe" --help
 
 # Or add to PATH in your shell config
-export PATH="$PATH:/c/Users/jeffr/AppData/Roaming/Python/Python313/Scripts"
+export PATH="$PATH:/path/to/python/Scripts"
 ```
 
 ## Installation
