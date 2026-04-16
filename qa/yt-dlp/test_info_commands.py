@@ -59,13 +59,13 @@ class TestInfoMetadata:
     def test_default_dumps_json(self):
         args = info_metadata.build_args(URL)
         assert "--dump-json" in args
-        assert "--no-download" in args
+        assert "--skip-download" in args
         assert args[-1] == URL
 
     def test_default_does_not_write_file(self):
         args = info_metadata.build_args(URL)
         assert "--write-info-json" not in args
-        assert "--skip-download" not in args
+        assert "--no-download" not in args
 
     def test_write_json_mode(self):
         args = info_metadata.build_args(URL, write_json=True)
