@@ -52,7 +52,7 @@ uv run yt_dlp_cli.py <group> <command> --help
 |-------|---------|
 | `download` | Download video/audio from URLs with format selection |
 | `info` | Query formats, metadata, subtitles, thumbnails without downloading |
-| `config` | Manage cookies, download archives, output templates |
+| `config` | Manage cookies and download archives |
 | `process` | Post-process: SponsorBlock, chapters, remux, embed metadata |
 | `batch` | Batch downloads from file, incremental sync, search |
 
@@ -124,8 +124,8 @@ The `info search` and `batch search` commands accept a `--provider` flag to sele
 ### Default Behavior
 
 - **Force overwrites:** All commands include `--force-overwrites` by default to
-  avoid interactive prompts in agent context. Pass `--no-overwrites` to prevent
-  overwriting existing files.
+  avoid interactive prompts in agent context. The `download` and `process`
+  commands support `--no-overwrites` to override this.
 - **Files download to the current working directory** unless `--output-dir` is specified.
 
 ## Knowledge Base
