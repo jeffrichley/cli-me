@@ -12,11 +12,11 @@ Planned skills for cli-me, in priority order.
 
 | Skill | Software | Backend Pattern | Why |
 |-------|----------|----------------|-----|
-| yt-dlp | yt-dlp | subprocess | Download video/audio from YouTube + 80 sites. Simplest next skill, validates new process |
-| demucs | Demucs (Meta) | Python (demucs library) | Separate vocals from music/noise. GPU-accelerated on 4060 Ti |
-| voice-library | Custom | Python (file management) | Manage voice profiles: reference audio, embeddings, LoRA adapters |
-| qwen3-tts | Qwen3-TTS + transformers | Python (torch) | TTS: voice cloning, voice engineering, streaming, batch generation |
-| pyannote | pyannote-audio | Python (pyannote library) | Speaker diarization — isolate individual speakers from multi-speaker audio |
+| yt-dlp | yt-dlp | subprocess | Download video/audio from YouTube + 80 sites. Simplest next skill, validates new process 🌶️🌶️ |
+| demucs | Demucs (Meta) | Python (demucs library) | Separate vocals from music/noise. GPU-accelerated on 4060 Ti 🌶️ |
+| voice-library | Custom | Python (file management) | Manage voice profiles: reference audio, embeddings, LoRA adapters 🌶️🌶️ |
+| qwen3-tts | Qwen3-TTS + transformers | Python (torch) | TTS: voice cloning, voice engineering, streaming, batch generation 🌶️🌶️🌶️🌶️🌶️ |
+| pyannote | pyannote-audio | Python (pyannote library) | Speaker diarization — isolate individual speakers from multi-speaker audio 🌶️ |
 
 ## Up Next — Viral / Community
 
@@ -29,11 +29,11 @@ Planned skills for cli-me, in priority order.
 
 | Skill | Software | Backend Pattern | Why |
 |-------|----------|----------------|-----|
-| gimp | GIMP | subprocess (Python-Fu headless) | Image editing, POD graphic cleanup |
-| blender | Blender | subprocess (`blender --background --python`) | 3D modeling, rendering |
-| comfyui | ComfyUI | REST API (localhost:8188) | AI image generation |
-| comfyui-vnccs | ComfyUI_VNCCS | REST API via ComfyUI (custom nodes) | Consistent character sprites |
-| kohya-ss | kohya_ss | subprocess (training scripts) | LoRA model training (image) |
+| gimp | GIMP | subprocess (Python-Fu headless) | Image editing, POD graphic cleanup 🌶️🌶️🌶️ |
+| blender | Blender | subprocess (`blender --background --python`) | 3D modeling, rendering 🌶️ |
+| comfyui | ComfyUI | REST API (localhost:8188) | AI image generation 🌶️🌶️🌶️🌶️ |
+| comfyui-vnccs | ComfyUI_VNCCS | REST API via ComfyUI (custom nodes) | Consistent character sprites 🌶️🌶️🌶️ |
+| kohya-ss | kohya_ss | subprocess (training scripts) | LoRA model training (image) 🌶️🌶️ |
 
 ## Wishlist
 
@@ -41,8 +41,11 @@ Add ideas here. Move to "Up Next" when ready to build.
 
 | Skill | Software | Backend Pattern | Notes |
 |-------|----------|----------------|-------|
-| inkscape | Inkscape | subprocess (`inkscape --actions`) | SVG editing, POD vector work |
-| imagemagick | ImageMagick | subprocess | Batch image processing, complements ffmpeg |
+| inkscape | Inkscape | subprocess (`inkscape --actions`) | SVG editing, POD vector work 🌶️ |
+| imagemagick | ImageMagick | subprocess | Batch image processing, complements ffmpeg 🌶️🌶️🌶️ |
 | krita | Krita | scripting API | Digital painting, art community |
 | audacity | Audacity | subprocess (sox) | Audio editing, podcasters |
 | godot | Godot | subprocess (headless) | Game engine, indie dev community |
+| pandoc | Pandoc | subprocess | Document format conversion (md→PDF, HTML→md). Render 47 Tabs pitches, PhD drafts, NIWC docs 🌶️🌶️🌶️🌶️ |
+| rsvg-convert | librsvg | subprocess | SVG→PNG rendering for Discord embeds, visual briefs, project cards 🌶️🌶️ |
+| tesseract | Tesseract OCR | subprocess | Extract text from images/screenshots. Read what Jeff pastes, process scanned docs 🌶️🌶️ |

@@ -21,3 +21,4 @@ tmp/
 # QA fixtures (generated/downloaded at test time)
 qa/fixtures/*
 !qa/fixtures/.gitkeep
+.gstack/
