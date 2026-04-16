@@ -24,6 +24,14 @@ For EVERY command in the wiki's "CLI Commands" section:
 - Report any divergence as: "Wiki line N says X, code line M does Y"
 - Check that default parameter values in code match wiki recommendations
 
+### 1a. Upstream Help Text Comparison
+Run the wrapped binary with `--help` (e.g., `demucs --help`). Compare
+its accepted flags against the wrapper's accepted flags. Report:
+- Wrapper flags not in upstream (these need to be translated, not passed through)
+- Upstream flags not in wrapper (document as deliberate omissions in gotchas.md)
+- Help text claims (e.g., "default 320") that describe upstream behavior
+  but are worded as if the wrapper controls them
+
 ### 1b. Prerequisite Flag Chains
 Some CLI tools have flags that require other flags to work. For example:
 - Embedding subtitles requires downloading them first
@@ -44,6 +52,9 @@ does nothing. Report as OBJECTIVE divergence.
 - What happens when the input file doesn't exist?
 - What happens when the output path is not writable?
 - Does the code fail loudly with clear messages, or silently?
+- What happens to stderr on SUCCESSFUL runs? Is it printed, logged,
+  or silently discarded? Discarding stderr on success loses warnings
+  and deprecation notices.
 
 ### 4. Edge Case Handling
 - Filenames with spaces — are they properly quoted?

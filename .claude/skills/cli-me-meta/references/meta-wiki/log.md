@@ -158,3 +158,27 @@ Append-only. Newest entries at the bottom.
     because SKILL.md says "Start with references/index.md" in prose, not via
     a markdown link. Both are excluded from orphan detection as root nodes
     that sit above the link graph.
+
+---
+
+**2026-04-16** — Second skill built: demucs. New lessons:
+
+31. **Installed version may differ from cloned source.** The demucs source repo
+    had `--other-method`, `--clip-mode none`, `--list-models`, and `demucs.api`
+    that didn't exist in the PyPI 4.0.1 release. Always run `binary --help` and
+    compare against source analysis before wrapping. Unreleased features cause
+    multiple rounds of rework when adversarial reviewers catch the mismatch.
+
+32. **Timeout guidance is a prerequisite concern, not a nice-to-have.** ML tools
+    (demucs, whisper, etc.) take minutes per invocation. Without explicit timeout
+    guidance in SKILL.md, agents use default 2-minute Bash timeouts and kill
+    processes mid-run. Add a "Default Behavior" section with timing estimates.
+
+33. **`detect_device()` must use the same Python as the wrapped tool.** When the
+    CLI runs in a uv venv but the tool is installed in system Python, `sys.executable`
+    points to the wrong interpreter. Device detection (CUDA/MPS/CPU) must probe the
+    tool's actual Python, not the wrapper's.
+
+34. **R5 parallel subagent architecture.** Updated R5 to dispatch one subagent per
+    technique page instead of running all commands sequentially. Benefit scales with
+    command speed — marginal for demucs (5s/command) but significant for ffmpeg (ms).

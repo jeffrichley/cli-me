@@ -40,6 +40,12 @@ For EACH test, ask: "What broken implementation would still pass this test?"
 - Are error paths tested? (binary not found, bad input, permission denied)
 - Is the "copy" vs "re-encode" path tested for commands that support both?
 
+### 3c. Combination Test
+Is there at least one test that calls `build_args` with MANY parameters
+set simultaneously? Individual parameter tests prove each flag works in
+isolation. A combination test proves they don't collide (duplicate flags,
+wrong ordering, files not at end). Report absence as OBJECTIVE.
+
 ### 3b. Parameter Coverage Audit
 For EACH `build_args` function in the commands/ directory:
 - Read the function signature — list every parameter

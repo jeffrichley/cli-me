@@ -34,6 +34,13 @@ uv run scripts/{{name}}_cli.py <command> [options]
 
 {{List each command group and command with a one-line description}}
 
+## Default Behavior
+
+{{Document: default output location, overwrite behavior, auto-detected
+settings (device, format), and processing time estimates. Include timeout
+guidance for agents — e.g., "Use timeout: 600000 for Bash tool calls" or
+"Run in background for long operations."}}
+
 ## Knowledge Base
 
 Read technique guides and best practices from the `references/` directory.

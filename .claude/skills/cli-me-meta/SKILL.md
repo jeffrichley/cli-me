@@ -72,6 +72,14 @@ as you go (don't wait until the end):
   - Record the git tag, commit hash, and date analyzed
   - Note the version string from the software's own metadata
 
+### 1b.1 Verify installed version matches source
+
+**CRITICAL:** The cloned source may be newer than the installed release.
+Run the installed binary with `--help` and compare its flags against the
+source analysis. Any flag in the source but NOT in `--help` output is an
+unreleased feature — mark it in `cli-interface.md` with a note like:
+"**Not in PyPI release X.Y.Z — unreleased.**" Do NOT wrap unreleased flags.
+
 ### 1c. Research the web
 
 Search for:
