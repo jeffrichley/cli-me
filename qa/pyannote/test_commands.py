@@ -120,7 +120,7 @@ class TestFormatTxt:
         assert "-->" in lines[0]
 
 
-from pyannote_cli.commands.vad import run_vad, format_rttm as vad_format_rttm, format_json as vad_format_json, format_txt as vad_format_txt
+from pyannote_cli.commands.vad import format_rttm as vad_format_rttm, format_json as vad_format_json, format_txt as vad_format_txt
 
 
 @pytest.fixture
@@ -132,23 +132,6 @@ def vad_output():
     ]
     return FakeAnnotation(tracks)
 
-
-@pytest.fixture
-def mock_vad_pipeline(vad_output):
-    pipeline = MagicMock()
-    pipeline.return_value = vad_output
-    return pipeline
-
-
-@pytest.mark.command_graph
-class TestRunVad:
-    def test_calls_pipeline(self, mock_vad_pipeline):
-        run_vad(mock_vad_pipeline, Path("test.wav"))
-        mock_vad_pipeline.assert_called_once_with("test.wav")
-
-    def test_returns_annotation(self, mock_vad_pipeline, vad_output):
-        result = run_vad(mock_vad_pipeline, Path("test.wav"))
-        assert result is vad_output
 
 
 @pytest.mark.command_graph

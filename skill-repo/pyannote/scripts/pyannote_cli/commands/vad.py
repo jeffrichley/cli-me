@@ -7,8 +7,27 @@ from typing import Any
 
 
 def run_vad(pipeline: Any, file: Path) -> Any:
-    """Run voice activity detection. Returns an Annotation with SPEECH labels."""
-    return pipeline(str(file))
+    """Run voice activity detection using the diarization pipeline.
+
+    Runs speaker diarization and collapses all speaker labels into "SPEECH"
+    regions. This works around pyannote/voice-activity-detection being
+    incompatible with pyannote.audio v4.x.
+
+    Returns an Annotation with "SPEECH" labels.
+    """
+    output = pipeline(str(file))
+    diarization = output.speaker_diarization if hasattr(output, "speaker_diarization") else output
+    return collapse_to_speech(diarization)
+
+
+def collapse_to_speech(annotation: Any) -> Any:
+    """Collapse all speaker labels in an annotation into 'SPEECH' labels."""
+    from pyannote.core import Annotation
+
+    vad = Annotation()
+    for segment, _, _ in annotation.itertracks(yield_label=True):
+        vad[segment] = "SPEECH"
+    return vad.support()
 
 
 def format_rttm(annotation: Any, filename: str = "audio") -> str:

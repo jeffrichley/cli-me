@@ -26,7 +26,7 @@ def vad(
         raise typer.Exit(code=1)
 
     pipeline = load_pipeline(
-        "pyannote/voice-activity-detection",
+        "pyannote/speaker-diarization-community-1",
         token=token,
         device=device,
     )

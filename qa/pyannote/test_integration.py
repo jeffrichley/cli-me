@@ -90,15 +90,14 @@ class TestDiarizeIntegration:
 
 @skip_no_token
 @skip_no_audio
-@pytest.mark.skip(reason="pyannote/voice-activity-detection uses @-revision syntax incompatible with v4.x")
 class TestVadIntegration:
-    """Test real voice activity detection pipeline."""
+    """Test VAD via diarization pipeline (collapses speakers to SPEECH)."""
 
     @pytest.fixture(scope="class")
     def pipeline(self):
         from pyannote_cli.backend import load_pipeline
         return load_pipeline(
-            "pyannote/voice-activity-detection",
+            "pyannote/speaker-diarization-community-1",
             device="cpu",
         )
 
