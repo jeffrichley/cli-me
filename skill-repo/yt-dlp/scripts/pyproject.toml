@@ -10,3 +10,8 @@ dependencies = [
 
 [project.scripts]
 yt-dlp-cli = "yt_dlp_cli:app"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+]
