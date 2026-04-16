@@ -25,7 +25,7 @@ import os
 
 # Load the embedding model (two-step pattern)
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet34-voxceleb",
+    "pyannote/wespeaker-voxceleb-resnet34-LM",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model, window="whole")
@@ -59,7 +59,7 @@ from pyannote.core import Segment
 import os
 
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet34-voxceleb",
+    "pyannote/wespeaker-voxceleb-resnet34-LM",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model, window="whole")
@@ -84,7 +84,7 @@ from pyannote.audio import Model, Inference
 import os
 
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet34-voxceleb",
+    "pyannote/wespeaker-voxceleb-resnet34-LM",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model, window="whole")
@@ -155,6 +155,6 @@ Use a held-out validation set from your target domain to tune the threshold.
 ## Sources
 
 - pyannote.audio GitHub: https://github.com/pyannote/pyannote-audio
-- wespeaker-resnet34 model: https://huggingface.co/pyannote/wespeaker-resnet34-voxceleb
-- wespeaker-resnet152 model: https://huggingface.co/pyannote/wespeaker-resnet152-voxceleb
+- wespeaker-voxceleb-resnet34-LM model: https://huggingface.co/pyannote/wespeaker-voxceleb-resnet34-LM
+- pyannote embedding model: https://huggingface.co/pyannote/embedding
 - VoxCeleb dataset: https://www.robots.ox.ac.uk/~vgg/data/voxceleb/

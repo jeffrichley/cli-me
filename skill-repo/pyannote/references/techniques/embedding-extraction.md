@@ -18,7 +18,7 @@ import os
 
 # Load the embedding model (two-step pattern)
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet34-voxceleb",
+    "pyannote/wespeaker-voxceleb-resnet34-LM",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model, window="whole")  # treat the entire file as one segment
@@ -34,14 +34,14 @@ print(f"Embedding dtype: {embedding.dtype}")  # float32
 ```python
 # Lightweight — fast, good for most use cases
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet34-voxceleb",
+    "pyannote/wespeaker-voxceleb-resnet34-LM",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model)
 
 # High-quality — more accurate, slower, larger
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet152-voxceleb",
+    "pyannote/embedding",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model)
@@ -49,8 +49,8 @@ inference = Inference(model)
 
 | Model | Architecture | Embedding dim | Speed | Accuracy |
 |-------|-------------|---------------|-------|----------|
-| wespeaker-resnet34-voxceleb  | ResNet-34  | 256 | Fast | Good |
-| wespeaker-resnet152-voxceleb | ResNet-152 | 256 | Slow | Better |
+| wespeaker-voxceleb-resnet34-LM | ResNet-34  | 256 | Fast | Good |
+| embedding | Generic | 256 | Medium | Better |
 
 ## Extracting from a Specific Time Range
 
@@ -59,7 +59,7 @@ from pyannote.audio import Model, Inference
 from pyannote.core import Segment
 
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet34-voxceleb",
+    "pyannote/wespeaker-voxceleb-resnet34-LM",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model, window="whole")
@@ -78,7 +78,7 @@ For long files, extract embeddings over a sliding window:
 from pyannote.audio import Model, Inference
 
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet34-voxceleb",
+    "pyannote/wespeaker-voxceleb-resnet34-LM",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model, window="sliding", duration=3.0, step=1.0)
@@ -129,7 +129,7 @@ import numpy as np
 from sklearn.cluster import AgglomerativeClustering
 
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet34-voxceleb",
+    "pyannote/wespeaker-voxceleb-resnet34-LM",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model, window="whole")
@@ -183,7 +183,7 @@ similarity = float(np.dot(emb_a, emb_b))
 import torch
 
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet34-voxceleb",
+    "pyannote/wespeaker-voxceleb-resnet34-LM",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model, window="whole")
@@ -205,6 +205,6 @@ embedding = inference("audio.wav")
 ## Sources
 
 - pyannote.audio GitHub: https://github.com/pyannote/pyannote-audio
-- wespeaker-resnet34-voxceleb: https://huggingface.co/pyannote/wespeaker-resnet34-voxceleb
-- wespeaker-resnet152-voxceleb: https://huggingface.co/pyannote/wespeaker-resnet152-voxceleb
+- wespeaker-voxceleb-resnet34-LM: https://huggingface.co/pyannote/wespeaker-voxceleb-resnet34-LM
+- pyannote embedding: https://huggingface.co/pyannote/embedding
 - pyannote Inference API: https://github.com/pyannote/pyannote-audio/blob/develop/src/pyannote/audio/core/inference.py

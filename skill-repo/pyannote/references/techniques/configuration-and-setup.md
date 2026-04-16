@@ -12,7 +12,7 @@ Visit each model page and click "Agree and access repository":
 - https://huggingface.co/pyannote/speaker-diarization-community-1
 - https://huggingface.co/pyannote/voice-activity-detection
 - https://huggingface.co/pyannote/segmentation-3.0
-- https://huggingface.co/pyannote/wespeaker-resnet34-voxceleb
+- https://huggingface.co/pyannote/wespeaker-voxceleb-resnet34-LM
 
 ### Step 2: Create an access token
 
@@ -143,7 +143,7 @@ pyannote pipelines can be configured via YAML. This is how hyperparameters like 
 pipeline:
   name: pyannote.audio.pipelines.SpeakerDiarization
   params:
-    embedding: pyannote/wespeaker-resnet34-voxceleb
+    embedding: pyannote/wespeaker-voxceleb-resnet34-LM
     embedding_batch_size: 32
     embedding_exclude_overlap: true
     segmentation: pyannote/segmentation-3.0

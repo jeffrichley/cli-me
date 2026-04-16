@@ -16,7 +16,7 @@ from pyannote_cli.commands.embed import run_embed, format_json, format_numpy
 def embed(
     file: Path = typer.Argument(..., help="Audio file to extract embedding from"),
     output: Optional[Path] = typer.Option(None, "--output", "-o", help="Output file (default: stdout as JSON)"),
-    model: str = typer.Option("resnet34", help="Embedding model: resnet34, resnet152"),
+    model: str = typer.Option("resnet34", help="Embedding model: resnet34, embedding"),
     device: str = typer.Option("auto", help="Device: cpu, cuda, mps, auto"),
     token: Optional[str] = typer.Option(None, help="HuggingFace token (default: HF_TOKEN env)"),
 ) -> None:
@@ -26,12 +26,12 @@ def embed(
         raise typer.Exit(code=1)
 
     model_map = {
-        "resnet34": "pyannote/wespeaker-resnet34-voxceleb",
-        "resnet152": "pyannote/wespeaker-resnet152-voxceleb",
+        "resnet34": "pyannote/wespeaker-voxceleb-resnet34-LM",
+        "embedding": "pyannote/embedding",
     }
     model_name = model_map.get(model)
     if model_name is None:
-        typer.echo(f"ERROR: Unknown model '{model}'. Use: resnet34, resnet152", err=True)
+        typer.echo(f"ERROR: Unknown model '{model}'. Use: resnet34, embedding", err=True)
         raise typer.Exit(code=1)
 
     inference = load_inference(model_name, token=token, device=device, window="whole")

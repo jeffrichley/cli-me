@@ -85,7 +85,7 @@ vad_output = vad_pipeline("audio.wav")
 from pyannote.audio import Model, Inference
 
 model = Model.from_pretrained(
-    "pyannote/wespeaker-resnet34-voxceleb",
+    "pyannote/wespeaker-voxceleb-resnet34-LM",
     token=os.environ["HF_TOKEN"]
 )
 inference = Inference(model, window="sliding", duration=2.0, step=0.5)
