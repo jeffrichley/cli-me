@@ -11,6 +11,7 @@ from rich.console import Console
 from rich.table import Table
 
 from cli_me.installer import Installer
+from cli_me.log import LogFile
 from cli_me.registry import Registry
 
 console = Console()
@@ -245,6 +246,38 @@ def registry_update(
 
     reg.save()
     console.print(f"Updated [bold]{name}[/bold] in registry.", style="green")
+
+
+# --- Log mutation subcommands (file-locked for concurrent access) ---
+
+log_app = typer.Typer(
+    name="log",
+    help="Append to log files with file locking for concurrent agent safety.",
+    no_args_is_help=True,
+)
+app.add_typer(log_app)
+
+
+@log_app.command("append")
+def log_append(
+    skill: str = typer.Option(..., help="Skill name for the log entry"),
+    message: str = typer.Option(..., help="Log message to append"),
+    log_file: str = typer.Option(
+        None,
+        "--log-file",
+        help="Path to log file. Defaults to meta-wiki/log.md in skill-repo.",
+    ),
+) -> None:
+    """Append a timestamped entry to a log file (file-locked)."""
+    if log_file:
+        path = Path(log_file)
+    else:
+        repo = _find_skill_repo()
+        path = repo.parent / ".claude" / "skills" / "cli-me-meta" / "references" / "meta-wiki" / "log.md"
+
+    log = LogFile(path)
+    log.append(skill, message)
+    console.print(f"Appended entry for [bold]{skill}[/bold] to {path}", style="green")
 
 
 def main() -> None:

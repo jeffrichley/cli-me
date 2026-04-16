@@ -178,3 +178,35 @@ def test_registry_update_not_found(fake_repo):
         "--description", "nope",
     ])
     assert result.exit_code == 1
+
+
+def test_log_append(fake_repo):
+    log_path = fake_repo / "meta-wiki" / "log.md"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_text("# Log\n")
+
+    result = runner.invoke(app, [
+        "log", "append",
+        "--skill", "gimp",
+        "--message", "Learned about --no-interface flag.",
+        "--log-file", str(log_path),
+    ])
+    assert result.exit_code == 0
+
+    content = log_path.read_text()
+    assert "gimp" in content
+    assert "--no-interface" in content
+
+
+def test_log_append_creates_file(fake_repo, tmp_path):
+    log_path = tmp_path / "new-log.md"
+
+    result = runner.invoke(app, [
+        "log", "append",
+        "--skill", "blender",
+        "--message", "Blender needs --background.",
+        "--log-file", str(log_path),
+    ])
+    assert result.exit_code == 0
+    assert log_path.exists()
+    assert "blender" in log_path.read_text()
