@@ -10,15 +10,24 @@ import typer
 
 
 def get_token(token: str | None = None) -> str:
-    """Get HuggingFace token from argument or environment."""
+    """Get HuggingFace token from argument, environment, or local cache."""
     if token:
         return token
     env_token = os.environ.get("HF_TOKEN")
     if env_token:
         return env_token
+    # Check huggingface_hub's saved token (from `huggingface-cli login`)
+    try:
+        from huggingface_hub import get_token as hf_get_token
+
+        saved = hf_get_token()
+        if saved:
+            return saved
+    except Exception:
+        pass
     typer.echo(
-        "ERROR: HuggingFace token required. Set HF_TOKEN environment variable "
-        "or pass --token. Get a token at https://huggingface.co/settings/tokens",
+        "ERROR: HuggingFace token required. Set HF_TOKEN environment variable, "
+        "run `huggingface-cli login`, or pass --token.",
         err=True,
     )
     raise typer.Exit(code=1)
