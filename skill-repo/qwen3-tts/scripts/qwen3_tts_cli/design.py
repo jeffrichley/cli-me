@@ -5,7 +5,7 @@ from typing import Annotated, Optional
 import typer
 
 from . import app
-from .backend import load_model, save_audio
+from .backend import load_design_model, save_audio
 from .commands import design_text
 
 design_app = typer.Typer(help="Voice design from natural language descriptions.", no_args_is_help=True)
@@ -23,7 +23,11 @@ def text(
     device: Annotated[Optional[str], typer.Option(help="Force device (cuda, cpu, mps)")] = None,
 ) -> None:
     """Design a voice from a natural language description and generate speech."""
-    model = load_model(model_size, device)
+    try:
+        model = load_design_model(model_size, device)
+    except ValueError as e:
+        typer.echo(str(e), err=True)
+        raise typer.Exit(code=1)
     try:
         audio, sr = design_text.design_speech(
             model,

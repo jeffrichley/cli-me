@@ -5,7 +5,8 @@ import json
 
 def get_languages(model) -> list[str]:
     """Get supported languages from a loaded model."""
-    return model.get_supported_languages()
+    result = model.get_supported_languages()
+    return result if result is not None else []
 
 
 def format_languages(languages: list[str], pretty: bool = False) -> str:

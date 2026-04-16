@@ -20,8 +20,8 @@ def generate_from_finetuned(
 
     wavs, sr = model.generate_custom_voice(
         text,
-        language,
         "custom_speaker",
+        language=language,
         instruct=instruct,
     )
     return wavs[0], sr

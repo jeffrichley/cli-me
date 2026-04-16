@@ -5,7 +5,8 @@ import json
 
 def get_speakers(model) -> list[str]:
     """Get supported speakers from a loaded model."""
-    return model.get_supported_speakers()
+    result = model.get_supported_speakers()
+    return result if result is not None else []
 
 
 def format_speakers(speakers: list[str], pretty: bool = False) -> str:

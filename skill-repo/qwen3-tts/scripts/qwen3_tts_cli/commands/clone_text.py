@@ -31,5 +31,6 @@ def clone_speech(
         language=language,
         ref_audio=str(ref_path),
         ref_text=ref_text,
+        non_streaming_mode=True,
     )
     return wavs[0], sr

@@ -44,6 +44,7 @@ def train(
     base_model: Annotated[str, typer.Option("--base-model", help="Base model size (1.7b or 0.6b)")] = "1.7b",
     epochs: Annotated[Optional[int], typer.Option(help="Number of training epochs")] = None,
     batch_size: Annotated[Optional[int], typer.Option(help="Training batch size")] = None,
+    learning_rate: Annotated[Optional[float], typer.Option("--learning-rate", help="Learning rate")] = None,
     device: Annotated[Optional[str], typer.Option(help="Force device (cuda, cpu)")] = None,
 ) -> None:
     """Train a custom voice model."""
@@ -54,6 +55,7 @@ def train(
             base_model=base_model,
             epochs=epochs,
             batch_size=batch_size,
+            learning_rate=learning_rate,
         )
     except ValueError as e:
         typer.echo(str(e), err=True)

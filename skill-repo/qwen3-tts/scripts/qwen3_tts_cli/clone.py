@@ -5,7 +5,7 @@ from typing import Annotated, Optional
 import typer
 
 from . import app
-from .backend import load_model, save_audio
+from .backend import load_base_model, save_audio
 from .commands import clone_text
 
 clone_app = typer.Typer(help="Voice cloning from reference audio.", no_args_is_help=True)
@@ -24,7 +24,7 @@ def text(
     device: Annotated[Optional[str], typer.Option(help="Force device (cuda, cpu, mps)")] = None,
 ) -> None:
     """Clone a voice from reference audio and generate speech."""
-    model = load_model(model_size, device)
+    model = load_base_model(model_size, device)
     try:
         audio, sr = clone_text.clone_speech(
             model,

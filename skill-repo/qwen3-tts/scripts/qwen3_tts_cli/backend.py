@@ -18,6 +18,10 @@ BASE_MODELS = {
     "0.6b": "Qwen/Qwen3-TTS-12Hz-0.6B-Base",
 }
 
+VOICE_DESIGN_MODELS = {
+    "1.7b": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+}
+
 # Cached model instance
 _model_cache: dict = {}
 
@@ -50,6 +54,14 @@ def base_model_name_from_size(size: str) -> str:
     return BASE_MODELS[size]
 
 
+def design_model_name_from_size(size: str) -> str:
+    """Return the HuggingFace model name for a VoiceDesign model size."""
+    if size not in VOICE_DESIGN_MODELS:
+        valid = ", ".join(sorted(VOICE_DESIGN_MODELS))
+        raise ValueError(f"Unknown model size '{size}' for voice design. Valid sizes: {valid}")
+    return VOICE_DESIGN_MODELS[size]
+
+
 def load_model(model_size: str = "1.7b", device: str | None = None):
     """Load a Qwen3-TTS CustomVoice model with caching.
 
@@ -71,6 +83,34 @@ def load_model(model_size: str = "1.7b", device: str | None = None):
         device_map=f"{device}:0" if device == "cuda" else device,
         dtype=dtype,
     )
+    _model_cache[cache_key] = model
+    return model
+
+
+def load_base_model(model_size: str = "1.7b", device: str | None = None):
+    """Load a Base model (for cloning). Caches."""
+    device = detect_device(device)
+    cache_key = ("base", model_size, device)
+    if cache_key in _model_cache:
+        return _model_cache[cache_key]
+    from qwen_tts import Qwen3TTSModel
+    model_name = base_model_name_from_size(model_size)
+    dtype = torch.bfloat16 if device != "cpu" else torch.float32
+    model = Qwen3TTSModel.from_pretrained(model_name, device_map=f"{device}:0" if device == "cuda" else device, dtype=dtype)
+    _model_cache[cache_key] = model
+    return model
+
+
+def load_design_model(model_size: str = "1.7b", device: str | None = None):
+    """Load a VoiceDesign model. Caches."""
+    device = detect_device(device)
+    cache_key = ("design", model_size, device)
+    if cache_key in _model_cache:
+        return _model_cache[cache_key]
+    from qwen_tts import Qwen3TTSModel
+    model_name = design_model_name_from_size(model_size)
+    dtype = torch.bfloat16 if device != "cpu" else torch.float32
+    model = Qwen3TTSModel.from_pretrained(model_name, device_map=f"{device}:0" if device == "cuda" else device, dtype=dtype)
     _model_cache[cache_key] = model
     return model
 
