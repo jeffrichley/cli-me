@@ -89,3 +89,40 @@ def test_locked_write_timeout(tmp_path):
         assert raised
     finally:
         external_lock.release()
+
+
+import threading
+
+
+def test_concurrent_writes_no_data_loss(tmp_path):
+    """Two threads writing to the same file via locked_write don't lose data."""
+    target = tmp_path / "counter.json"
+    target.write_text(json.dumps({"count": 0}))
+
+    errors = []
+
+    def increment(n: int) -> None:
+        """Increment the counter n times, each via a locked read-modify-write."""
+        for _ in range(n):
+            def writer(path: Path) -> None:
+                data = json.loads(target.read_text())
+                data["count"] += 1
+                path.write_text(json.dumps(data))
+
+            try:
+                locked_write(target, writer)
+            except Exception as e:
+                errors.append(e)
+
+    iterations = 20
+    t1 = threading.Thread(target=increment, args=(iterations,))
+    t2 = threading.Thread(target=increment, args=(iterations,))
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()
+
+    assert not errors, f"Errors during concurrent writes: {errors}"
+
+    data = json.loads(target.read_text())
+    assert data["count"] == iterations * 2
