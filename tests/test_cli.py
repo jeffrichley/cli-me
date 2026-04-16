@@ -115,3 +115,66 @@ def test_uninstall(fake_repo, tmp_path):
     result = runner.invoke(app, ["uninstall", "gimp", "--project", str(project)])
     assert result.exit_code == 0
     assert not (project / ".claude" / "skills" / "gimp").exists()
+
+
+def test_registry_add(fake_repo):
+    result = runner.invoke(app, [
+        "registry", "add",
+        "--name", "blender",
+        "--description", "3D modeling CLI",
+        "--category", "3d",
+        "--tags", "3d,modeling",
+        "--version", "0.1.0",
+    ])
+    assert result.exit_code == 0
+    assert "blender" in result.output
+
+    # Verify it's persisted
+    data = json.loads((fake_repo / "registry.json").read_text())
+    names = [s["name"] for s in data["skills"]]
+    assert "blender" in names
+
+
+def test_registry_add_duplicate(fake_repo):
+    result = runner.invoke(app, [
+        "registry", "add",
+        "--name", "gimp",
+        "--description", "duplicate",
+    ])
+    assert result.exit_code == 1
+
+
+def test_registry_remove(fake_repo):
+    result = runner.invoke(app, ["registry", "remove", "gimp"])
+    assert result.exit_code == 0
+
+    data = json.loads((fake_repo / "registry.json").read_text())
+    names = [s["name"] for s in data["skills"]]
+    assert "gimp" not in names
+
+
+def test_registry_remove_not_found(fake_repo):
+    result = runner.invoke(app, ["registry", "remove", "nonexistent"])
+    assert result.exit_code == 1
+
+
+def test_registry_update(fake_repo):
+    result = runner.invoke(app, [
+        "registry", "update", "gimp",
+        "--description", "Updated description",
+        "--version", "0.2.0",
+    ])
+    assert result.exit_code == 0
+
+    data = json.loads((fake_repo / "registry.json").read_text())
+    skill = next(s for s in data["skills"] if s["name"] == "gimp")
+    assert skill["description"] == "Updated description"
+    assert skill["version"] == "0.2.0"
+
+
+def test_registry_update_not_found(fake_repo):
+    result = runner.invoke(app, [
+        "registry", "update", "nonexistent",
+        "--description", "nope",
+    ])
+    assert result.exit_code == 1

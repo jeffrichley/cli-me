@@ -153,5 +153,99 @@ def uninstall(
         raise typer.Exit(code=1)
 
 
+# --- Registry mutation subcommands (file-locked for concurrent access) ---
+
+registry_app = typer.Typer(
+    name="registry",
+    help="Mutate skill-repo/registry.json with file locking for concurrent agent safety.",
+    no_args_is_help=True,
+)
+app.add_typer(registry_app)
+
+
+@registry_app.command("add")
+def registry_add(
+    name: str = typer.Option(..., help="Skill name"),
+    description: str = typer.Option("", help="Skill description"),
+    category: str = typer.Option("", help="Skill category"),
+    tags: str = typer.Option("", help="Comma-separated tags"),
+    version: str = typer.Option("0.1.0", help="Skill version"),
+    software_url: str = typer.Option("", help="Upstream software URL"),
+    source_repo: str = typer.Option("", help="Source repository URL"),
+    dependencies: str = typer.Option("", help="Comma-separated dependency names"),
+) -> None:
+    """Add a new skill to the registry (file-locked)."""
+    reg = _get_registry()
+    skill = {
+        "name": name,
+        "description": description,
+        "category": category,
+        "tags": [t.strip() for t in tags.split(",") if t.strip()],
+        "version": version,
+        "software_url": software_url,
+        "source_repo": source_repo,
+        "dependencies": [d.strip() for d in dependencies.split(",") if d.strip()],
+    }
+    try:
+        reg.add(skill)
+        reg.save()
+        console.print(f"Added [bold]{name}[/bold] to registry.", style="green")
+    except ValueError as e:
+        err_console.print(str(e), style="bold red")
+        raise typer.Exit(code=1)
+
+
+@registry_app.command("remove")
+def registry_remove(
+    name: str = typer.Argument(..., help="Skill name to remove"),
+) -> None:
+    """Remove a skill from the registry (file-locked)."""
+    reg = _get_registry()
+    try:
+        reg.remove(name)
+        reg.save()
+        console.print(f"Removed [bold]{name}[/bold] from registry.", style="green")
+    except ValueError as e:
+        err_console.print(str(e), style="bold red")
+        raise typer.Exit(code=1)
+
+
+@registry_app.command("update")
+def registry_update(
+    name: str = typer.Argument(..., help="Skill name to update"),
+    description: str = typer.Option(None, help="New description"),
+    category: str = typer.Option(None, help="New category"),
+    tags: str = typer.Option(None, help="New comma-separated tags"),
+    version: str = typer.Option(None, help="New version"),
+    software_url: str = typer.Option(None, help="New software URL"),
+    source_repo: str = typer.Option(None, help="New source repo URL"),
+    dependencies: str = typer.Option(None, help="New comma-separated dependencies"),
+) -> None:
+    """Update fields on an existing skill (file-locked)."""
+    reg = _get_registry()
+    skill = reg.get(name)
+    if skill is None:
+        err_console.print(f"Skill '{name}' not found.", style="bold red")
+        raise typer.Exit(code=1)
+
+    if description is not None:
+        skill["description"] = description
+    if category is not None:
+        skill["category"] = category
+    if tags is not None:
+        skill["tags"] = [t.strip() for t in tags.split(",") if t.strip()]
+    if version is not None:
+        skill["version"] = version
+    if software_url is not None:
+        skill["software_url"] = software_url
+    if source_repo is not None:
+        skill["source_repo"] = source_repo
+    if dependencies is not None:
+        skill["dependencies"] = [d.strip() for d in dependencies.split(",") if d.strip()]
+
+    reg.save()
+    console.print(f"Updated [bold]{name}[/bold] in registry.", style="green")
+
+
 def main() -> None:
     app()
