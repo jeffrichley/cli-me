@@ -13,11 +13,6 @@ def test_soundcloud_provider():
     assert args[-1] == "scsearch5:test query"
 
 
-def test_youtube_music_provider():
-    args = build_args("test query", max_results=2, provider="youtube-music")
-    assert args[-1] == "ytmsearch2:test query"
-
-
 def test_invalid_provider_raises():
     import pytest
     with pytest.raises(ValueError, match="Unknown search provider"):

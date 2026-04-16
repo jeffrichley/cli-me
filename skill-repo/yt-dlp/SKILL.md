@@ -82,7 +82,7 @@ uv run yt_dlp_cli.py info metadata "https://youtube.com/watch?v=..."
 # Search for videos without downloading (JSON output by default)
 uv run yt_dlp_cli.py info search "lo-fi beats" --max-results 10
 uv run yt_dlp_cli.py info search "lo-fi beats" --pretty
-uv run yt_dlp_cli.py info search "lo-fi beats" --provider youtube-music
+uv run yt_dlp_cli.py info search "lo-fi beats" --provider soundcloud
 
 # Download with SponsorBlock removal
 uv run yt_dlp_cli.py process sponsorblock "https://youtube.com/watch?v=..." --remove sponsor,selfpromo
@@ -91,7 +91,7 @@ uv run yt_dlp_cli.py process sponsorblock "https://youtube.com/watch?v=..." --re
 uv run yt_dlp_cli.py batch from-file urls.txt --archive downloaded.txt
 
 # Batch search and download
-uv run yt_dlp_cli.py batch search "lofi hip hop" --max-results 5 --provider youtube-music --format mp3
+uv run yt_dlp_cli.py batch search "lofi hip hop" --max-results 5 --provider soundcloud --format mp3
 
 # Download with browser cookies (use absolute paths to avoid cwd dependency)
 uv run yt_dlp_cli.py config cookies --browser chrome --output /path/to/cookies.txt
@@ -111,7 +111,6 @@ The `info search` and `batch search` commands accept a `--provider` flag to sele
 | Provider | Description |
 |----------|-------------|
 | `youtube` | YouTube (default) — general video search |
-| `youtube-music` | YouTube Music — music-focused results |
 | `soundcloud` | SoundCloud — music and audio tracks |
 
 `info search` outputs JSON by default (machine-readable). Use `--pretty` for human-readable output.
@@ -128,7 +127,7 @@ The `info search` and `batch search` commands accept a `--provider` flag to sele
 | Remove sponsors | `process sponsorblock URL --remove sponsor` | Requires SponsorBlock API |
 | Archive playlist | `batch sync URL --archive archive.txt` | Skip already-downloaded |
 | Search without downloading | `info search QUERY --pretty` | JSON by default, `--pretty` for readable |
-| Search by music provider | `info search QUERY --provider youtube-music` | See Search Providers table |
+| Search SoundCloud | `info search QUERY --provider soundcloud` | See Search Providers table |
 | Search and download | `batch search QUERY --provider soundcloud` | Downloads all results |
 | Check if URL is archived | `config archive-check archive.txt URL` | Returns 0 if present, 1 if not |
 | Manually mark URL as downloaded | `config archive-add archive.txt URL` | Adds to archive without downloading |

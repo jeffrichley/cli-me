@@ -92,12 +92,16 @@ def search(
     cookies: Annotated[Optional[str], typer.Option(help="Path to cookies file")] = None,
 ) -> None:
     """Search for videos without downloading. Outputs JSON by default."""
-    args = info_search.build_args(
-        query,
-        max_results=max_results,
-        provider=provider,
-        cookies=cookies,
-    )
+    try:
+        args = info_search.build_args(
+            query,
+            max_results=max_results,
+            provider=provider,
+            cookies=cookies,
+        )
+    except ValueError as e:
+        typer.echo(str(e), err=True)
+        raise typer.Exit(code=1)
     try:
         result = run_command(args, capture=True)
     except subprocess.CalledProcessError as e:

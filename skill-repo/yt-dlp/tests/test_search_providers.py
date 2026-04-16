@@ -18,11 +18,6 @@ def test_providers_map_has_soundcloud():
     assert PROVIDERS["soundcloud"] == "scsearch"
 
 
-def test_providers_map_has_youtube_music():
-    assert "youtube-music" in PROVIDERS
-    assert PROVIDERS["youtube-music"] == "ytmsearch"
-
-
 def test_get_search_prefix_valid():
     assert get_search_prefix("youtube") == "ytsearch"
     assert get_search_prefix("soundcloud") == "scsearch"
