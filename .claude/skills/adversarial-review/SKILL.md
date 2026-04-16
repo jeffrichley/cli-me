@@ -53,7 +53,27 @@ Reports: Tier 1 (command-graph) and Tier 2 (integration) test failures.
 Read the review protocol from:
 `.claude/skills/cli-me-meta/references/adversarial-reviewers/protocol.md`
 
-Dispatch all 5 reviewers as **fresh subagents in parallel** using the Agent tool.
+### R5 Cache Check
+
+Before dispatching reviewers, check if R5 can be skipped:
+
+```bash
+uv run qa/r5_cache.py check <skill-name>
+```
+
+- **Exit 0** (unchanged): Skip R5, note "R5 SKIPPED (technique files unchanged)" in report.
+  Dispatch only R1-R4.
+- **Exit 1** (changed or no cache): Dispatch all 5 reviewers including R5.
+
+After a successful R5 run (no MAJOR_FAIL), update the cache:
+
+```bash
+uv run qa/r5_cache.py update <skill-name>
+```
+
+### Dispatching Reviewers
+
+Dispatch reviewers as **fresh subagents in parallel** using the Agent tool.
 Each agent must have ZERO context from this session — fresh context only.
 
 For each reviewer, read its prompt file and dispatch:
@@ -64,7 +84,7 @@ For each reviewer, read its prompt file and dispatch:
 | R2 | `adversarial-reviewers/r2-scaffold.md` | SKILL.md, registry, directory structure |
 | R3 | `adversarial-reviewers/r3-code-wiki.md` | Code matches wiki documentation |
 | R4 | `adversarial-reviewers/r4-test-quality.md` | Test mutation resilience, assertion depth |
-| R5 | `adversarial-reviewers/r5-wiki-execution.md` | Run every documented command |
+| R5 | `adversarial-reviewers/r5-wiki-execution.md` | Run every documented command (skippable via cache) |
 
 When dispatching each agent, provide:
 1. The reviewer prompt (read from the file above)

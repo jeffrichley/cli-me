@@ -21,4 +21,7 @@ tmp/
 # QA fixtures (generated/downloaded at test time)
 qa/fixtures/*
 !qa/fixtures/.gitkeep
+
+# R5 execution cache (per-skill, auto-generated)
+.r5-cache.json
 .gstack/
