@@ -46,13 +46,13 @@ def build_args(
         args.extend(["--cookies", cookies])
 
     # Polite downloading
-    if sleep_interval:
+    if sleep_interval is not None:
         args.extend(["--sleep-interval", str(sleep_interval)])
-    if max_sleep_interval:
+    if max_sleep_interval is not None:
         args.extend(["--max-sleep-interval", str(max_sleep_interval)])
 
     # Max downloads
-    if max_downloads:
+    if max_downloads is not None:
         args.extend(["--max-downloads", str(max_downloads)])
 
     # Continue on errors

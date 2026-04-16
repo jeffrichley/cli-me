@@ -302,6 +302,7 @@ class TestConfigArchiveCheck:
         assert args[idx + 1] == self.ARCHIVE
         assert "--simulate" in args
         assert "--print" in args
+        assert args[args.index("--print") + 1] == "%(id)s"
         assert args[-1] == self.URL
 
     def test_check_no_force_write(self):
@@ -330,3 +331,78 @@ class TestConfigArchiveAdd:
     def test_add_url_is_last(self):
         args = config_archive.build_add_args(self.ARCHIVE, self.URL)
         assert args[-1] == self.URL
+
+
+# ─── Combination tests ────────────────────────────────────────────────────────
+
+def _check_no_duplicate_flags(args: list[str]) -> None:
+    """Assert no flag appears more than once in the argument list."""
+    flag_counts: dict[str, int] = {}
+    for arg in args:
+        if arg.startswith("-"):
+            flag_counts[arg] = flag_counts.get(arg, 0) + 1
+    for flag, count in flag_counts.items():
+        assert count == 1, f"Duplicate flag: {flag} appears {count} times"
+
+
+@pytest.mark.command_graph
+class TestBatchFromFileCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = batch_from_file.build_args(
+            "urls.txt",
+            format="22",
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            archive="archive.txt",
+            cookies="cookies.txt",
+            concurrent_fragments=4,
+            rate_limit="1M",
+            sleep_interval=1.0,
+            max_sleep_interval=3.0,
+            max_downloads=10,
+            extra_args=["--verbose"],
+        )
+        _check_no_duplicate_flags(args)
+        # -a FILE must be last two elements
+        assert args[-2] == "-a"
+        assert args[-1] == "urls.txt"
+
+
+@pytest.mark.command_graph
+class TestBatchSyncCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = batch_sync.build_args(
+            "URL",
+            archive="sync_archive.txt",
+            format="22",
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            cookies="cookies.txt",
+            break_on_existing=True,
+            sleep_interval=1.0,
+            max_sleep_interval=3.0,
+            max_downloads=10,
+            extra_args=["--verbose"],
+        )
+        _check_no_duplicate_flags(args)
+        assert args[-1] == "URL"
+
+
+@pytest.mark.command_graph
+class TestBatchSearchCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = batch_search.build_args(
+            "test query",
+            max_results=5,
+            provider="youtube",
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            format="bestaudio",
+            cookies="cookies.txt",
+            extra_args=["--verbose"],
+        )
+        _check_no_duplicate_flags(args)
+        assert args[-1] == "ytsearch5:test query"

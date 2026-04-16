@@ -66,7 +66,7 @@ def build_args(
         args.extend(["--sponsorblock-remove", sponsorblock_remove])
 
     # Performance
-    if concurrent_fragments:
+    if concurrent_fragments is not None:
         args.extend(["-N", str(concurrent_fragments)])
     if rate_limit:
         args.extend(["-r", rate_limit])

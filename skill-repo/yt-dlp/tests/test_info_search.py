@@ -12,12 +12,12 @@ def test_default_args_include_no_download():
 
 def test_default_provider_is_youtube():
     args = build_args("test query", max_results=3)
-    assert "ytsearch3:test query" in args
+    assert args[-1] == "ytsearch3:test query"
 
 
 def test_soundcloud_provider():
     args = build_args("test query", provider="soundcloud", max_results=2)
-    assert "scsearch2:test query" in args
+    assert args[-1] == "scsearch2:test query"
 
 
 def test_does_not_include_force_overwrites():
@@ -28,7 +28,8 @@ def test_does_not_include_force_overwrites():
 def test_cookies_passed_through():
     args = build_args("test query", cookies="/tmp/cookies.txt")
     assert "--cookies" in args
-    assert "/tmp/cookies.txt" in args
+    idx = args.index("--cookies")
+    assert args[idx + 1] == "/tmp/cookies.txt"
 
 
 def test_search_query_is_last():

@@ -334,3 +334,92 @@ class TestEmbed:
         assert "--embed-chapters" in args
         assert "--embed-info-json" in args
         assert args[-1] == URL
+
+
+# ─── Combination tests ────────────────────────────────────────────────────────
+
+def _check_no_duplicate_flags(args: list[str]) -> None:
+    """Assert no flag appears more than once in the argument list."""
+    flag_counts: dict[str, int] = {}
+    for arg in args:
+        if arg.startswith("-"):
+            flag_counts[arg] = flag_counts.get(arg, 0) + 1
+    for flag, count in flag_counts.items():
+        assert count == 1, f"Duplicate flag: {flag} appears {count} times"
+
+
+@pytest.mark.command_graph
+class TestSponsorBlockCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = process_sponsorblock.build_args(
+            URL,
+            remove="sponsor,selfpromo",
+            mark="intro,outro",
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            format="22",
+            cookies="cookies.txt",
+            force_keyframes=True,
+            no_overwrites=True,
+        )
+        _check_no_duplicate_flags(args)
+        assert args[-1] == URL
+
+
+@pytest.mark.command_graph
+class TestChaptersCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = process_chapters.build_args(
+            URL,
+            split=True,
+            remove="^Intro$",
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            format="22",
+            cookies="cookies.txt",
+            no_overwrites=True,
+            force_keyframes=True,
+        )
+        _check_no_duplicate_flags(args)
+        assert args[-1] == URL
+
+
+@pytest.mark.command_graph
+class TestRemuxCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = process_remux.build_args(
+            URL,
+            container="mkv",
+            format="bv*+ba/b",
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            cookies="cookies.txt",
+            no_overwrites=True,
+        )
+        _check_no_duplicate_flags(args)
+        assert args[-1] == URL
+
+
+@pytest.mark.command_graph
+class TestEmbedCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = process_embed.build_args(
+            URL,
+            subs=True,
+            thumbnail=True,
+            metadata=True,
+            chapters=True,
+            info_json=True,
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            format="22",
+            sub_langs="en,es",
+            cookies="cookies.txt",
+            no_overwrites=True,
+        )
+        _check_no_duplicate_flags(args)
+        assert args[-1] == URL

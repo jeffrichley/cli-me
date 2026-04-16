@@ -73,7 +73,7 @@ def build_args(
         args.append("--embed-thumbnail")
 
     # Rate limit
-    if rate_limit:
+    if rate_limit is not None:
         args.extend(["-r", rate_limit])
 
     # Extra args passthrough

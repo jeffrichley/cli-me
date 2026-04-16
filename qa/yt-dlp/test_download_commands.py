@@ -378,3 +378,125 @@ class TestDownloadChannel:
     def test_url_is_always_last(self):
         args = download_channel.build_args(self.URL, archive="a.txt")
         assert args[-1] == self.URL
+
+
+# ─── format test missing from TestDownloadPlaylist ────────────────────────────
+
+# (added here as a standalone; the class above is complete but was missing this)
+def test_download_playlist_format_selection():
+    args = download_playlist.build_args(
+        "https://www.youtube.com/playlist?list=PLtest123", format="22"
+    )
+    idx = args.index("-f")
+    assert args[idx + 1] == "22"
+
+
+# ─── Combination tests ────────────────────────────────────────────────────────
+
+def _check_no_duplicate_flags(args: list[str]) -> None:
+    """Assert no flag appears more than once in the argument list."""
+    flag_counts: dict[str, int] = {}
+    for arg in args:
+        if arg.startswith("-"):
+            flag_counts[arg] = flag_counts.get(arg, 0) + 1
+    for flag, count in flag_counts.items():
+        assert count == 1, f"Duplicate flag: {flag} appears {count} times"
+
+
+@pytest.mark.command_graph
+class TestDownloadVideoCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = download_video.build_args(
+            "URL",
+            format="22",
+            max_height=720,
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            no_overwrites=True,
+            cookies="cookies.txt",
+            embed_metadata=True,
+            embed_subs=True,
+            embed_thumbnail=True,
+            embed_chapters=True,
+            sponsorblock_remove="sponsor",
+            concurrent_fragments=4,
+            rate_limit="1M",
+            max_filesize="500M",
+            extra_args=["--verbose"],
+        )
+        _check_no_duplicate_flags(args)
+        assert args[-1] == "URL"
+
+
+@pytest.mark.command_graph
+class TestDownloadAudioCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = download_audio.build_args(
+            "URL",
+            format="flac",
+            quality="best",
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            cookies="cookies.txt",
+            embed_metadata=True,
+            embed_thumbnail=True,
+            no_overwrites=True,
+            rate_limit="1M",
+            extra_args=["--verbose"],
+        )
+        _check_no_duplicate_flags(args)
+        assert args[-1] == "URL"
+
+
+@pytest.mark.command_graph
+class TestDownloadPlaylistCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = download_playlist.build_args(
+            "URL",
+            format="22",
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            items="1:5",
+            archive="archive.txt",
+            cookies="cookies.txt",
+            no_overwrites=True,
+            concurrent_fragments=4,
+            rate_limit="1M",
+            sleep_interval=1.0,
+            max_sleep_interval=3.0,
+            date_after="20240101",
+            date_before="20241231",
+            max_downloads=10,
+            extra_args=["--verbose"],
+        )
+        _check_no_duplicate_flags(args)
+        assert args[-1] == "URL"
+
+
+@pytest.mark.command_graph
+class TestDownloadChannelCombination:
+    def test_all_params_simultaneously(self):
+        """Verify all parameters coexist without collisions."""
+        args = download_channel.build_args(
+            "URL",
+            format="22",
+            output="%(title)s.%(ext)s",
+            output_dir="/tmp",
+            archive="archive.txt",
+            cookies="cookies.txt",
+            no_overwrites=True,
+            concurrent_fragments=4,
+            rate_limit="1M",
+            sleep_interval=1.0,
+            max_sleep_interval=3.0,
+            date_after="20240101",
+            date_before="20241231",
+            max_downloads=10,
+            break_on_existing=True,
+            extra_args=["--verbose"],
+        )
+        _check_no_duplicate_flags(args)
+        assert args[-1] == "URL"
