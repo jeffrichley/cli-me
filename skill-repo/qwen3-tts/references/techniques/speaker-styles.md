@@ -18,7 +18,7 @@ updated: 2026-04-16
 
 The `speaker` parameter is only available on **CustomVoice model variants**:
 - `Qwen3-TTS-12Hz-1.7B-CustomVoice` — supports all 9 speakers + `instruct`
-- `Qwen3-TTS-12Hz-0.6B-CustomVoice` — supports all 9 speakers; `instruct` is silently ignored
+- `Qwen3-TTS-12Hz-0.6B-CustomVoice` — supports all 9 speakers; `instruct` is silently ignored (this is upstream model behavior, not wrapper behavior — the 0.6B model simply lacks the capacity to act on instruct tokens)
 
 Speaker names are validated case-insensitively. Pass any capitalization; the wrapper normalizes it.
 
@@ -50,13 +50,13 @@ The `instruct` parameter is a natural-language string that modifies the speaking
 Generate with a specific speaker (no instruct):
 
 ```bash
-python qwen3_tts_cli.py generate text "Good morning, everyone!" --speaker Aiden -o morning.wav
+uv run python -m qwen3_tts_cli generate text "Good morning, everyone!" --speaker Aiden -o morning.wav
 ```
 
 Generate with speaker + style instruction:
 
 ```bash
-python qwen3_tts_cli.py generate text "Please hold while I connect your call." \
+uv run python -m qwen3_tts_cli generate text "Please hold while I connect your call." \
   --speaker Serena \
   --instruct "Speak in a professional, calm customer service tone." \
   -o hold_message.wav
@@ -65,15 +65,15 @@ python qwen3_tts_cli.py generate text "Please hold while I connect your call." \
 List all available speakers with details:
 
 ```bash
-python qwen3_tts_cli.py info speakers --pretty
+uv run python -m qwen3_tts_cli info speakers --pretty
 ```
 
-Generate with the 0.6B model (instruct is ignored):
+Generate with the 0.6B model (instruct is silently ignored by the upstream model):
 
 ```bash
-python qwen3_tts_cli.py generate text "Hello there." \
+uv run python -m qwen3_tts_cli generate text "Hello there." \
   --speaker Ryan \
-  --model Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice \
+  --model 0.6b \
   -o hello.wav
 ```
 
@@ -91,14 +91,14 @@ The `instruct` text is tokenized separately and provided as `instruct_ids`, form
 <|im_start|>assistant
 ```
 
-This means the model sees the instruction as a directive from a user before producing the speech. The 0.6B model does not have the capacity to act on instruct tokens — the wrapper detects the 0.6B size and sets `instruct=None` silently.
+This means the model sees the instruction as a directive from a user before producing the speech. The 0.6B model does not have the capacity to act on instruct tokens — this is an upstream architectural limitation, and the wrapper detects the 0.6B size and sets `instruct=None` silently.
 
 Speaker names are listed in the model's config and returned by `get_supported_speakers()`. Passing an unsupported name raises a `ValueError` at validation time before any GPU computation occurs.
 
 ## Gotchas
 
 - **CustomVoice model only.** The `speaker` parameter does not exist on Base or VoiceDesign models.
-- **`instruct` is silently ignored on 0.6B models.** No error is raised — the instruction is simply discarded. Always use the 1.7B CustomVoice model if instruct guidance is needed.
+- **`instruct` is silently ignored on 0.6B models.** No error is raised — the instruction is simply discarded. This is upstream behavior (the 0.6B model lacks the capacity), not a wrapper limitation. Always use the 1.7B CustomVoice model if instruct guidance is needed.
 - **Speaker names with underscores must be exact.** `Uncle_Fu` and `Ono_Anna` include underscores — missing or replacing them with spaces will fail validation.
 - **All speakers can speak all 10 supported languages**, regardless of their "native language" listed above. The native language is their strongest/most natural language, not a restriction.
 - **Instruct does not transform voice identity** — it modifies delivery style. You cannot instruct Aiden to sound like Serena.

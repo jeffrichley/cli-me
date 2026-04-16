@@ -19,6 +19,8 @@ updated: 2026-04-16
 
 Fine-tuning adapts the Base model to a new speaker using supervised fine-tuning (SFT). After training, the resulting checkpoint behaves like a CustomVoice model — invoke it with `generate_custom_voice` using the speaker name you specified during training.
 
+**Important: the CLI wrapper is a preparation and orchestration aid, not a training runner.** The `finetune prepare` subcommand validates your audio files. The `finetune train` subcommand builds the argument list for the upstream training script. You must run the actual training scripts from the upstream Qwen3-TTS repository.
+
 **Full pipeline:**
 
 ### Step 1: Prepare your audio dataset
@@ -32,7 +34,19 @@ Organize into a JSONL file where each line has:
 {"audio": "path/to/utterance.wav", "text": "transcript of utterance", "ref_audio": "path/to/any_speaker_sample.wav"}
 ```
 
-### Step 2: Encode audio to codec tokens (`prepare_data.py`)
+### Step 2: Validate audio files with `finetune prepare`
+
+```bash
+uv run python -m qwen3_tts_cli finetune prepare \
+  --audio-dir ./speaker_samples/ \
+  --output-dir ./dataset/
+```
+
+This checks that WAV files exist and are accessible in `--audio-dir`. It does **not** generate JSONL or run codec encoding — it is a validation step only. Full dataset preparation (JSONL generation and codec encoding) requires the upstream `prepare_data.py` script.
+
+### Step 3: Encode audio to codec tokens (`prepare_data.py`)
+
+Run this upstream script directly:
 
 ```bash
 python finetuning/prepare_data.py \
@@ -44,7 +58,23 @@ python finetuning/prepare_data.py \
 
 This runs the 12Hz tokenizer over every audio file, converting raw waveforms to codec token sequences. The output JSONL adds encoded audio codes alongside the original fields. This is the most time-consuming preparation step.
 
-### Step 3: Run supervised fine-tuning (`sft_12hz.py`)
+### Step 4: Get training arguments with `finetune train`
+
+```bash
+uv run python -m qwen3_tts_cli finetune train \
+  --dataset train_with_codes.jsonl \
+  --output-dir ./my_speaker_checkpoints \
+  --base-model 1.7b \
+  --epochs 10 \
+  --batch-size 32 \
+  --learning-rate 2e-6
+```
+
+This prints the argument list that you should pass to the upstream `sft_12hz.py` training script. It does **not** run training itself. Copy the printed args and run the actual training via the upstream script.
+
+### Step 5: Run supervised fine-tuning (`sft_12hz.py`)
+
+Use the args from Step 4 to run the upstream training script directly:
 
 ```bash
 python finetuning/sft_12hz.py \
@@ -52,19 +82,17 @@ python finetuning/sft_12hz.py \
   --output_model_path ./my_speaker_checkpoints \
   --train_jsonl train_with_codes.jsonl \
   --batch_size 32 \
-  --lr 2e-6 \
   --num_epochs 10 \
   --speaker_name my_custom_speaker
 ```
 
 Checkpoints are saved after each epoch as `my_speaker_checkpoints/checkpoint-epoch-N/` in HuggingFace format.
 
-### Step 4: Use the fine-tuned model
+### Step 6: Use the fine-tuned model
 
 ```bash
-python qwen3_tts_cli.py generate text "Hello, I am your custom voice." \
-  --model ./my_speaker_checkpoints/checkpoint-epoch-10 \
-  --speaker my_custom_speaker \
+uv run python -m qwen3_tts_cli finetune generate "Hello, I am your custom voice." \
+  --model-dir ./my_speaker_checkpoints/checkpoint-epoch-10 \
   -o output.wav
 ```
 
@@ -76,18 +104,6 @@ python qwen3_tts_cli.py generate text "Hello, I am your custom voice." \
 | 0.6B Base | 8GB+                  |
 
 Training with `batch_size=32` on a single GPU requires the full VRAM allocation. Reduce `batch_size` if you run out of memory.
-
-## CLI Commands
-
-Prepare dataset from audio directory (assumes transcripts are sidecar `.txt` files):
-
-```bash
-python qwen3_tts_cli.py finetune prepare \
-  --audio-dir ./speaker_samples/ \
-  --output-dir ./dataset/
-```
-
-The `prepare` subcommand handles JSONL generation and codec encoding in one step.
 
 ## Under the Hood
 
@@ -101,6 +117,8 @@ Only **single-speaker fine-tuning** is supported in this release. Multi-speaker 
 
 ## Gotchas
 
+- **`finetune prepare` is validation only.** It checks that WAV files exist but does not generate JSONL or run codec encoding. Use the upstream `prepare_data.py` for actual data preparation.
+- **`finetune train` builds arguments but does not run training.** It prints the argument list for the upstream training script. You must run `sft_12hz.py` yourself.
 - **Only the Base model can be fine-tuned.** VoiceDesign and CustomVoice models are not the correct starting point.
 - **Only single-speaker fine-tuning is supported.** Do not attempt to add multiple speakers in one training run.
 - **Transcripts must match audio exactly.** Errors in the JSONL transcripts will train the model on bad audio-text alignments, degrading quality.

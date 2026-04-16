@@ -17,7 +17,7 @@ updated: 2026-04-16
 
 ## Technique
 
-Voice design is only available on **`Qwen3-TTS-12Hz-1.7B-VoiceDesign`**. There is no 0.6B voice design model.
+Voice design is only available on **`Qwen3-TTS-12Hz-1.7B-VoiceDesign`**. There is no 0.6B voice design model — only the 1.7B variant supports this capability. The CLI loads the VoiceDesign model automatically when the `design` subcommand is used. Do not pass `--model 0.6b`; it will not work for voice design.
 
 The `instruct` parameter accepts a free-form natural language description of the desired voice. The model interprets these descriptions and generates speech that attempts to match the described characteristics.
 
@@ -46,7 +46,7 @@ An empty string for `instruct` is allowed — the model will pick a default styl
 Design a voice from a description:
 
 ```bash
-python qwen3_tts_cli.py design text "Welcome to the museum." \
+uv run python -m qwen3_tts_cli design text "Welcome to the museum." \
   --description "A warm, authoritative male narrator voice, clear American accent, slow and measured delivery." \
   -o museum_intro.wav
 ```
@@ -54,7 +54,7 @@ python qwen3_tts_cli.py design text "Welcome to the museum." \
 Generate with an emotional style:
 
 ```bash
-python qwen3_tts_cli.py design text "I can't believe what just happened!" \
+uv run python -m qwen3_tts_cli design text "I can't believe what just happened!" \
   --description "An excited young female voice, energetic and slightly breathless." \
   -o reaction.wav
 ```
@@ -62,7 +62,7 @@ python qwen3_tts_cli.py design text "I can't believe what just happened!" \
 Generate a child character voice:
 
 ```bash
-python qwen3_tts_cli.py design text "Can we go to the park today?" \
+uv run python -m qwen3_tts_cli design text "Can we go to the park today?" \
   --description "A playful young child's voice, curious and enthusiastic." \
   -o child.wav
 ```
@@ -80,6 +80,7 @@ The VoiceDesign model is the 1.7B transformer; no 0.6B variant exists for this c
 ## Gotchas
 
 - **VoiceDesign model only.** This method will raise an error if called on a Base or CustomVoice model.
+- **Only the 1.7B model supports voice design.** There is no 0.6B VoiceDesign variant — `--model 0.6b` is not valid for this subcommand.
 - **Voice is not reproducible across runs** by default. Due to sampling, the same description generates a different voice each time. If consistency is needed, generate one sample you like, then use voice cloning from that sample.
 - **Accent fidelity is limited.** The model can approximate accents but does not perfectly reproduce every regional accent. Test before committing to a description.
 - **Emotional range is constrained.** Extreme emotions (rage, sobbing) may not render convincingly — the model tends toward moderate expressiveness.
