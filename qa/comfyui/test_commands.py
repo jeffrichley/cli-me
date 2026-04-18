@@ -652,6 +652,37 @@ class TestModelList:
             status_code=404,
             text="not found",
         )
+        # Expanded loader set: diffusion_models, clip_vision, style_models,
+        # hypernetworks, gligen, photomaker
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/UNETLoader",
+            json=_loader_body(
+                "UNETLoader", "unet_name", ["flux1-dev.safetensors"]
+            ),
+        )
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/StyleModelLoader",
+            json=_loader_body("StyleModelLoader", "style_model_name", []),
+        )
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/CLIPVisionLoader",
+            json=_loader_body(
+                "CLIPVisionLoader", "clip_name", ["clip_vision_h.safetensors"]
+            ),
+        )
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/HypernetworkLoader",
+            json=_loader_body("HypernetworkLoader", "hypernetwork_name", []),
+        )
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/GLIGENLoader",
+            json=_loader_body("GLIGENLoader", "gligen_name", []),
+        )
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/PhotoMakerLoader",
+            status_code=404,
+            text="not found",
+        )
         httpx_mock.add_response(
             url="http://127.0.0.1:8188/embeddings",
             json=["emb1.pt"],
@@ -669,6 +700,13 @@ class TestModelList:
         assert data["embeddings"] == 1
         # text_encoders union: c1, c2 → 2
         assert data["text_encoders"] == 2
+        # New types added in the TYPE_TO_NODES expansion
+        assert data["diffusion_models"] == 1
+        assert data["clip_vision"] == 1
+        assert data["style_models"] == 0
+        assert data["hypernetworks"] == 0
+        assert data["gligen"] == 0
+        assert data["photomaker"] == 0  # 404 → empty
 
     def test_list_embeddings_uses_special_endpoint(
         self, httpx_mock: HTTPXMock, capsys
@@ -706,6 +744,95 @@ class TestModelList:
 
         assert is_enum(["LATENT"]) is False
         assert is_enum(["MODEL"]) is False
+
+    def test_list_diffusion_models_uses_unet_loader(
+        self, httpx_mock: HTTPXMock, capsys
+    ):
+        """--type diffusion_models must hit /object_info/UNETLoader."""
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/UNETLoader",
+            json=_loader_body(
+                "UNETLoader",
+                "unet_name",
+                [
+                    "flux1-schnell-fp8.safetensors",
+                    "wan2.2_t2v_high_noise.safetensors",
+                ],
+            ),
+        )
+        from comfyui_cli.commands.model_list import run_list
+
+        run_list(
+            type_name="diffusion_models",
+            url="http://127.0.0.1:8188",
+            json_output=True,
+        )
+        out = capsys.readouterr().out
+        data = json.loads(out)
+        assert data == {
+            "diffusion_models": [
+                "flux1-schnell-fp8.safetensors",
+                "wan2.2_t2v_high_noise.safetensors",
+            ]
+        }
+        req = httpx_mock.get_request()
+        assert req is not None
+        assert req.headers.get("Origin") == "http://127.0.0.1:8188"
+        assert "/object_info/UNETLoader" in str(req.url)
+
+    def test_list_clip_vision_uses_clipvision_loader(
+        self, httpx_mock: HTTPXMock, capsys
+    ):
+        """--type clip_vision must hit /object_info/CLIPVisionLoader (NOT CLIPLoader)."""
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/CLIPVisionLoader",
+            json=_loader_body(
+                "CLIPVisionLoader",
+                "clip_name",
+                ["clip_vision_h.safetensors", "clip_vision_g.safetensors"],
+            ),
+        )
+        from comfyui_cli.commands.model_list import run_list
+
+        run_list(
+            type_name="clip_vision",
+            url="http://127.0.0.1:8188",
+            json_output=True,
+        )
+        out = capsys.readouterr().out
+        data = json.loads(out)
+        assert data["clip_vision"] == [
+            "clip_vision_h.safetensors",
+            "clip_vision_g.safetensors",
+        ]
+        req = httpx_mock.get_request()
+        assert req is not None
+        assert "/object_info/CLIPVisionLoader" in str(req.url)
+
+    def test_list_style_models_uses_stylemodel_loader(
+        self, httpx_mock: HTTPXMock, capsys
+    ):
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/StyleModelLoader",
+            json=_loader_body(
+                "StyleModelLoader", "style_model_name", ["flux-redux.safetensors"]
+            ),
+        )
+        from comfyui_cli.commands.model_list import run_list
+
+        run_list(
+            type_name="style_models",
+            url="http://127.0.0.1:8188",
+            json_output=True,
+        )
+        out = capsys.readouterr().out
+        data = json.loads(out)
+        assert data == {"style_models": ["flux-redux.safetensors"]}
+
+    def test_is_enum_additional_cases(self):
+        """Additional is_enum edge cases — file-list vs typed-socket."""
+        from comfyui_cli.commands.model_list import is_enum
+
         assert is_enum(["CLIP"]) is False
         assert is_enum(["sd.safetensors", "flux.safetensors"]) is True
         # Single filename entry — not uppercase-type, still an enum
@@ -1066,6 +1193,36 @@ class TestModelFind:
         )
         httpx_mock.add_response(
             url="http://127.0.0.1:8188/object_info/TripleCLIPLoader",
+            status_code=404,
+            text="not found",
+        )
+        # Expanded model-type coverage — empty/404 here is fine for the find tests
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/UNETLoader",
+            json=_loader_body(
+                "UNETLoader", "unet_name", ["flux1-schnell-fp8.safetensors"]
+            ),
+        )
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/StyleModelLoader",
+            json=_loader_body("StyleModelLoader", "style_model_name", []),
+        )
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/CLIPVisionLoader",
+            json=_loader_body("CLIPVisionLoader", "clip_name", []),
+        )
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/HypernetworkLoader",
+            status_code=404,
+            text="not found",
+        )
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/GLIGENLoader",
+            status_code=404,
+            text="not found",
+        )
+        httpx_mock.add_response(
+            url="http://127.0.0.1:8188/object_info/PhotoMakerLoader",
             status_code=404,
             text="not found",
         )

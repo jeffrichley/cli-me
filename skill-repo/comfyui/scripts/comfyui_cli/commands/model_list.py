@@ -46,17 +46,29 @@ TYPE_TO_NODES: dict[str, list[tuple[str, str]]] = {
         ("TripleCLIPLoader", "clip_name2"),
         ("TripleCLIPLoader", "clip_name3"),
     ],
+    "diffusion_models": [("UNETLoader", "unet_name")],
+    "style_models": [("StyleModelLoader", "style_model_name")],
+    "clip_vision": [("CLIPVisionLoader", "clip_name")],
+    "hypernetworks": [("HypernetworkLoader", "hypernetwork_name")],
+    "gligen": [("GLIGENLoader", "gligen_name")],
+    "photomaker": [("PhotoMakerLoader", "photomaker_model_name")],
     "embeddings": [],  # uses /embeddings special-case
 }
 
 # Ordered list of types for the summary view (no --type). "embeddings" last.
 _SUMMARY_ORDER: list[str] = [
     "checkpoints",
+    "diffusion_models",
     "loras",
     "vae",
+    "text_encoders",
+    "clip_vision",
     "controlnet",
     "upscale_models",
-    "text_encoders",
+    "style_models",
+    "hypernetworks",
+    "gligen",
+    "photomaker",
     "embeddings",
 ]
 
