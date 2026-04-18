@@ -15,6 +15,8 @@
 - [Workflow formats](techniques/workflow-formats.md) — UI vs API format, conversion, embedding
 - [Workflow params](techniques/workflow-params.md) — parameter substitution syntax and tricks
 - [Models and assets](techniques/models-and-assets.md) — model types, /models endpoint, folder layout
+- [Model acquisition](techniques/model-acquisition.md) — auditing a workflow for required models, where to find them, placement, refresh
+- [Flow acquisition](techniques/flow-acquisition.md) — finding existing workflows (examples repo, OpenArt, Civitai, reddit PNGs), dependency chain
 - [Input / output](techniques/input-output.md) — /upload/image, /view, /history output shape
 - [Server info and errors](techniques/server-info-and-errors.md) — /system_stats, origin-guard, HTTP error codes
 

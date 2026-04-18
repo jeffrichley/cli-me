@@ -81,3 +81,43 @@ requires `--local` and reads the filesystem directly — don't expect a
 remote listing to ever work.
 
 See [techniques/input-output.md](techniques/input-output.md).
+
+### `checkpoints/` vs `diffusion_models/` — loader mismatch
+Single-file bundled checkpoints (SDXL, Flux-fp8 all-in-one) load via
+`CheckpointLoaderSimple` from `checkpoints/`. Standalone UNETs (split
+Flux, SD3, WAN, HunyuanVideo, Kontext) load via `UNETLoader` from
+`diffusion_models/`. Dropping a file in the wrong folder makes the
+loader say "value not in list" even though the file exists on disk.
+
+See [techniques/model-acquisition.md](techniques/model-acquisition.md).
+
+### PyPI `nunchaku` is NOT the SVDQuant library
+`pip install nunchaku` from PyPI installs a Gibbs sampler for Bayesian
+models — unrelated to the ComfyUI-nunchaku custom node. The real
+SVDQuant inference library lives only at
+`github.com/nunchaku-tech/nunchaku/releases` as pre-built wheels keyed
+to specific CUDA + torch + Python + OS combos. General lesson:
+"ImportError: cannot import name X from Y" often means the wrong
+package is installed under the expected name, not that the right one
+is missing.
+
+See [techniques/model-acquisition.md](techniques/model-acquisition.md).
+
+### `/object_info` cache is mtime-based — restart if your FS doesn't bump dir mtime
+ComfyUI auto-refreshes its model lists when a folder's mtime changes
+(new download, deleted file). On some Windows/network-FS configs the
+mtime doesn't bump, and `model list` keeps returning stale data. If
+that happens, restart ComfyUI — there's no in-core refresh endpoint.
+
+See [techniques/model-acquisition.md](techniques/model-acquisition.md).
+
+### UI-format workflows can't auto-convert to API format in v1
+ComfyUI's `graphToPrompt()` conversion lives in the web frontend, not
+the server. A UI-format `.json` (`{"nodes": [...], "links": [...]}`)
+cannot be submitted to `/prompt` and this skill cannot convert it.
+Either extract an API-format PNG that the same workflow produced,
+load the UI-format into the web editor and re-export via Dev mode,
+or hand-roll the API form. v2 could add a headless converter that
+round-trips through a running ComfyUI — not present in v1.
+
+See [techniques/flow-acquisition.md](techniques/flow-acquisition.md).

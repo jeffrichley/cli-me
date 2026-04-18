@@ -50,7 +50,8 @@ EXAMPLE_PATTERNS = [
     "/123456789",  # Fake numeric IDs (e.g., vimeo.com/123456789)
     "@Channel1", "@Channel2", "@Channel3",  # Placeholder channel names
     "@ChannelName",
-    "{", "<host", "<server",  # Template placeholders like http://{server}/prompt
+    "{", "<", ">",  # Template placeholders like http://{server}/prompt or <author>
+    "ORG/REPO", "/vX.Y.Z",  # Classic placeholder repo-path patterns
 ]
 
 
