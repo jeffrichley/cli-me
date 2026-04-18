@@ -1,0 +1,14 @@
+{
+  "1": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": ["99", 0],
+      "seed": 42,
+      "steps": 20
+    }
+  },
+  "2": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {"ckpt_name": "model.safetensors"}
+  }
+}

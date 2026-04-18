@@ -31,9 +31,17 @@ LINK_PATTERN = re.compile(
 ORPHAN_EXCLUDES = {"SKILL.md", "index.md"}
 
 
+EXCLUDE_DIRS = {".venv", "__pycache__", "node_modules", ".git", ".pytest_cache"}
+
+
 def find_md_files(root: Path) -> list[Path]:
-    """Find all .md files under root."""
-    return sorted(root.rglob("*.md"))
+    """Find all .md files under root, skipping dev artifacts."""
+    files: list[Path] = []
+    for md in root.rglob("*.md"):
+        if any(part in EXCLUDE_DIRS for part in md.parts):
+            continue
+        files.append(md)
+    return sorted(files)
 
 
 def extract_relative_links(text: str) -> list[tuple[str, str | None]]:

@@ -1,0 +1,58 @@
+{
+  "3": {
+    "class_type": "KSampler",
+    "inputs": {
+      "cfg": 8,
+      "denoise": 1,
+      "seed": 8566257,
+      "steps": 20,
+      "sampler_name": "euler",
+      "scheduler": "normal",
+      "model": ["10", 0],
+      "latent_image": ["5", 0],
+      "positive": ["6", 0],
+      "negative": ["7", 0]
+    },
+    "_meta": {"title": "KSampler"}
+  },
+  "4": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {"ckpt_name": "v1-5-pruned-emaonly.safetensors"}
+  },
+  "5": {
+    "class_type": "EmptyLatentImage",
+    "inputs": {"batch_size": 2, "height": 512, "width": 512}
+  },
+  "6": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {"clip": ["11", 1], "text": "a cat"},
+    "_meta": {"title": "Positive"}
+  },
+  "7": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {"clip": ["11", 1], "text": "bad hands"},
+    "_meta": {"title": "PositivePrompt"}
+  },
+  "8": {
+    "class_type": "SaveImage",
+    "inputs": {"filename_prefix": "ComfyUI", "images": ["3", 0]}
+  },
+  "9": {
+    "class_type": "ControlNetLoader",
+    "inputs": {"control_net_name": "control_v11p_sd15_canny.pth"}
+  },
+  "10": {
+    "class_type": "LoraLoader",
+    "inputs": {
+      "lora_name": "lcm_sd15.safetensors",
+      "strength_model": 1.0,
+      "strength_clip": 1.0,
+      "model": ["4", 0],
+      "clip": ["4", 1]
+    }
+  },
+  "11": {
+    "class_type": "CLIPSetLastLayer",
+    "inputs": {"stop_at_clip_layer": -1, "clip": ["10", 1]}
+  }
+}

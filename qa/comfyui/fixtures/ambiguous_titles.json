@@ -1,0 +1,12 @@
+{
+  "1": {
+    "class_type": "KSampler",
+    "inputs": {"seed": 0, "steps": 20},
+    "_meta": {"title": "Sampler"}
+  },
+  "2": {
+    "class_type": "KSampler",
+    "inputs": {"seed": 0, "steps": 20},
+    "_meta": {"title": "Sampler"}
+  }
+}

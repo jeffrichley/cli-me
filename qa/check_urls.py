@@ -44,11 +44,13 @@ GET_ONLY_DOMAINS = {
 EXAMPLE_PATTERNS = [
     "example.com", "example.org", "example.net",
     "PLAYLIST_ID", "VIDEO_ID", "CHANNEL_ID", "USER_ID",
-    "proxy.example", "localhost",
+    "proxy.example", "localhost", "127.0.0.1",
+    "192.168.", "10.0.0.", "172.16.",  # Private LAN example IPs
     "your_", "SECRET", "API_KEY",
     "/123456789",  # Fake numeric IDs (e.g., vimeo.com/123456789)
     "@Channel1", "@Channel2", "@Channel3",  # Placeholder channel names
     "@ChannelName",
+    "{", "<host", "<server",  # Template placeholders like http://{server}/prompt
 ]
 
 

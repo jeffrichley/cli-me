@@ -1,6 +1,21 @@
 {
   "skills": [
     {
+      "name": "comfyui",
+      "description": "Agent-native CLI for ComfyUI \u2014 submit workflows, track progress, download outputs, manage models.",
+      "category": "generation",
+      "tags": [
+        "comfyui",
+        "stable-diffusion",
+        "image-generation",
+        "ai-art"
+      ],
+      "version": "0.1.0",
+      "software_url": "https://www.comfy.org/",
+      "source_repo": "https://github.com/comfyanonymous/ComfyUI",
+      "dependencies": []
+    },
+    {
       "name": "demucs",
       "description": "Music source separation CLI for Demucs \u2014 separate audio into stems (vocals, drums, bass, other), extract vocals, isolate instruments, karaoke, acapella, stem splitting",
       "category": "media",
@@ -69,7 +84,7 @@
     },
     {
       "name": "qwen3-tts",
-      "description": "Text-to-speech generation, voice cloning, and voice design using Qwen3-TTS — generate speech, TTS, clone voice, voice cloning, design a voice, create voiceover, narrate, read aloud, synthesize speech",
+      "description": "Text-to-speech generation, voice cloning, and voice design using Qwen3-TTS \u2014 generate speech, TTS, clone voice, voice cloning, design a voice, create voiceover, narrate, read aloud, synthesize speech",
       "category": "audio",
       "tags": [
         "tts",

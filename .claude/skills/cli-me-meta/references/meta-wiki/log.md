@@ -182,3 +182,7 @@ Append-only. Newest entries at the bottom.
 34. **R5 parallel subagent architecture.** Updated R5 to dispatch one subagent per
     technique page instead of running all commands sequentially. Benefit scales with
     command speed — marginal for demucs (5s/command) but significant for ffmpeg (ms).
+
+**2026-04-16** [pyannote] — Phase 3 complete: 4 commands (diarize, vad, verify, embed) implemented with 26 Tier 1 tests passing. Used Python API wrapper pattern, not subprocess.
+
+**2026-04-16** [pyannote] — Build complete: 5 commands (diarize, vad, verify, embed, info), 26 Tier 1 + 12 Tier 2 tests. R1-R4 adversarial reviews done. VAD model incompatible with v4.x (known issue). Model names corrected: wespeaker-voxceleb-resnet34-LM.
