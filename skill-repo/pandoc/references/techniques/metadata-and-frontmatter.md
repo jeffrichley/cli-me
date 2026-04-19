@@ -124,7 +124,7 @@ The full schema lives at https://pandoc.org/MANUAL.html#defaults-files. Common k
 | `resource-path` | `--resource-path` |
 | `include-in-header` | `--include-in-header` |
 
-CLI flags override matching keys in the defaults file. Defaults files chain: `--defaults a.yaml --defaults b.yaml` applies both, with `b` overriding `a`.
+CLI flags override matching scalar keys in the defaults file (e.g., `--to html5` overrides `to: latex`). For the `metadata:` map specifically, `-M KEY=VAL` does NOT cleanly override a map entry — pandoc accumulates the values into a `MetaList` instead. If you want a single value, set it in only one place. Defaults files chain: `--defaults a.yaml --defaults b.yaml` applies both, with `b` overriding `a`.
 
 ### Defaults File vs Metadata File
 
@@ -280,11 +280,11 @@ For metadata specifically, the merge order (verified against the binary on 3.9.0
 
 ## Common Gotchas
 
-- **Frontmatter not at line 1.** A blank line above `---` makes pandoc treat it as a horizontal rule, not metadata. Frontmatter silently ignored; `$title$` renders empty.
+- **Frontmatter NOT enclosed in `---`/`---`.** Pandoc 3.9.x is forgiving — frontmatter is parsed even after preceding content or blank lines, as long as the `---` opening fence and the closing `---` (or `...`) are well-formed. The footgun is malformed fences (e.g., `--` instead of `---`, missing close, embedded blank lines breaking the block) — those silently disable metadata parsing and `$title$` renders empty.
 - **Closing `---` vs `...`.** Both work. But a stray `---` later in your document might accidentally open a second metadata block. Use `...` to close if you have horizontal rules elsewhere.
 - **YAML quoting.** Unquoted strings starting with `:`, `&`, `*`, `?`, `|`, `>`, `[`, `{`, `#`, `!` are YAML directives. Quote any value starting with these: `title: "Q4: Results"`.
 - **`-V` vs `-M` confusion.** `-V toc` (variable) sets a template flag; `-M toc=true` (metadata) sets it in the document model. Most users want `-M` so filters see the value too.
-- **Repeating `--metadata` for lists.** `-M author=Jeff -M author=Sam` does not produce a list — the second overwrites the first. Use a metadata file or frontmatter for lists. (Server-only options like `port:` and `ip:` are rejected entirely.)
+- **Repeating `--metadata`.** In pandoc 3.9.x, `-M author=Jeff -M author=Sam` produces a `MetaList [Jeff, Sam]` — both values are kept. Older docs sometimes claim "second overwrites first" — that's no longer the case. If you only want one value, pass `-M` once. Server-only options like `port:` and `ip:` are rejected entirely from defaults files.
 - **Date formats.** YAML `date: 2026-04-18` is parsed as a date. For non-ISO formats, quote: `date: "April 18, 2026"`.
 - **Windows path separators in defaults files.** Use forward slashes (`C:/path/file.bib`) — backslashes need escaping (`C:\\path\\file.bib`).
 - **Filters key in defaults files.** The `filters:` list takes objects with `type:` (`json` or `lua`) and `path:`. A bare string is parsed as a JSON filter. Lua filters need explicit `type: lua`.

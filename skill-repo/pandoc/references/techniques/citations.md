@@ -210,7 +210,7 @@ The reference list is generated at the end by walking the collected citations an
 ## Common Gotchas
 
 - **Forgot `--citeproc`.** Citations render as literal text: `[@smith2020]`. The `--bibliography` flag alone does nothing without `--citeproc`.
-- **Citation key not found.** Pandoc warns `[WARNING] Citation smith2020 not found` and leaves the literal `[@smith2020]` in the output. Check your `.bib` for a typo in the key.
+- **Citation key not found.** Pandoc warns `[WARNING] Citeproc: citation smith2020 not found` to stderr and renders the missing key as `(**smith2020?**)` in the output (bold key with a `?`, in parens). The wrapper preserves both the warning and the exit-0 status. Check your `.bib` for a typo.
 - **Zotero `.bib` exports lose data.** The default Zotero BibTeX export normalizes Unicode aggressively and mangles citation keys. Install the **Better BibTeX** extension (https://retorque.re/zotero-better-bibtex/) for stable, citation-friendly keys (`author2020title` style) and clean Unicode export.
 - **CSL file not found.** `pandoc: chicago-author-date.csl: openFile: does not exist`. Either give a full path or place the `.csl` in pandoc's user data directory (`pandoc --version` shows the location, or `--data-dir`). Pandoc only searches the working directory and the data dir.
 - **Wrong citation style for your venue.** ACM venues want `acm-siggraph.csl`; IEEE Transactions wants `ieee.csl`; specific journals often have their own. Check the publisher's submission guidelines first; many publishers list their CSL file at the Zotero style repo.
