@@ -1,0 +1,15 @@
+[project]
+name = "pandoc-cli"
+version = "0.1.0"
+description = "Agent-native CLI for pandoc"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15.0",
+]
+
+[project.scripts]
+pandoc-cli = "pandoc_cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

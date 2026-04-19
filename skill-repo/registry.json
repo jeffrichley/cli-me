@@ -62,6 +62,26 @@
       "dependencies": []
     },
     {
+      "name": "pandoc",
+      "description": "Universal document converter \u2014 md to PDF/DOCX/HTML/EPUB/LaTeX with citations, templates, Lua filters",
+      "category": "documents",
+      "tags": [
+        "pandoc",
+        "markdown",
+        "pdf",
+        "docx",
+        "latex",
+        "citations",
+        "bibtex",
+        "filters",
+        "templates"
+      ],
+      "version": "0.1.0",
+      "software_url": "https://pandoc.org/",
+      "source_repo": "https://github.com/jgm/pandoc",
+      "dependencies": []
+    },
+    {
       "name": "pyannote",
       "description": "Speaker diarization and audio analysis CLI for pyannote.audio \u2014 diarize speakers, detect speech activity, verify speakers, extract embeddings",
       "category": "audio",
