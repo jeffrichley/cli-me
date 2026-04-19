@@ -28,6 +28,50 @@ LINK_PATTERN = re.compile(
     r'\)'
 )
 
+# Fenced code block: ``` ... ``` (or ~~~ ... ~~~), spanning multiple lines.
+# Inline code span: `...` on a single line.
+# We strip both before extracting links so that markdown link syntax shown
+# inside example blocks (e.g. `[text](url)` as documentation) doesn't get
+# parsed as a real link to a missing file.
+_FENCED_BLOCK = re.compile(r"^([ \t]*)(`{3,}|~{3,}).*?\n.*?^\1\2\s*$", re.DOTALL | re.MULTILINE)
+_INLINE_CODE = re.compile(r"`[^`\n]*`")
+
+
+def _strip_code(text: str) -> str:
+    """Remove fenced code blocks and inline code spans from markdown."""
+    text = _FENCED_BLOCK.sub("", text)
+    text = _INLINE_CODE.sub("", text)
+    return text
+
+
+_FENCE_OPEN = re.compile(r"^[ \t]*(`{3,}|~{3,})")
+
+
+def _fenced_line_numbers(text: str) -> set[int]:
+    """Return 1-indexed line numbers that are inside a fenced code block.
+
+    Walks the file line by line, tracking whether we're inside a fence (and
+    which fence character ran the count). The opening and closing fence
+    lines themselves are also marked as "inside" — they're not link content.
+    """
+    inside_lines: set[int] = set()
+    in_fence = False
+    fence_token: str | None = None
+    for line_num, line in enumerate(text.splitlines(), 1):
+        m = _FENCE_OPEN.match(line)
+        if not in_fence and m:
+            in_fence = True
+            fence_token = m.group(1)
+            inside_lines.add(line_num)
+            continue
+        if in_fence:
+            inside_lines.add(line_num)
+            if m and fence_token and m.group(1).startswith(fence_token[0]) and len(m.group(1)) >= len(fence_token):
+                in_fence = False
+                fence_token = None
+    return inside_lines
+
+
 ORPHAN_EXCLUDES = {"SKILL.md", "index.md"}
 
 
@@ -59,12 +103,23 @@ def extract_relative_links(text: str) -> list[tuple[str, str | None]]:
 def check_links(root: Path) -> list[dict]:
     """Find all broken relative links in .md files under root.
     Returns list of dicts with keys: source, line, target, resolved.
+
+    Skips content inside fenced code blocks and inline code spans —
+    markdown link syntax shown as documentation (e.g. `[text](url)` in a
+    prose paragraph or inside a ```markdown ... ``` block) is not a real
+    link and shouldn't be flagged.
     """
     broken = []
     for md_file in find_md_files(root):
-        text = md_file.read_text(encoding="utf-8", errors="replace")
-        for line_num, line in enumerate(text.splitlines(), 1):
-            for path, _anchor in extract_relative_links(line):
+        full_text = md_file.read_text(encoding="utf-8", errors="replace")
+        fenced = _fenced_line_numbers(full_text)
+        for line_num, line in enumerate(full_text.splitlines(), 1):
+            if line_num in fenced:
+                continue
+            # Strip inline `...` code spans from this line so a markdown
+            # link literal shown as documentation isn't flagged.
+            line_stripped = _INLINE_CODE.sub("", line)
+            for path, _anchor in extract_relative_links(line_stripped):
                 resolved = (md_file.parent / path).resolve()
                 if not resolved.exists():
                     broken.append({
@@ -84,7 +139,7 @@ def check_orphans(root: Path) -> list[str]:
 
     referenced: set[Path] = set()
     for md_file in md_files:
-        text = md_file.read_text(encoding="utf-8", errors="replace")
+        text = _strip_code(md_file.read_text(encoding="utf-8", errors="replace"))
         for path, _anchor in extract_relative_links(text):
             resolved = (md_file.parent / path).resolve()
             referenced.add(resolved)
