@@ -1,9 +1,9 @@
 ---
 title: Assertion Depth — "Runs" Is Not "Works"
 tags: [process, testing]
-sources: [daily/2026-04-15-seed.md]
+sources: [daily/2026-04-15-seed.md, daily/2026-04-18.md]
 created: 2026-04-16
-updated: 2026-04-16
+updated: 2026-04-18
 ---
 
 # Assertion Depth
@@ -38,4 +38,8 @@ A particularly dangerous variant: assertions that are conditional on prerequisit
 | Image | File exists | Dimensions, color space, magic bytes |
 | Download | File exists | Format, expected metadata, file size in expected range |
 
-See also: [[concepts/qa-before-implementation]], [[connections/interactive-prompts-in-agent-context]].
+## Synthetic Fixture Trap
+
+A related failure mode occurs at a different layer: the assertions are deep and correct, but the test fixture guarantees they never execute. Synthetic fixtures (sine tones, blank images) can produce legitimately empty results, causing assertion loops to iterate zero times. See [[concepts/synthetic-fixture-trap]] for the full pattern.
+
+See also: [[concepts/qa-before-implementation]], [[connections/interactive-prompts-in-agent-context]], [[concepts/synthetic-fixture-trap]].
