@@ -63,6 +63,16 @@ uv run <name>_cli.py --help
 - Does each group's `--help` show the expected subcommands?
 - If any command fails to load, report as OBJECTIVE failure.
 
+### 6a. --help text quality (agent UX)
+The `--help` output is the FIRST thing an agent sees. Verify:
+- Each command group's help text describes WHEN to use it (not just WHAT it does)
+- Each subcommand's help text mentions key flags inline
+- Each `--option` has a descriptive `help=` (not just the flag name repeated)
+- Required arguments are marked `required` (not optional with default `None`)
+- No `<...>` angle brackets in help strings (Typer renders them literally)
+- No leftover `TODO` / `FIXME` / `XXX` / `Phase 3` notes
+Report any unhelpful help text as NEEDS_REVISION.
+
 ### 7. Creative Hunt — Trigger Conflicts
 - Could this skill's description trigger on queries meant for a
   different skill? (e.g., "convert audio" triggering both ffmpeg

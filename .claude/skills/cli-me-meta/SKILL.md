@@ -204,6 +204,25 @@ clime registry add \
 **Do NOT write to `skill-repo/registry.json` directly.** The CLI uses file
 locking to prevent data loss when multiple agents build skills concurrently.
 
+### Bundled assets (when needed)
+
+If your skill ships fixed third-party assets (templates, themes, small
+model weights, default configs), bundle them under
+`scripts/templates/` or `scripts/data/`. For each bundled asset:
+
+1. Pin to a specific upstream release tag (not `main` / `master`)
+2. Compute and document SHA-256 in a sibling `README.md`
+3. Verify the upstream license permits redistribution
+4. Add an attribution comment / line in the asset file or README
+5. Add a Tier 1 test asserting the asset exists at the expected
+   path AND its SHA-256 matches the documented value (catches
+   accidental overwrites or version drift)
+6. Resolve the path via a `backend.bundled_<asset>_path()` helper
+   so callers don't hardcode locations
+
+Pandoc bundles `scripts/templates/eisvogel.latex` (v3.4.0,
+sha256 a2c93461..., BSD-3-Clause). See for reference.
+
 ### REVIEW: Scaffold (Adversarial)
 
 Dispatch a **fresh reviewer agent** using the "Reviewer 2: Scaffold Reviewer"
@@ -224,13 +243,34 @@ adding a new parameter to an existing command (e.g., adding `--no-overwrites`
 during a fix round), write the test FIRST. The test-first discipline applies
 equally to new features and to fixes.
 
-### 3a. Write the QA playbook
+### 3a. Build the shared QA infrastructure (FIRST, before parallel agents)
 
-Create `qa/<name>/playbook.md` FIRST — before any implementation. Document:
-- What each command should do
-- Input required, expected output, verification method
-- Manual verification steps for visual/audio quality
-- Known edge cases and gotchas
+Before dispatching ANY implementation agents — especially when running
+command groups in parallel — create the shared infrastructure they all
+depend on:
+
+1. **`qa/<name>/playbook.md`** — per-command contracts (signature,
+   behavior, verification, edge cases, error contracts) for every
+   command group. This is the authoritative spec; implementation agents
+   read it before touching code. Document:
+   - What each command should do
+   - Input required, expected output, verification method
+   - Manual verification steps for visual/audio quality
+   - Known edge cases and gotchas
+2. **`qa/<name>/conftest.py`** — session-scoped fixtures that skip when
+   the wrapped binary or its dependencies are missing
+   (`<name>_path`, engine-availability fixtures). Per-test content
+   fixtures (sample inputs in `tmp_path`).
+3. **`qa/<name>/_<name>_helpers.py`** — output-format assertion helpers
+   (`assert_pdf_magic`, `assert_docx_magic`, etc.). Lives outside
+   conftest because pytest's importlib mode breaks
+   `from conftest import ...`. Name the module with a skill prefix
+   (`_<name>_helpers.py`, not just `_helpers.py`) to avoid collision
+   with other skills' helpers when the whole-suite runs.
+
+These three files are FROZEN once parallel agents start — agents read
+them but never modify them. Without this step, parallel agents race on
+conftest.py creation and produce inconsistent fixture sets.
 
 ### 3b. Write the backend module
 
@@ -279,6 +319,12 @@ this default in the skill's SKILL.md and gotchas.md.
 1. **Write Tier 1 test** (`qa/<name>/test_commands.py`):
    - Mock subprocess.run and shutil.which
    - Assert the command builds the correct argument list
+   - **Required: at least one "kitchen-sink" test that calls `build_args`
+     with EVERY parameter set simultaneously** and asserts the exact argv
+     list (`==` comparison or index-based value pairing). Individual
+     parameter tests prove flags work in isolation; the kitchen-sink test
+     proves they don't collide (duplicate flags, wrong ordering, files
+     not at end). R4 will fail you if this is missing.
    - Mark with `@pytest.mark.command_graph`
 
 2. **Run Tier 1 test — verify it fails**
@@ -392,6 +438,27 @@ Extract a protocol/strategy pattern only when branching justifies it.
 4. Have a human review Tier 3 outputs
 5. Fix any failures found
 6. Document test results via: `clime log append --skill <name> --message "<results summary>"`
+
+### 4.1 Ship-readiness summary
+
+After all tier tests pass and all reviews land, produce a one-screen
+summary for the human reviewer:
+
+```
+## Skill <name> — Ship Readiness
+
+**Tests:** N passing, M skipped (skip reasons)
+**Command groups:** group1 (X commands), group2 (Y commands), ...
+**Wiki:** N technique pages, K source-analysis pages
+**Adversarial reviews:** R1 ✓, R2 ✓, R3+R4 (per group) ✓, R5 ✓
+**Static checks:** check_urls.py 0 dead, check_links.py 0 broken/orphan
+**Bundled assets:** (list if any)
+**Known limitations:** (what's deferred to v0.2)
+**Environment caveats:** (anything that requires specific install on
+the user's machine — e.g. MiKTeX packages, GPU)
+```
+
+Commit this as the SKILL ships, in the per-skill `references/log.md`.
 
 ## Phase 5: Write-back Instruction
 

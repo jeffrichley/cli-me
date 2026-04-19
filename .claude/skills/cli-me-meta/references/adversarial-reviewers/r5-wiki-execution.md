@@ -82,6 +82,23 @@ Wait for all page agents to complete. Merge their reports into the
 final R5 report format. Flag any page agent that returned zero findings
 as suspicious.
 
+### Step 4a: Verify previous-round hardening landed
+
+If the build went through R3/R4 review rounds, the page-agent prompts
+MUST include explicit checks for the hardening fixes from those rounds.
+Common items to verify end-to-end at R5:
+- Wrapped-tool error surface: when the wrapped tool exits non-zero,
+  does the user see the tool's stderr (not a Python traceback)?
+- Pre-flight validation messages: do invalid inputs (missing files,
+  bad flags) hit clean exit-1 messages BEFORE invoking the wrapped tool?
+- Mutex / disallowed combinations: are they rejected upfront with a
+  clear message?
+- Auto-fetched dependencies (e.g. MiKTeX `--enable-installer`): do
+  fresh-install machines get the right dependency-fetch behavior?
+
+R5 is the last gate before ship — if previous-round hardening didn't
+reach the wrapper's actual code path, this is where to find out.
+
 ### Step 5: URL Verification
 
 If the coordinator has NOT already verified URLs (check the static check

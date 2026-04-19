@@ -5,7 +5,7 @@ It self-improves as more skills are built.
 
 ## Pages
 
-- [Learning Log](log.md) — chronological record of builds and lessons learned (21 entries)
+- [Learning Log](log.md) — chronological record of builds and lessons learned (42 entries)
 - [Adversarial Review Protocol](../adversarial-reviewers/protocol.md) — finding categories, fix-review loop, phase gate format
 - [R1 Wiki Technique](../adversarial-reviewers/r1-wiki-technique.md) — technique page accuracy reviewer
 - [R2 Scaffold](../adversarial-reviewers/r2-scaffold.md) — SKILL.md, registry, structure reviewer

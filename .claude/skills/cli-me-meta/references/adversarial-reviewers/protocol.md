@@ -42,6 +42,21 @@ Reviewer finds objective failure
   → Still failing after 3? ESCALATE TO HUMAN with full evidence
 ```
 
+### Cross-cutting findings
+
+When the same issue is independently flagged by 2+ reviewers across
+different command groups (typical: a shared `backend.py` defect surfaces
+in R3 reports for multiple groups), the coordinator MUST:
+1. Dispatch ONE fix agent for the cross-cutting issue (not N per-group)
+2. Have that agent edit the shared file (backend, conftest, etc.)
+3. Re-run the affected R3 reviewers to verify the cross-cutting fix
+   resolved their per-group findings
+
+This avoids N agents racing on the same file and producing N different
+(or contradictory) fixes. Pattern observed in pandoc build:
+`run_pandoc` stderr swallowing flagged by convert/templates/filters R3;
+fixed once at backend.py.
+
 ### Rules
 
 1. **3-strike limit on auto-fix.** Objective failure → fix → re-review.

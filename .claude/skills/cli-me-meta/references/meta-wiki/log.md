@@ -186,3 +186,77 @@ Append-only. Newest entries at the bottom.
 **2026-04-16** [pyannote] — Phase 3 complete: 4 commands (diarize, vad, verify, embed) implemented with 26 Tier 1 tests passing. Used Python API wrapper pattern, not subprocess.
 
 **2026-04-16** [pyannote] — Build complete: 5 commands (diarize, vad, verify, embed, info), 26 Tier 1 + 12 Tier 2 tests. R1-R4 adversarial reviews done. VAD model incompatible with v4.x (known issue). Model names corrected: wespeaker-voxceleb-resnet34-LM.
+
+---
+
+**2026-04-19** — Seventh skill built: pandoc (5 command groups, 221 tests, 4 adversarial review rounds). Eight new lessons.
+
+35. **Heuristic markers are fragile; structural markers are robust.** Pandoc's
+    R4 fixer added a `size > 50KB` heuristic to verify Eisvogel was actually
+    applied to the PDF — false negative on tiny fixtures (Eisvogel produces
+    8-15KB PDFs from 8-line markdown). Replaced with a structural check
+    (PDF metadata `/Creator` contains "Eisvogel" via pypdf when available;
+    falls back to PDF magic + non-trivial size). The general rule: when a
+    test asserts "feature X was applied", look for a STRUCTURAL marker
+    (specific bytes, specific metadata, specific element count) — not a
+    heuristic that could be true for other reasons. Size, line count, byte
+    threshold, and "contains substring" are heuristic markers. Magic bytes,
+    metadata keys, and structural-element extraction are structural markers.
+
+36. **Synthetic fixtures need real-world variants.** When a Tier 2 test uses
+    a synthetic fixture (sine tone, hello-world markdown, blank image), check
+    whether the assertions are MEANINGFUL on that fixture — or if the synthetic
+    nature trivializes them. Pyannote fixed this by adding real-speech
+    fixtures alongside sine tones. Future skills should think about this at
+    Phase 3a (when designing the playbook).
+
+37. **`text=True` + binary stdout = silent corruption.** When the wrapped
+    tool can produce binary output (PDF, DOCX, ZIP, tar) AND the wrapper
+    supports `OUTPUT == "-"` for stdout, `subprocess.run(text=True,
+    capture_output=True)` will UnicodeDecodeError on the binary bytes,
+    print a Python traceback, and (worst) exit 0. Two safe options:
+    (a) refuse `OUTPUT == "-"` for known binary formats upfront, OR
+    (b) detect binary output and switch to `text=False` for that call.
+    Option (a) is simpler. Pandoc's convert command refuses pdf/docx/epub
+    to stdout with a clear message. Now codified in R3 §3 ("Subprocess
+    error surface").
+
+38. **Static checkers must be code-block-aware.** check_links.py originally
+    flagged markdown link literals shown inside ```markdown blocks (e.g.
+    `![alt](path.png)` in pandoc-crossref docs) as broken links. Fixed by
+    walking the file once to mark fenced-block line numbers, then skipping
+    those lines during link extraction. Same risk applies to any future
+    static checker that grep-extracts patterns from markdown — assume the
+    pattern can appear inside code blocks as DOCUMENTATION and decide
+    whether to skip them.
+
+39. **Cross-cutting bugs surface via parallel reviewers.** Three of five R3
+    reviewers (convert, templates, filters — all from independent fresh
+    contexts) flagged the same `run_pandoc(check=True, capture=True)`
+    stderr-swallowing bug. This is the review architecture working as
+    designed: parallel reviewers triangulate systemic issues. Fix-once-at-
+    backend was correct; per-group patching would have been wasteful.
+    Codified as the "cross-cutting findings" rule in protocol.md.
+
+40. **Parallel implementation agents need frozen shared infra.** Five
+    implementation agents in parallel (one per command group) shipped
+    cleanly because the shared `playbook.md`, `conftest.py`, and helpers
+    module were created BEFORE dispatch and frozen during. Without that
+    pre-step, agents would race on conftest.py. Now codified as Phase 3a
+    in cli-me-meta SKILL.md.
+
+41. **Bundled assets need integrity tripwires.** Pandoc bundles
+    `eisvogel.latex` v3.4.0 with sha256, license, and a Tier 1 test that
+    asserts the file exists at the expected path. Without that test, a
+    deletion or accidental overwrite would only surface at Tier 2 (or
+    later, when an agent tries to use the template). Pattern documented
+    in cli-me-meta Phase 2 "Bundled assets".
+
+42. **Environment can masquerade as wrapper bug.** R5 reported "Eisvogel
+    PDF generation fails" — turned out the Claude Code agent shell had
+    `/bin/bash.exe` as a PATH entry (file masquerading as directory),
+    which MiKTeX walks and chokes on. xelatex worked fine in cmd.exe /
+    PowerShell. Always rule out shell environment before patching the
+    wrapper. Lesson for future R5 prompts: when an env-related failure
+    looks intermittent or version-specific, suggest a clean PATH retry
+    before declaring it a wrapper bug.

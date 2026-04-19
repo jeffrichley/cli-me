@@ -55,6 +55,14 @@ does nothing. Report as OBJECTIVE divergence.
 - What happens to stderr on SUCCESSFUL runs? Is it printed, logged,
   or silently discarded? Discarding stderr on success loses warnings
   and deprecation notices.
+- **Subprocess error surface (most common subprocess-wrapper bug):**
+  When the wrapped tool exits non-zero with a useful stderr message,
+  does the USER see the wrapped tool's stderr — or a Python traceback
+  from `subprocess.CalledProcessError`? Trace through `run_<tool>` and
+  verify it catches `CalledProcessError`, forwards `e.stderr`, and exits
+  with `e.returncode` via `typer.Exit`. A bare `check=True` raises an
+  unhandled exception that Typer/Rich renders as a traceback — the
+  wrapped tool's actual error is captured but never displayed.
 
 ### 4. Edge Case Handling
 - Filenames with spaces — are they properly quoted?
