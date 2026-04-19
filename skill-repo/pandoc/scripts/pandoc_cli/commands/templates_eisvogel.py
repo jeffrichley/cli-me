@@ -62,6 +62,12 @@ def build_args(
     """Construct the pandoc argv list for a `templates eisvogel` invocation.
 
     Pure function: no filesystem checks, no subprocess calls.
+
+    Adds ``--pdf-engine-opt=-enable-installer`` so MiKTeX-based installs
+    auto-fetch missing Eisvogel dependencies (footnotebackref, mdframed,
+    bookmark, etc.) on the first run instead of failing with an obscure
+    "package not found" error. Harmless on TeX Live (the option is silently
+    ignored by non-MiKTeX engines).
     """
     args: list[str] = [
         str(input),
@@ -70,6 +76,7 @@ def build_args(
         "--template",
         str(template_path),
         f"--pdf-engine={pdf_engine}",
+        "--pdf-engine-opt=-enable-installer",
     ]
 
     if toc:

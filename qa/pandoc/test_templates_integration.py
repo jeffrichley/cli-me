@@ -238,20 +238,24 @@ class TestTemplatesEisvogel:
         latex_engine: str,  # noqa: ARG002 — skip-gate fixture
         tmp_path: Path,
     ):
-        """Tier 2 happy path + Eisvogel-specific marker assertion.
+        """Tier 2 happy path: Eisvogel produces a valid PDF.
 
-        R4 fix: the original test only asserted the file was a valid PDF,
-        which would pass even if a mutation stripped ``--template`` from the
-        wrapper (pandoc's default LaTeX template still produces a valid PDF).
-
-        Marker chosen: PDF byte size. The bundled Eisvogel template is a
-        ~31KB LaTeX preamble that loads ``mdframed``, ``footnotebackref``,
-        custom title-page geometry, etc. The resulting PDF for our small
-        fixture is reliably > 50KB; pandoc's default LaTeX template emits a
-        far smaller PDF (~30KB or less) for the same input. We pick 50_000
-        as a conservative threshold that catches the "ignored template"
-        mutation while leaving plenty of headroom for upstream Eisvogel
-        revisions.
+        Mutation coverage history:
+        - v1 (original): only ``assert_pdf_magic`` — passed even if a mutation
+          stripped ``--template`` from the wrapper (pandoc's default LaTeX
+          template still produces a valid PDF).
+        - v2 (R4 first pass): added ``size > 50_000`` heuristic. False
+          negative: Eisvogel-generated PDFs for tiny fixtures can be 8-15KB.
+        - v3 (R4 second pass): tried searching PDF bytes for ``Eisvogel
+          template``. False negative: the metadata lives inside FlateDecode
+          streams, so the literal string isn't byte-searchable without
+          decompression.
+        - v4 (current): rely on the Tier 1 ``test_includes_template_path``
+          test (covers "wrapper stripped --template" mutation by asserting
+          the resolved bundled-template path appears in argv) and verify
+          here only that the wrapper produces a valid PDF end-to-end. If
+          stronger mutation coverage is needed, ``pip install pypdf`` and
+          decode the Info dict — guarded so it skips when pypdf is absent.
         """
         out = tmp_path / "out.pdf"
         result = runner.invoke(
@@ -267,14 +271,26 @@ class TestTemplatesEisvogel:
                 f"exception={result.exception!r}"
             )
         assert_pdf_magic(out)
-        # Eisvogel-specific marker: PDF size > 50KB (default pandoc LaTeX
-        # output for the same fixture is ~10-30KB; Eisvogel adds the
-        # title-page + tcolorbox + mdframed preamble pushing it well over).
-        size = out.stat().st_size
-        assert size > 50_000, (
-            f"PDF only {size} bytes — too small to have used Eisvogel "
-            f"preamble (default pandoc LaTeX is ~10-30KB; Eisvogel ~80KB+). "
-            f"Possible regression: --template was ignored."
+        assert out.stat().st_size > 1_000, (
+            f"PDF only {out.stat().st_size} bytes — too small to contain "
+            "rendered content. xelatex likely produced an empty document."
+        )
+
+        # Optional stronger marker: when pypdf is available, decode the PDF
+        # Info dict and verify the Eisvogel-specific creator string. Skip
+        # silently when pypdf isn't installed — it's a polish-grade signal,
+        # not a build prerequisite.
+        try:
+            from pypdf import PdfReader  # type: ignore
+        except ImportError:
+            return
+        reader = PdfReader(str(out))
+        meta = reader.metadata or {}
+        creator = str(meta.get("/Creator", ""))
+        assert "Eisvogel" in creator, (
+            f"PDF /Creator metadata is {creator!r} — should contain 'Eisvogel' "
+            "when the bundled template is applied. Possible regression: "
+            "--template was stripped or replaced with the default."
         )
 
     def test_eisvogel_warns_when_output_not_pdf(
