@@ -14,7 +14,6 @@ Planned skills for cli-me, in priority order.
 |-------|----------|----------------|-----|
 | yt-dlp | yt-dlp | subprocess | Download video/audio from YouTube + 80 sites. Simplest next skill, validates new process 🌶️🌶️ |
 | demucs | Demucs (Meta) | Python (demucs library) | Separate vocals from music/noise. GPU-accelerated on 4060 Ti 🌶️ |
-| voice-library | Custom | Python (file management) | Manage voice profiles: reference audio, embeddings, LoRA adapters 🌶️🌶️ |
 | qwen3-tts | Qwen3-TTS + transformers | Python (torch) | TTS: voice cloning, voice engineering, streaming, batch generation 🌶️🌶️🌶️🌶️🌶️ |
 | pyannote | pyannote-audio | Python (pyannote library) | Speaker diarization — isolate individual speakers from multi-speaker audio 🌶️ |
 
