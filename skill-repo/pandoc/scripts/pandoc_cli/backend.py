@@ -13,10 +13,14 @@ import typer
 
 # Engines pandoc supports for `-t pdf` (or via `--pdf-engine`). Each must be
 # installed separately on PATH; pandoc errors if the chosen engine is missing.
+# Source: `pandoc --pdf-engine=nonexistent in.md -o out.pdf` reports the
+# authoritative list pandoc accepts. Keep in sync with that list.
 PDF_ENGINES = (
     "pdflatex",
+    "pdflatex-dev",
     "xelatex",
     "lualatex",
+    "lualatex-dev",
     "tectonic",
     "latexmk",
     "context",
@@ -25,7 +29,23 @@ PDF_ENGINES = (
     "prince",
     "pagedjs-cli",
     "typst",
+    "groff",
+    "pdfroff",
 )
+
+# Subset of PDF_ENGINES that consume LaTeX source (vs HTML or other formats).
+# Used by templates that are LaTeX-specific (e.g. Eisvogel) to validate
+# `--pdf-engine` choices upfront.
+LATEX_PDF_ENGINES = frozenset({
+    "pdflatex",
+    "pdflatex-dev",
+    "xelatex",
+    "lualatex",
+    "lualatex-dev",
+    "tectonic",
+    "latexmk",
+    "context",
+})
 
 
 @lru_cache(maxsize=1)
@@ -34,12 +54,17 @@ def find_pandoc() -> str:
     path = shutil.which("pandoc")
     if path is not None:
         return path
-    # Windows winget default install location not always on PATH for fresh shells.
+    # Windows winget default install locations not always on PATH for fresh shells.
     if sys.platform == "win32":
-        for candidate in (
+        local_appdata = os.environ.get("LOCALAPPDATA", "")
+        candidates = [
             r"C:\Program Files\Pandoc\pandoc.exe",
             r"C:\Program Files (x86)\Pandoc\pandoc.exe",
-        ):
+        ]
+        if local_appdata:
+            # winget user-scope install location
+            candidates.append(str(Path(local_appdata) / "Pandoc" / "pandoc.exe"))
+        for candidate in candidates:
             if Path(candidate).exists():
                 return candidate
     typer.echo(
@@ -58,8 +83,9 @@ def find_pandoc() -> str:
 def detect_version() -> str:
     """Return the installed pandoc version string (e.g. '3.9.0.2').
 
-    Returns 'unknown' if pandoc fails to print a parseable version line —
-    `check=False` so a broken pandoc install doesn't crash unrelated commands.
+    Returns 'unknown' if pandoc fails to print a parseable version line.
+    Forwards stderr to the user so a broken pandoc install is visible
+    (rather than silently propagating "unknown" with exit 0).
     """
     exe = find_pandoc()
     result = subprocess.run(
@@ -68,10 +94,12 @@ def detect_version() -> str:
         text=True,
         check=False,
     )
+    if result.returncode != 0 and result.stderr:
+        typer.echo(result.stderr, err=True, nl=False)
     first_line = result.stdout.split("\n", 1)[0]
     # "pandoc 3.9.0.2"
     parts = first_line.split()
-    if len(parts) >= 2:
+    if len(parts) >= 2 and parts[0].lower() == "pandoc":
         return parts[1]
     return "unknown"
 
@@ -109,23 +137,43 @@ def run_pandoc(
     *,
     check: bool = True,
     capture: bool = True,
+    forward_stderr_on_success: bool = True,
 ) -> subprocess.CompletedProcess:
     """Run a pandoc subprocess with sensible defaults.
 
-    `check=True` raises on non-zero exit. `capture=True` returns stdout/stderr
-    as strings on the result. Pandoc has no interactive prompts to suppress —
-    no `-y` equivalent needed — but if no input file is provided, pandoc reads
-    from stdin, which would silently hang in agent contexts. Callers are
-    responsible for ensuring an input file is present in `args`.
+    Behavior:
+    - On success: returns the CompletedProcess. If ``capture`` is True and
+      ``forward_stderr_on_success`` is True (default), pandoc's stderr is
+      echoed to our stderr — so deprecation warnings (`--self-contained`),
+      citeproc "citation not found" warnings, and similar non-fatal messages
+      reach the user instead of being silently swallowed.
+    - On non-zero exit (when ``check`` is True): forwards pandoc's stderr to
+      our stderr verbatim, then raises ``typer.Exit(returncode)``. The user
+      sees pandoc's actual error message, not a Python ``CalledProcessError``
+      traceback.
+
+    Pandoc has no interactive prompts. Pandoc DOES read from stdin if no
+    input file is given, which would silently hang in agent contexts —
+    callers are responsible for ensuring an input file is present in ``args``.
     """
     exe = find_pandoc()
     cmd = [exe] + args
-    return subprocess.run(
-        cmd,
-        capture_output=capture,
-        text=True,
-        check=check,
-    )
+    try:
+        result = subprocess.run(
+            cmd,
+            capture_output=capture,
+            text=True,
+            check=check,
+        )
+    except subprocess.CalledProcessError as e:
+        # Forward pandoc's own stderr (which contains the real error message)
+        # to the user instead of letting Typer/Rich render a Python traceback.
+        if e.stderr:
+            typer.echo(e.stderr, err=True, nl=False)
+        raise typer.Exit(code=e.returncode)
+    if capture and forward_stderr_on_success and result.stderr:
+        typer.echo(result.stderr, err=True, nl=False)
+    return result
 
 
 def report_success(output_path: str) -> None:
