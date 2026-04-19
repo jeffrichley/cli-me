@@ -100,7 +100,7 @@ Verify: `draft.tex` starts with `\documentclass{article}` and ends with `\end{do
 ```bash
 pandoc page.html -t markdown -o page.md
 ```
-Verify: `page.md` contains markdown headings (`#`), bold (`**...**`), and links (`[text](url)`).
+Verify: `page.md` contains markdown headings (`#`), bold (`**...**`), and inline links rendered with the standard `[label](href)` markdown syntax.
 
 **DOCX to markdown (extract text from a Word doc):**
 ```bash

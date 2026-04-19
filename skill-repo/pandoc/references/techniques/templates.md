@@ -200,11 +200,11 @@ Save as `47tabs.html`:
 <head>
   <meta charset="UTF-8">
   <title>$title$</title>
-  <link rel="stylesheet" href="https://cdn.47tabs.com/brand.css">
+  <link rel="stylesheet" href="https://static.example.com/brand.css">
   $for(header-includes)$$header-includes$$endfor$
 </head>
 <body>
-  <header><img src="https://cdn.47tabs.com/logo.svg" alt="47 Tabs"></header>
+  <header><img src="https://static.example.com/logo.svg" alt="47 Tabs"></header>
   <main>
   $if(title)$<h1>$title$</h1>$endif$
   $if(subtitle)$<p class="subtitle">$subtitle$</p>$endif$

@@ -78,7 +78,7 @@ Verify with `pandoc-crossref --version`. The binary must be on `PATH`, or pass a
 Define labeled figures, equations, and tables in markdown:
 
 ```markdown
-![A diagram of the architecture.](arch.png){#fig:arch}
+![A diagram of the architecture.](figures/arch.png){#fig:arch}
 
 $$ E = mc^2 $$ {#eq:einstein}
 

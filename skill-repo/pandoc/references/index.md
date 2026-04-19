@@ -27,6 +27,7 @@ features](#v02-deferred-features) below for what's intentionally not yet wrapped
 - [Log](log.md) — append-only build log
 - [Gotchas](gotchas.md) — known footguns, version-dependent behavior, Windows-specific issues
 - [Future Scope](future-scope.md) — v0.2 deferred features (slides, notebooks, custom writers, etc.)
+- [Bundled Templates](../scripts/templates/README.md) — bundled Eisvogel template (version, sha256, license)
 
 ## v0.2 Deferred Features
 
