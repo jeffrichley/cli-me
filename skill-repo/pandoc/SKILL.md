@@ -3,11 +3,6 @@ name: pandoc
 description: Universal document conversion CLI for pandoc — convert markdown to PDF, DOCX, HTML, EPUB, LaTeX with citations, templates, and Lua filters. Use when asked to "convert to pdf", "render markdown", "build docx", "compile thesis", "make epub", "render report", "generate document", "format my paper", "compile to docx", "build a pdf", "apply citations", "use bibtex", "convert markdown to pdf without latex" (uses weasyprint), or to produce a formatted document from markdown. Slides (beamer/reveal.js) and Jupyter notebooks are NOT yet supported — deferred to v0.2.
 ---
 
-> **Status (v0.1 scaffold):** Phase 2 scaffolding is in place; command bodies
-> arrive in Phase 3. The CLI loads and lists subcommands but invocations like
-> `pandoc-cli convert to ...` will return "No such command" until Phase 3
-> ships. Remove this banner when Phase 3 lands.
-
 # pandoc — cli-me skill
 
 CLI-powered interface for pandoc. This skill wraps the real `pandoc` executable
@@ -80,10 +75,15 @@ extension-flag mastery. See `references/future-scope.md`.
 - **Format auto-detection:** pandoc detects input/output format from file
   extensions (`.md` → markdown, `.docx` → docx, etc.). Use `--from`/`--to` to
   override.
-- **`--standalone`:** auto-enabled for PDF/DOCX/EPUB outputs. Pandoc adds it
-  implicitly when `--template` or `--include-*` flags are present.
-- **PDF engine:** auto-selects `pdflatex` for `-t pdf` if available, else
-  `weasyprint` for HTML→PDF flows. Pass `--pdf-engine` to override.
+- **`--standalone`:** the wrapper does NOT auto-add this flag. Pandoc handles
+  binary formats (PDF/DOCX/EPUB) as standalone documents implicitly; for text
+  formats (HTML/LaTeX) pass `--standalone` explicitly when you want a full
+  document rather than a fragment.
+- **PDF engine:** the wrapper does NOT auto-select an engine. Pandoc's own
+  default is `pdflatex` (it errors if not on PATH); pass `--pdf-engine` to
+  override (e.g. `xelatex`, `tectonic`, `weasyprint`, `wkhtmltopdf`). When
+  `--pdf-engine` is given explicitly, the wrapper validates the engine is on
+  PATH before invoking pandoc.
 - **Filter ordering:** preserved as given on the command line. `--citeproc`
   should typically come last (after content-modifying filters).
 - **Interactive prompts:** none. Pandoc never blocks waiting for input —
