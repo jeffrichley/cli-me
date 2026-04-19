@@ -22,6 +22,10 @@ tmp/
 qa/fixtures/*
 !qa/fixtures/.gitkeep
 
+# Per-skill QA fixtures (downloaded by fetch_*_fixtures.py scripts)
+qa/pyannote/fixtures/single_speaker.wav
+qa/pyannote/fixtures/two_speakers.wav
+
 # R5 execution cache (per-skill, auto-generated)
 .r5-cache.json
 .gstack/

@@ -25,7 +25,7 @@ inference = Inference(model, window="whole")  # treat the entire file as one seg
 
 # Extract embedding from a file
 embedding = inference("audio.wav")
-print(f"Embedding shape: {embedding.shape}")  # (1, 256)
+print(f"Embedding shape: {embedding.shape}")  # (256,)
 print(f"Embedding dtype: {embedding.dtype}")  # float32
 ```
 
@@ -67,7 +67,7 @@ inference = Inference(model, window="whole")
 # Crop to a specific segment before extracting
 segment = Segment(5.0, 12.0)  # 5s to 12s
 embedding = inference.crop("audio.wav", segment)
-print(f"Shape: {embedding.shape}")  # (1, 256)
+print(f"Shape: {embedding.shape}")  # (256,)
 ```
 
 ## Sliding Window Embeddings
@@ -160,9 +160,18 @@ for seg, label in zip(segments, labels):
 
 ## Normalizing Embeddings
 
-> **Note:** The CLI's `embed` command outputs raw (unnormalized) embeddings. The `verify` command normalizes internally before comparison. If comparing embeddings from `embed` manually, L2-normalize them first.
+### CLI behavior: `embed` vs `verify`
 
-L2-normalize before cosine similarity for consistent behavior:
+The two CLI commands handle normalization differently — by design, but worth knowing if you're chaining them:
+
+| Command | Output / behavior | Why |
+|---------|-------------------|-----|
+| `pyannote-cli embed` | Returns the **raw** (unnormalized) embedding from the model | Downstream consumer chooses what to do with it |
+| `pyannote-cli verify` | L2-normalizes both embeddings internally before computing cosine similarity | Score is meaningful as a same/different decision without caller setup |
+
+**Practical implication:** if you call `embed` twice and compare the results yourself with cosine similarity, you'll get the same number `verify` would produce — cosine is scale-invariant, so the missing normalization doesn't matter. But if you use a non-cosine metric (Euclidean distance, raw dot product, etc.) on `embed` outputs, you must L2-normalize first to get distances that are comparable across files.
+
+### Manual normalization
 
 ```python
 import numpy as np
@@ -177,8 +186,11 @@ def normalize(embedding):
 emb_a = normalize(inference("audio_a.wav").flatten())
 emb_b = normalize(inference("audio_b.wav").flatten())
 
-# After L2 normalization, cosine similarity = dot product
+# After L2 normalization, cosine similarity equals dot product
 similarity = float(np.dot(emb_a, emb_b))
+
+# Euclidean distance on normalized vectors is well-defined
+distance = float(np.linalg.norm(emb_a - emb_b))  # range: [0, 2]
 ```
 
 ## GPU Acceleration

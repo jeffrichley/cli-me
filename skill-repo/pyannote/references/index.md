@@ -25,3 +25,4 @@ detection, speaker verification, and embedding extraction.
 
 - [Log](log.md) — append-only build log
 - [Gotchas](gotchas.md) — known issues and workarounds
+- [Testing](testing.md) — three-tier test strategy, real-speech fixture setup

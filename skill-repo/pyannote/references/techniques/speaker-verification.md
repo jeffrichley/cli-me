@@ -31,7 +31,7 @@ model = Model.from_pretrained(
 inference = Inference(model, window="whole")
 
 # Extract embeddings from both samples
-embedding_a = inference("speaker_a.wav")  # shape: (1, embedding_dim)
+embedding_a = inference("speaker_a.wav")  # shape: (embedding_dim,)
 embedding_b = inference("speaker_b.wav")
 
 # Compute cosine similarity
@@ -151,6 +151,7 @@ Use a held-out validation set from your target domain to tune the threshold.
 - **Minimum duration**: embeddings from very short segments (< 1s) are less reliable. Aim for 3–5s of clean speech.
 - **Domain mismatch**: models trained on VoxCeleb may underperform on telephone or noisy speech. Consider fine-tuning.
 - **HF token required**: same token and model acceptance requirement as diarization.
+- **`verify` vs `embed` normalization**: the `verify` command L2-normalizes embeddings internally before scoring; the `embed` command returns raw embeddings. Cosine comparisons of two `embed` outputs match `verify`'s score (cosine is scale-invariant), but Euclidean / dot-product comparisons need manual normalization. See [embedding-extraction#normalizing-embeddings](embedding-extraction.md#normalizing-embeddings).
 
 ## Sources
 
