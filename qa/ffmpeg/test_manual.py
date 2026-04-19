@@ -30,7 +30,7 @@ from typer.testing import CliRunner
 
 from ffmpeg_cli import app  # noqa: E402
 
-from conftest import assert_file_exists_and_nonzero  # noqa: E402
+from _helpers import assert_file_exists_and_nonzero  # noqa: E402
 
 runner = CliRunner()
 

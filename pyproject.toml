@@ -23,6 +23,11 @@ packages = ["cli_me"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "qa"]
+# importlib mode lets pytest collect same-named test modules across subdirs
+# (qa/<skill>/test_commands.py) without requiring __init__.py — and without
+# the sys.path collisions that __init__.py would create (e.g. qa/pyannote
+# shadowing the installed pyannote package).
+addopts = ["--import-mode=importlib"]
 markers = [
     "command_graph: Tier 1 — tests command construction (no binary needed)",
     "integration: Tier 2 — tests against real binary (skips if missing)",
@@ -32,4 +37,5 @@ markers = [
 [dependency-groups]
 dev = [
     "pytest>=8.0.0",
+    "pytest-httpx>=0.30.0",
 ]

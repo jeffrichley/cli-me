@@ -30,8 +30,7 @@ from typer.testing import CliRunner
 
 from ffmpeg_cli import app  # noqa: E402
 
-# Import helpers from conftest (module-level functions)
-from conftest import (  # noqa: E402
+from _helpers import (  # noqa: E402
     assert_audio_properties,
     assert_duration_approx,
     assert_file_exists_and_nonzero,
