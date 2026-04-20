@@ -25,6 +25,7 @@ from vnccs_cli.commands import (
     character_clone,
     character_create,
     character_list,
+    character_prune,
     character_show,
 )
 
@@ -310,3 +311,44 @@ def clone(
         return
     _console.print(f"[bold cyan]{name}[/bold cyan] cloned from [dim]{from_}[/dim]")
     _console.print(f"prompt_id: [green]{result['prompt_id']}[/green]")
+
+
+@app.command("prune")
+def prune(
+    name: Annotated[str, typer.Argument(help="Character name to delete.")],
+    yes: Annotated[
+        bool,
+        typer.Option("--yes", help="Required confirmation — this is destructive."),
+    ] = False,
+    path: Annotated[
+        Optional[str],
+        typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
+    ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option("--state-dir", help="VNCCS state directory (overrides VNCCS_STATE_DIR env)."),
+    ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON."),
+    ] = False,
+) -> None:
+    """Delete a character's entire state tree. Requires --yes."""
+    try:
+        result = character_prune.run_prune(
+            name,
+            confirm=yes,
+            comfy_path=path,
+            state_dir=state_dir,
+        )
+    except VnccsError as err:
+        backend.print_error_and_exit(err)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2, default=str))
+        return
+    r = result["removed"]
+    _console.print(
+        f"[bold red]pruned[/bold red] [cyan]{name}[/cyan] "
+        f"({r['file_count']} files, {r['total_bytes']:,} bytes)"
+    )

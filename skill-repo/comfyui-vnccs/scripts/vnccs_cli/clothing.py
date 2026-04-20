@@ -20,7 +20,12 @@ from rich.table import Table
 
 from vnccs_cli import backend
 from vnccs_cli.backend import VnccsError
-from vnccs_cli.commands import clothing_add, clothing_list
+from vnccs_cli.commands import (
+    clothing_add,
+    clothing_list,
+    clothing_pick,
+    clothing_remove,
+)
 
 app = typer.Typer(
     help="Add / list / remove / pick clothing variants per VNCCS character.",
@@ -172,3 +177,98 @@ def add(
             f"  variant {sub['variant_index']} seed={sub['variant_seed']} "
             f"prompt_id=[green]{sub['prompt_id']}[/green]"
         )
+
+
+@app.command("remove")
+def remove(
+    character: Annotated[str, typer.Argument(help="Character name (must exist).")],
+    costume: Annotated[
+        str,
+        typer.Option("--name", help="Costume name to remove."),
+    ],
+    yes: Annotated[
+        bool,
+        typer.Option("--yes", help="Required confirmation — this is destructive."),
+    ] = False,
+    path: Annotated[
+        Optional[str],
+        typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
+    ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option("--state-dir", help="VNCCS state directory (overrides VNCCS_STATE_DIR env)."),
+    ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON."),
+    ] = False,
+) -> None:
+    """Delete a costume's Sheets/ tree + strip it from config. Requires --yes."""
+    try:
+        result = clothing_remove.run_remove(
+            character,
+            costume,
+            confirm=yes,
+            comfy_path=path,
+            state_dir=state_dir,
+        )
+    except VnccsError as err:
+        backend.print_error_and_exit(err)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2, default=str))
+        return
+    r = result["removed"]
+    suffix = " [dim](config updated)[/dim]" if result["config_updated"] else ""
+    _console.print(
+        f"[bold red]removed[/bold red] "
+        f"[cyan]{character}[/cyan]/[magenta]{costume}[/magenta] "
+        f"({r['file_count']} files, {r['total_bytes']:,} bytes){suffix}"
+    )
+
+
+@app.command("pick")
+def pick(
+    character: Annotated[str, typer.Argument(help="Character name.")],
+    costume: Annotated[
+        str,
+        typer.Option("--name", help="Costume name."),
+    ],
+    variant: Annotated[
+        int,
+        typer.Option("--variant", help="Variant sequence number (NNNNN from sheet_neutral_NNNNN_.png)."),
+    ],
+    path: Annotated[
+        Optional[str],
+        typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
+    ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option("--state-dir", help="VNCCS state directory (overrides VNCCS_STATE_DIR env)."),
+    ] = None,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON."),
+    ] = False,
+) -> None:
+    """Record the chosen variant for a costume in the character's config."""
+    try:
+        result = clothing_pick.run_pick(
+            character,
+            costume,
+            variant,
+            comfy_path=path,
+            state_dir=state_dir,
+        )
+    except VnccsError as err:
+        backend.print_error_and_exit(err)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2, default=str))
+        return
+    _console.print(
+        f"[bold green]picked[/bold green] "
+        f"[cyan]{character}[/cyan]/[magenta]{costume}[/magenta] "
+        f"variant=[yellow]{variant}[/yellow] "
+        f"(available: {result['available_variants']})"
+    )
