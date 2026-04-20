@@ -1,0 +1,35 @@
+{
+  "7": {
+    "inputs": {
+      "character": "NewCharacter1",
+      "game_name": "VN",
+      "additional_caption": " "
+    },
+    "class_type": "DatasetGenerator",
+    "_meta": {
+      "title": "VNCCS Dataset Generator"
+    }
+  },
+  "8": {
+    "inputs": {
+      "path": [
+        "7",
+        0
+      ],
+      "filename_prefix": "ComfyUI",
+      "filename_delimiter": "_",
+      "filename_number_padding": 4,
+      "file_extension": ".txt",
+      "encoding": "utf-8",
+      "filename_suffix": "",
+      "text": [
+        "7",
+        0
+      ]
+    },
+    "class_type": "Save Text File",
+    "_meta": {
+      "title": "Save Text File"
+    }
+  }
+}

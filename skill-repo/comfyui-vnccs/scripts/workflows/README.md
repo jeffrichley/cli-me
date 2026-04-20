@@ -36,6 +36,42 @@ and SHA-256 verified at install time via a Tier 1 test.
 | `V1SDXL/VN_Step2_ClothesChanger_v5.json` | `5f14e940683299fe26697c96020a4143f14ed97dd0f50523c273d23aacfb117c` | 238,933 | 2 legacy |
 | `V1SDXL/VN_Step3_CharEmotionGeneratorV6.json` | `5cd87b339372247eb041a219d362325213803fbd6484cff8bd1bea586577932b` | 48,027 | **3 legacy — the default `emotion add` path** |
 
+### API-format bundle (`api/`) — what the wrapper actually submits
+
+The `api/` subdirectory contains API-format (`/prompt`-ready) versions of every
+UI-format workflow above. Generated once-and-for-all by loading each UI workflow
+into ComfyUI's web frontend and calling `app.graphToPrompt()`, which is
+upstream's own UI→API conversion (`scripts/app.js`). The wrapper's submission
+pipeline reads from `api/` — the top-level UI files stay as reference copies
+for humans to open in the frontend.
+
+| File | SHA-256 | Size | Nodes |
+|---|---|---|---|
+| `api/VN_Step1_QWEN_CharSheetGenerator_v1_api.json` | `801f831140b6a909e747d9c3b22bf6532614b3b60e170c55b18476824bbc89a9` | 52,656 | 83 |
+| `api/VN_Step1.1_QWEN_Clone_Existing_Character_v1_api.json` | `3202f7aea31289638f3babcc4ad6bb936da30a224d74e522b22fc0a95b25df70` | 66,660 | 110 |
+| `api/VN_Step2_QWEN_ClothesGenerator_v1_api.json` | `47c07018b9b3c0d0e4fc601e9674499ce727dc20a8f399d86b72b334cb234bd5` | 21,350 | 60 |
+| `api/VN_Step3_QWEN_EmotionStudio_V1_api.json` | `fa47540e2a3ad26ba4bbf55cbec68664b7f78f0b1e17d9e49439f1af7e622040` | 5,676 | 22 (2 unresolved — see below) |
+| `api/VN_Step4_CharSpriteCreatorV5_api.json` | `60b3323c8ee8300ce197b4cd71db9ec4376ea94d90ced08e9a63a38adab16d0c` | 664 | 3 |
+| `api/VN_Step5_LoraDataSetGeneratorV5_api.json` | `6116805c77ba76665a93353c03192b60b2f18cf32f890cc5b11157c3a12bbe7f` | 647 | 2 |
+| `api/V1SDXL/VN_Step1_CharSheetGenerator_v5_api.json` | `969e054bc06733c2540ce2050e7636e4aba419c5c1ec538ed5b7f5724d28cc4e` | 32,832 | 102 |
+| `api/V1SDXL/VN_Step2_ClothesChanger_v5_api.json` | `be1c380e70569e335611f2dac99aab56112bc9f86104cc73aebc1fc65ff6419a` | 45,038 | 136 |
+| `api/V1SDXL/VN_Step3_CharEmotionGeneratorV6_api.json` | `0e2aec16b0aeae1e27cd7fe6477775e7097df5ae5f28eff60052c3d19872fade` | 6,725 | 21 |
+
+**Unresolved nodes in Step3 QWEN** — the 2 nodes shown with `"class_type": null`
+in `VN_Step3_QWEN_EmotionStudio_V1_api.json` are `VNCCS_QWEN_Detailer` and
+`VNCCS_BBox_Extractor`, which are unregistered in any published VNCCS branch
+(documented above and in `../../references/gotchas.md`). The wrapper refuses
+`--qwen` emotion generation with exit 4 until upstream ships those classes;
+the legacy path (`V1SDXL/VN_Step3_CharEmotionGeneratorV6_api.json`) is the
+default and is fully resolved.
+
+**Custom nodes present at conversion time** (needed for the API files to match
+the SHAs above):
+ComfyUI_VNCCS, ComfyUI-Impact-Pack, ComfyUI-Impact-Subpack, ComfyUI-KJNodes,
+ComfyUI-GGUF, ComfyUI-SeedVR2_VideoUpscaler, ComfyUI-Easy-Use,
+comfyui_controlnet_aux, was-node-suite-comfyui, ComfyUI_UltimateSDUpscale,
+rgthree-comfy.
+
 ## Stage 3 upstream-bug note (critical)
 
 `VN_Step3_QWEN_EmotionStudio_V1.json` references two node class types that

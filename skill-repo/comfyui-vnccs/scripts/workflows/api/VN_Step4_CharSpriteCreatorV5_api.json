@@ -1,0 +1,44 @@
+{
+  "1": {
+    "inputs": {
+      "character": "VNCCS_MASCOT"
+    },
+    "class_type": "SpriteGenerator",
+    "_meta": {
+      "title": "VNCCS Sprite Generator"
+    }
+  },
+  "4": {
+    "inputs": {
+      "min_size": 128,
+      "image": [
+        "1",
+        0
+      ],
+      "mask": [
+        "1",
+        2
+      ]
+    },
+    "class_type": "CharacterSheetCropper",
+    "_meta": {
+      "title": "VNCCS Character Sheet Cropper"
+    }
+  },
+  "5": {
+    "inputs": {
+      "filename_prefix": [
+        "1",
+        1
+      ],
+      "images": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  }
+}

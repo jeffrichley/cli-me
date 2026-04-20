@@ -1,0 +1,344 @@
+{
+  "9": {
+    "inputs": {
+      "filename_prefix": [
+        "69",
+        2
+      ],
+      "images": [
+        "75:80",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "19": {
+    "inputs": {
+      "filename_prefix": [
+        "69",
+        3
+      ],
+      "images": [
+        "75:70",
+        0
+      ],
+      "mask": [
+        "69",
+        7
+      ]
+    },
+    "class_type": "SaveImageWithAlpha",
+    "_meta": {
+      "title": "Save Image With Alpha"
+    }
+  },
+  "39": {
+    "inputs": {
+      "seed_int": [
+        "69",
+        6
+      ],
+      "sample_steps": [
+        "76:380",
+        0
+      ],
+      "cfg": [
+        "76:381",
+        0
+      ],
+      "denoise": 0,
+      "sampler_name": [
+        "76:378",
+        0
+      ],
+      "scheduler": [
+        "76:378",
+        1
+      ],
+      "model": [
+        "73:6",
+        0
+      ],
+      "clip": [
+        "73:23",
+        0
+      ],
+      "vae": [
+        "73:22",
+        0
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "40": {
+    "inputs": {
+      "seed_int": 0,
+      "sample_steps": 0,
+      "cfg": 0,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "55",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "55": {
+    "inputs": {
+      "seed_int": 0,
+      "sample_steps": 0,
+      "cfg": 0,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "39",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "69": {
+    "inputs": {
+      "prompt_style": "QWEN Style",
+      "character": "Alina",
+      "costumes_data": "[\"Naked\"]",
+      "emotions_data": "[\"radiant-smile\"]",
+      "emotion_ui_v2": ""
+    },
+    "class_type": "EmotionGeneratorV2",
+    "_meta": {
+      "title": "VNCCS Emotion Studio"
+    }
+  },
+  "73:6": {
+    "inputs": {
+      "strength": 1,
+      "model": [
+        "73:1",
+        0
+      ]
+    },
+    "class_type": "CFGNorm",
+    "_meta": {
+      "title": "CFGNorm"
+    }
+  },
+  "73:2": {
+    "inputs": {
+      "unet_name": "qwen-image-edit-2511-Q5_0.gguf"
+    },
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {
+      "title": "Unet Loader (GGUF)"
+    }
+  },
+  "73:1": {
+    "inputs": {
+      "lora_name": "qwen\\Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "73:2",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "73:23": {
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "73:22": {
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "76:378": {
+    "inputs": {
+      "sampler_name": "euler",
+      "scheduler": "simple"
+    },
+    "class_type": "VNCCSSamplerSchedulerPicker",
+    "_meta": {
+      "title": "VNCCS Sampler Scheduler Picker"
+    }
+  },
+  "76:380": {
+    "inputs": {
+      "value": 4
+    },
+    "class_type": "VNCCS_Integer",
+    "_meta": {
+      "title": "Sampler Steps count"
+    }
+  },
+  "76:381": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "VNCCS_Float",
+    "_meta": {
+      "title": "Sampler CFG"
+    }
+  },
+  "75:77": {
+    "inputs": {
+      "value": [
+        "69",
+        1
+      ]
+    },
+    "class_type": "VNCCS_String",
+    "_meta": {
+      "title": "VNCCS String"
+    }
+  },
+  "75:71": {
+    "inputs": {
+      "model_name": "bbox/face_yolov8m.pt"
+    },
+    "class_type": "UltralyticsDetectorProvider",
+    "_meta": {
+      "title": "UltralyticsDetectorProvider"
+    }
+  },
+  "75:70": {
+    "inputs": {
+      "UNKNOWN": true,
+      "image": [
+        "69",
+        0
+      ],
+      "bbox_detector": [
+        "75:71",
+        0
+      ],
+      "model": [
+        "75:72",
+        0
+      ],
+      "clip": [
+        "40",
+        1
+      ],
+      "vae": [
+        "40",
+        2
+      ],
+      "prompt": [
+        "75:77",
+        0
+      ],
+      "steps": [
+        "40",
+        6
+      ],
+      "cfg": [
+        "40",
+        7
+      ],
+      "seed": [
+        "40",
+        5
+      ],
+      "sampler_name": [
+        "40",
+        10
+      ],
+      "scheduler": [
+        "40",
+        11
+      ]
+    },
+    "_meta": {}
+  },
+  "75:78": {
+    "inputs": {
+      "model_name": "bbox/face_yolov8m.pt"
+    },
+    "class_type": "UltralyticsDetectorProvider",
+    "_meta": {
+      "title": "UltralyticsDetectorProvider"
+    }
+  },
+  "75:72": {
+    "inputs": {
+      "lora_name": "qwen\\VNCCS\\EmotionCoreV1_000003000.safetensors",
+      "strength_model": 1,
+      "model": [
+        "40",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "75:74": {
+    "inputs": {
+      "images": [
+        "75:70",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "75:79": {
+    "inputs": {
+      "images": [
+        "75:80",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "75:80": {
+    "inputs": {
+      "UNKNOWN": 10,
+      "image": [
+        "75:70",
+        0
+      ],
+      "bbox_detector": [
+        "75:78",
+        0
+      ]
+    },
+    "_meta": {}
+  }
+}

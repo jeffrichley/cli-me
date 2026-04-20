@@ -1,0 +1,1129 @@
+{
+  "15": {
+    "inputs": {
+      "filename_prefix": [
+        "536",
+        0
+      ],
+      "images": [
+        "700",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Refined faces character sheet"
+    }
+  },
+  "532": {
+    "inputs": {
+      "image": [
+        "579",
+        6
+      ]
+    },
+    "class_type": "VNCCS_MaskExtractor",
+    "_meta": {
+      "title": "VNCCS Mask Extractor"
+    }
+  },
+  "536": {
+    "inputs": {
+      "value": [
+        "579",
+        2
+      ]
+    },
+    "class_type": "VNCCS_String",
+    "_meta": {
+      "title": "sheets"
+    }
+  },
+  "575": {
+    "inputs": {
+      "seed_int": 0,
+      "sample_steps": 0,
+      "cfg": 0,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "576",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "576": {
+    "inputs": {
+      "seed_int": [
+        "579",
+        4
+      ],
+      "sample_steps": 0,
+      "cfg": 0,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "577",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "577": {
+    "inputs": {
+      "seed_int": 0,
+      "sample_steps": [
+        "533:380",
+        0
+      ],
+      "cfg": [
+        "533:381",
+        0
+      ],
+      "denoise": [
+        "533:379",
+        0
+      ],
+      "sampler_name": [
+        "533:378",
+        0
+      ],
+      "scheduler": [
+        "533:378",
+        1
+      ],
+      "model": [
+        "676:675",
+        0
+      ],
+      "clip": [
+        "676:704",
+        0
+      ],
+      "vae": [
+        "676:705",
+        0
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "579": {
+    "inputs": {
+      "character": "VNCCS_QWEN",
+      "costume": "Naked",
+      "face": "",
+      "head": "",
+      "top": "Red mecha-bio-armor",
+      "bottom": "",
+      "shoes": "",
+      "extra_negative_prompt": "",
+      "new_costume_name": "",
+      "Create New Costume": ""
+    },
+    "class_type": "CharacterAssetSelectorQWEN",
+    "_meta": {
+      "title": "VNCCS Character Selector QWEN"
+    }
+  },
+  "609": {
+    "inputs": {
+      "rgthree_comparer": {
+        "images": [
+          {
+            "name": "A",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_udaxi_00007_.png&type=temp&subfolder=&rand=0.807338645180405"
+          },
+          {
+            "name": "B",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_udaxi_00008_.png&type=temp&subfolder=&rand=0.6738295203878581"
+          }
+        ]
+      },
+      "image_a": [
+        "699:698",
+        0
+      ],
+      "image_b": [
+        "610",
+        0
+      ]
+    },
+    "class_type": "Image Comparer (rgthree)",
+    "_meta": {
+      "title": "Image Comparer (rgthree)"
+    }
+  },
+  "610": {
+    "inputs": {
+      "part_index": 11,
+      "target_width": 1024,
+      "target_height": 3072,
+      "image": [
+        "579",
+        6
+      ]
+    },
+    "class_type": "VNCCSSheetExtractor",
+    "_meta": {
+      "title": "VNCCS Sheet Extractor"
+    }
+  },
+  "677": {
+    "inputs": {
+      "image": [
+        "532",
+        0
+      ]
+    },
+    "class_type": "VNCCS_MaskExtractor",
+    "_meta": {
+      "title": "VNCCS Mask Extractor"
+    }
+  },
+  "678": {
+    "inputs": {
+      "tolerance": 0.45,
+      "despill_strength": 1,
+      "despill_kernel_size": 3,
+      "despill_color": "black",
+      "image": [
+        "701:711",
+        0
+      ]
+    },
+    "class_type": "VNCCSChromaKey",
+    "_meta": {
+      "title": "VNCCS Chroma Key"
+    }
+  },
+  "700": {
+    "inputs": {
+      "mode": "compose",
+      "target_width": 1024,
+      "target_height": 6144,
+      "safe_margin": false,
+      "images": [
+        "678",
+        0
+      ]
+    },
+    "class_type": "VNCCSSheetManager",
+    "_meta": {
+      "title": "VNCCS Sheet Manager"
+    }
+  },
+  "533:378": {
+    "inputs": {
+      "sampler_name": "euler",
+      "scheduler": "simple"
+    },
+    "class_type": "VNCCSSamplerSchedulerPicker",
+    "_meta": {
+      "title": "VNCCS Sampler Scheduler Picker"
+    }
+  },
+  "533:380": {
+    "inputs": {
+      "value": 4
+    },
+    "class_type": "VNCCS_Integer",
+    "_meta": {
+      "title": "Sampler Steps count"
+    }
+  },
+  "533:379": {
+    "inputs": {
+      "value": 0.5
+    },
+    "class_type": "VNCCS_Float",
+    "_meta": {
+      "title": "Denoise"
+    }
+  },
+  "533:381": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "VNCCS_Float",
+    "_meta": {
+      "title": "Sampler CFG"
+    }
+  },
+  "676:675": {
+    "inputs": {
+      "strength": 1,
+      "model": [
+        "676:673",
+        0
+      ]
+    },
+    "class_type": "CFGNorm",
+    "_meta": {
+      "title": "CFGNorm"
+    }
+  },
+  "676:674": {
+    "inputs": {
+      "unet_name": "qwen-image-edit-2511-Q5_0.gguf"
+    },
+    "class_type": "UnetLoaderGGUF",
+    "_meta": {
+      "title": "Unet Loader (GGUF)"
+    }
+  },
+  "676:673": {
+    "inputs": {
+      "lora_name": "qwen\\Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "676:674",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "676:704": {
+    "inputs": {
+      "clip_name": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+      "type": "qwen_image",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "676:705": {
+    "inputs": {
+      "vae_name": "qwen_image_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "632:622": {
+    "inputs": {
+      "seed_int": 1042031769574022,
+      "sample_steps": 4,
+      "cfg": 1,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "632:626",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "632:624": {
+    "inputs": {
+      "seed_int": 1042031769574022,
+      "sample_steps": 4,
+      "cfg": 1,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "632:622",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "632:625": {
+    "inputs": {
+      "seed": [
+        "632:624",
+        5
+      ],
+      "steps": [
+        "632:624",
+        6
+      ],
+      "cfg": [
+        "632:624",
+        7
+      ],
+      "sampler_name": [
+        "632:624",
+        10
+      ],
+      "scheduler": [
+        "632:624",
+        11
+      ],
+      "denoise": 1,
+      "model": [
+        "632:633",
+        0
+      ],
+      "positive": [
+        "632:620",
+        0
+      ],
+      "negative": [
+        "632:620",
+        1
+      ],
+      "latent_image": [
+        "632:620",
+        2
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "632:631": {
+    "inputs": {
+      "delimiter": ":",
+      "clean_whitespace": "true",
+      "text_a": [
+        "632:630",
+        0
+      ],
+      "text_b": [
+        "579",
+        7
+      ],
+      "text_c": [
+        "632:639",
+        0
+      ]
+    },
+    "class_type": "Text Concatenate",
+    "_meta": {
+      "title": "Text Concatenate"
+    }
+  },
+  "632:646": {
+    "inputs": {
+      "preprocessor": "DepthAnythingV2Preprocessor",
+      "resolution": 512,
+      "image": [
+        "632:627",
+        0
+      ]
+    },
+    "class_type": "AIO_Preprocessor",
+    "_meta": {
+      "title": "AIO Aux Preprocessor"
+    }
+  },
+  "632:621": {
+    "inputs": {
+      "seed_int": 1042031769574022,
+      "sample_steps": 4,
+      "cfg": 1,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "632:624",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "632:641": {
+    "inputs": {
+      "images": [
+        "632:619",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "632:620": {
+    "inputs": {
+      "prompt": [
+        "632:631",
+        0
+      ],
+      "latent_image_index": 1,
+      "image1_name": "Picture 1",
+      "image2_name": "Picture 2",
+      "image3_name": "Picture 3",
+      "target_size": 1344,
+      "upscale_method": "lanczos",
+      "crop_method": "pad",
+      "weight1": 1,
+      "weight2": 1,
+      "weight3": 1,
+      "vl_size": 384,
+      "instruction": "Describe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate.",
+      "qwen_2511": true,
+      "clip": [
+        "632:622",
+        1
+      ],
+      "vae": [
+        "632:622",
+        2
+      ],
+      "image1": [
+        "632:627",
+        0
+      ],
+      "image2": [
+        "632:646",
+        0
+      ]
+    },
+    "class_type": "VNCCS_QWEN_Encoder",
+    "_meta": {
+      "title": "VNCCS QWEN Encoder"
+    }
+  },
+  "632:627": {
+    "inputs": {
+      "part_index": 11,
+      "target_width": 1024,
+      "target_height": 3072,
+      "image": [
+        "532",
+        0
+      ]
+    },
+    "class_type": "VNCCSSheetExtractor",
+    "_meta": {
+      "title": "VNCCS Sheet Extractor"
+    }
+  },
+  "632:619": {
+    "inputs": {
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 64,
+      "temporal_overlap": 8,
+      "samples": [
+        "632:625",
+        0
+      ],
+      "vae": [
+        "632:621",
+        2
+      ]
+    },
+    "class_type": "VAEDecodeTiled",
+    "_meta": {
+      "title": "VAE Decode (Tiled)"
+    }
+  },
+  "632:629": {
+    "inputs": {
+      "rgthree_comparer": {
+        "images": [
+          {
+            "name": "A",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_aijxv_00007_.png&type=temp&subfolder=&rand=0.5417871366354867"
+          },
+          {
+            "name": "B",
+            "selected": true,
+            "url": "/api/view?filename=rgthree.compare._temp_aijxv_00008_.png&type=temp&subfolder=&rand=0.9566457061231414"
+          }
+        ]
+      },
+      "image_a": [
+        "632:619",
+        0
+      ],
+      "image_b": [
+        "632:627",
+        0
+      ]
+    },
+    "class_type": "Image Comparer (rgthree)",
+    "_meta": {
+      "title": "Image Comparer (rgthree)"
+    }
+  },
+  "632:633": {
+    "inputs": {
+      "lora_name": "qwen\\VNCCS\\ClothesHelperUltimateV1_000005100.safetensors",
+      "strength_model": 1.65,
+      "model": [
+        "632:622",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "632:639": {
+    "inputs": {
+      "text": "\nsolid green (00FF00) background "
+    },
+    "class_type": "Text Multiline",
+    "_meta": {
+      "title": "Text Multiline"
+    }
+  },
+  "632:626": {
+    "inputs": {
+      "seed_int": [
+        "576",
+        5
+      ],
+      "sample_steps": [
+        "576",
+        6
+      ],
+      "cfg": [
+        "576",
+        7
+      ],
+      "denoise": 0,
+      "sampler_name": [
+        "576",
+        10
+      ],
+      "scheduler": [
+        "576",
+        11
+      ],
+      "model": [
+        "576",
+        0
+      ],
+      "clip": [
+        "576",
+        1
+      ],
+      "vae": [
+        "576",
+        2
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "632:630": {
+    "inputs": {
+      "text": "Dress the character in the following clothes, keeping the body proportions the same: \n "
+    },
+    "class_type": "Text Multiline",
+    "_meta": {
+      "title": "Text Multiline"
+    }
+  },
+  "699:697": {
+    "inputs": {
+      "model": "seedvr2_ema_3b_fp16.safetensors",
+      "device": "cuda:0",
+      "blocks_to_swap": 0,
+      "swap_io_components": false,
+      "offload_device": "cpu",
+      "cache_model": "sdpa",
+      "attention_mode": "sdpa"
+    },
+    "class_type": "SeedVR2LoadDiTModel",
+    "_meta": {
+      "title": "SeedVR2 (Down)Load DiT Model"
+    }
+  },
+  "699:696": {
+    "inputs": {
+      "model": "ema_vae_fp16.safetensors",
+      "device": "cuda:0",
+      "encode_tiled": true,
+      "encode_tile_size": 1024,
+      "encode_tile_overlap": 128,
+      "decode_tiled": true,
+      "decode_tile_size": 1024,
+      "decode_tile_overlap": 128,
+      "tile_debug": "false",
+      "offload_device": "cpu",
+      "cache_model": false
+    },
+    "class_type": "SeedVR2LoadVAEModel",
+    "_meta": {
+      "title": "SeedVR2 (Down)Load VAE Model"
+    }
+  },
+  "699:698": {
+    "inputs": {
+      "seed": 42,
+      "resolution": 3840,
+      "max_resolution": 3840,
+      "batch_size": 1,
+      "uniform_batch_size": false,
+      "color_correction": "lab",
+      "temporal_overlap": 0,
+      "prepend_frames": 0,
+      "input_noise_scale": 0,
+      "latent_noise_scale": 0,
+      "offload_device": "cpu",
+      "enable_debug": false,
+      "image": [
+        "699:706",
+        0
+      ],
+      "dit": [
+        "699:697",
+        0
+      ],
+      "vae": [
+        "699:696",
+        0
+      ]
+    },
+    "class_type": "SeedVR2VideoUpscaler",
+    "_meta": {
+      "title": "SeedVR2 Video Upscaler (v2.5.24)"
+    }
+  },
+  "699:706": {
+    "inputs": {
+      "anything": [
+        "632:619",
+        0
+      ]
+    },
+    "class_type": "easy cleanGpuUsed",
+    "_meta": {
+      "title": "Clean VRAM Used"
+    }
+  },
+  "665:668": {
+    "inputs": {
+      "seed_int": 1042031769574022,
+      "sample_steps": 0,
+      "cfg": 1,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "665:667",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "665:670": {
+    "inputs": {
+      "seed_int": 1042031769574022,
+      "sample_steps": 0,
+      "cfg": 1,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "665:669",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "665:664": {
+    "inputs": {
+      "seed": [
+        "665:669",
+        5
+      ],
+      "steps": [
+        "665:669",
+        6
+      ],
+      "cfg": [
+        "665:669",
+        7
+      ],
+      "sampler_name": [
+        "665:669",
+        10
+      ],
+      "scheduler": [
+        "665:669",
+        11
+      ],
+      "denoise": 1,
+      "model": [
+        "665:666",
+        0
+      ],
+      "positive": [
+        "665:662",
+        0
+      ],
+      "negative": [
+        "665:662",
+        1
+      ],
+      "latent_image": [
+        "665:662",
+        2
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "665:667": {
+    "inputs": {
+      "seed_int": [
+        "575",
+        5
+      ],
+      "sample_steps": [
+        "575",
+        6
+      ],
+      "cfg": [
+        "575",
+        7
+      ],
+      "denoise": 0,
+      "sampler_name": [
+        "575",
+        10
+      ],
+      "scheduler": [
+        "575",
+        11
+      ],
+      "model": [
+        "575",
+        0
+      ],
+      "clip": [
+        "575",
+        1
+      ],
+      "vae": [
+        "575",
+        2
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "665:669": {
+    "inputs": {
+      "seed_int": 1042031769574022,
+      "sample_steps": 0,
+      "cfg": 1,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "665:668",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "665:666": {
+    "inputs": {
+      "lora_name": "qwen\\VNCCS\\TransferClothes_000006700.safetensors",
+      "strength_model": 1.15,
+      "model": [
+        "665:668",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "665:657": {
+    "inputs": {
+      "mode": "split",
+      "target_width": 1024,
+      "target_height": 3072,
+      "safe_margin": false,
+      "images": [
+        "677",
+        0
+      ]
+    },
+    "class_type": "VNCCSSheetManager",
+    "_meta": {
+      "title": "VNCCS Sheet Manager"
+    }
+  },
+  "665:660": {
+    "inputs": {
+      "images": [
+        "665:703",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "665:662": {
+    "inputs": {
+      "prompt": [
+        "665:702",
+        0
+      ],
+      "latent_image_index": 1,
+      "image1_name": "image1",
+      "image2_name": "image2",
+      "image3_name": "image3",
+      "target_size": 1024,
+      "upscale_method": "lanczos",
+      "crop_method": "disabled",
+      "weight1": 1,
+      "weight2": 1,
+      "weight3": 1,
+      "vl_size": 384,
+      "instruction": "Describe the key features of the input image (color, shape, size, texture, objects, background), then explain how the user's text instruction should alter or modify the image. Generate a new image that meets the user's requirements while maintaining consistency with the original input where appropriate.",
+      "qwen_2511": true,
+      "clip": [
+        "665:668",
+        1
+      ],
+      "vae": [
+        "665:668",
+        2
+      ],
+      "image1": [
+        "665:657",
+        0
+      ],
+      "image2": [
+        "699:698",
+        0
+      ]
+    },
+    "class_type": "VNCCS_QWEN_Encoder",
+    "_meta": {
+      "title": "VNCCS QWEN Encoder"
+    }
+  },
+  "665:702": {
+    "inputs": {
+      "delimiter": "",
+      "clean_whitespace": "true",
+      "text_a": [
+        "665:684",
+        0
+      ],
+      "text_b": [
+        "665:682",
+        0
+      ],
+      "text_c": [
+        "665:681",
+        0
+      ],
+      "text_d": [
+        "665:683",
+        0
+      ]
+    },
+    "class_type": "Text Concatenate",
+    "_meta": {
+      "title": "Text Concatenate"
+    }
+  },
+  "665:683": {
+    "inputs": {
+      "value": "background "
+    },
+    "class_type": "VNCCS_MultilineText",
+    "_meta": {
+      "title": "VNCCS Multiline Text"
+    }
+  },
+  "665:681": {
+    "inputs": {
+      "value": "green"
+    },
+    "class_type": "VNCCS_String",
+    "_meta": {
+      "title": "VNCCS String"
+    }
+  },
+  "665:682": {
+    "inputs": {
+      "value": "solid"
+    },
+    "class_type": "VNCCS_MultilineText",
+    "_meta": {
+      "title": "VNCCS Multiline Text"
+    }
+  },
+  "665:684": {
+    "inputs": {
+      "value": "Transfer clothes"
+    },
+    "class_type": "VNCCS_MultilineText",
+    "_meta": {
+      "title": "VNCCS Multiline Text"
+    }
+  },
+  "665:703": {
+    "inputs": {
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 64,
+      "temporal_overlap": 8,
+      "samples": [
+        "665:664",
+        0
+      ],
+      "vae": [
+        "665:670",
+        2
+      ]
+    },
+    "class_type": "VAEDecodeTiled",
+    "_meta": {
+      "title": "VAE Decode (Tiled)"
+    }
+  },
+  "701:707": {
+    "inputs": {
+      "model": "seedvr2_ema_3b_fp16.safetensors",
+      "device": "cuda:0",
+      "blocks_to_swap": 0,
+      "swap_io_components": false,
+      "offload_device": "cpu",
+      "cache_model": "sdpa",
+      "attention_mode": "sdpa"
+    },
+    "class_type": "SeedVR2LoadDiTModel",
+    "_meta": {
+      "title": "SeedVR2 (Down)Load DiT Model"
+    }
+  },
+  "701:708": {
+    "inputs": {
+      "model": "ema_vae_fp16.safetensors",
+      "device": "cuda:0",
+      "encode_tiled": true,
+      "encode_tile_size": 1024,
+      "encode_tile_overlap": 128,
+      "decode_tiled": true,
+      "decode_tile_size": 1024,
+      "decode_tile_overlap": 128,
+      "tile_debug": "false",
+      "offload_device": "cpu",
+      "cache_model": false
+    },
+    "class_type": "SeedVR2LoadVAEModel",
+    "_meta": {
+      "title": "SeedVR2 (Down)Load VAE Model"
+    }
+  },
+  "701:709": {
+    "inputs": {
+      "anything": [
+        "665:703",
+        0
+      ]
+    },
+    "class_type": "easy cleanGpuUsed",
+    "_meta": {
+      "title": "Clean VRAM Used"
+    }
+  },
+  "701:710": {
+    "inputs": {
+      "seed": 42,
+      "resolution": 3840,
+      "max_resolution": 3840,
+      "batch_size": 1,
+      "uniform_batch_size": false,
+      "color_correction": "lab",
+      "temporal_overlap": 0,
+      "prepend_frames": 0,
+      "input_noise_scale": 0,
+      "latent_noise_scale": 0,
+      "offload_device": "cpu",
+      "enable_debug": false,
+      "image": [
+        "701:709",
+        0
+      ],
+      "dit": [
+        "701:707",
+        0
+      ],
+      "vae": [
+        "701:708",
+        0
+      ]
+    },
+    "class_type": "SeedVR2VideoUpscaler",
+    "_meta": {
+      "title": "SeedVR2 Video Upscaler (v2.5.24)"
+    }
+  },
+  "701:711": {
+    "inputs": {
+      "model": "RMBG-2.0",
+      "sensitivity": 1,
+      "process_res": 1024,
+      "mask_blur": 0,
+      "mask_offset": 0,
+      "invert_output": false,
+      "refine_foreground": false,
+      "background": "Green",
+      "image": [
+        "701:710",
+        0
+      ]
+    },
+    "class_type": "VNCCS_RMBG2",
+    "_meta": {
+      "title": "VNCCS RMBG2"
+    }
+  }
+}

@@ -31,6 +31,8 @@ VNCCS_STATE_SUBDIR = "VN_CharacterCreatorSuit"
 REQUIRED_CUSTOM_NODE_PACKS = (
     "ComfyUI_VNCCS",
     "ComfyUI-Impact-Pack",
+    "ComfyUI-Impact-Subpack",
+    "ComfyUI-KJNodes",
     "ComfyUI-GGUF",
     "ComfyUI-SeedVR2_VideoUpscaler",
     "ComfyUI-Easy-Use",

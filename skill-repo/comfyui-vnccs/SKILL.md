@@ -15,7 +15,9 @@ This skill composes on top of the sibling `comfyui` cli-me skill — it loads bu
 - **`COMFY_PATH` env var** set to your ComfyUI install directory (e.g. `E:/workspaces/tools/comfy/ComfyUI`). Required so the wrapper can read VNCCS's state (character sheets, costumes, emotions) off the filesystem and enumerate them for `list` / `show` commands.
 - **Installed custom node packs** (use the sibling `comfyui custom-nodes install` to set these up):
   - `ComfyUI_VNCCS` — the core pack (version 2.1.0 or later)
-  - `ComfyUI-Impact-Pack` — provides `UltralyticsDetectorProvider`, `FaceDetailer`
+  - `ComfyUI-Impact-Pack` — provides `FaceDetailer`, `SAMLoader`
+  - `ComfyUI-Impact-Subpack` — provides `UltralyticsDetectorProvider` (split out of Impact-Pack in v8+)
+  - `ComfyUI-KJNodes` — provides `SaveImageWithAlpha` (used by stage 3 legacy)
   - `ComfyUI-GGUF` — provides `UnetLoaderGGUF` (for QWEN UNet loading)
   - `ComfyUI-SeedVR2_VideoUpscaler` — provides the upscaler subgraphs
   - `ComfyUI-Easy-Use` — provides `easy cleanGpuUsed`

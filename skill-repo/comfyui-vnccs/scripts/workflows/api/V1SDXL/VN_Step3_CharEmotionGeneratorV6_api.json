@@ -1,0 +1,391 @@
+{
+  "9": {
+    "inputs": {
+      "filename_prefix": [
+        "69",
+        2
+      ],
+      "images": [
+        "54:7",
+        1
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "19": {
+    "inputs": {
+      "filename_prefix": [
+        "69",
+        3
+      ],
+      "images": [
+        "54:7",
+        0
+      ],
+      "mask": [
+        "69",
+        7
+      ]
+    },
+    "class_type": "SaveImageWithAlpha",
+    "_meta": {
+      "title": "Save Image With Alpha"
+    }
+  },
+  "35": {
+    "inputs": {
+      "lora_01": "None",
+      "strength_01": 0,
+      "lora_02": "None",
+      "strength_02": 0,
+      "lora_03": "None",
+      "strength_03": 0,
+      "lora_04": "None",
+      "strength_04": 0,
+      "model": [
+        "28:70",
+        0
+      ],
+      "clip": [
+        "28:70",
+        1
+      ]
+    },
+    "class_type": "Lora Loader Stack (rgthree)",
+    "_meta": {
+      "title": "Lora Loader Stack (rgthree)"
+    }
+  },
+  "39": {
+    "inputs": {
+      "seed_int": [
+        "69",
+        6
+      ],
+      "sample_steps": [
+        "53:380",
+        0
+      ],
+      "cfg": [
+        "53:381",
+        0
+      ],
+      "denoise": 0,
+      "sampler_name": [
+        "53:378",
+        0
+      ],
+      "scheduler": [
+        "53:378",
+        1
+      ],
+      "vae": [
+        "53:4",
+        2
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "40": {
+    "inputs": {
+      "seed_int": 0,
+      "sample_steps": 0,
+      "cfg": 0,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "pipe": [
+        "55",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "55": {
+    "inputs": {
+      "seed_int": 0,
+      "sample_steps": 0,
+      "cfg": 0,
+      "denoise": 0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "model": [
+        "35",
+        0
+      ],
+      "clip": [
+        "35",
+        1
+      ],
+      "pipe": [
+        "39",
+        9
+      ]
+    },
+    "class_type": "VNCCS_Pipe",
+    "_meta": {
+      "title": "VNCCS Pipe"
+    }
+  },
+  "69": {
+    "inputs": {
+      "prompt_style": "SDXL Style",
+      "character": "VNCCS_QWEN",
+      "costumes_data": "[\"Naked\"]",
+      "emotions_data": "[\"cat-smile-nyan\"]",
+      "emotion_ui_v2": ""
+    },
+    "class_type": "EmotionGeneratorV2",
+    "_meta": {
+      "title": "VNCCS Emotion Studio"
+    }
+  },
+  "53:4": {
+    "inputs": {
+      "ckpt_name": "Illustrious\\ILFlatMixV4_00001_.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "53:378": {
+    "inputs": {
+      "sampler_name": "euler",
+      "scheduler": "simple"
+    },
+    "class_type": "VNCCSSamplerSchedulerPicker",
+    "_meta": {
+      "title": "VNCCS Sampler Scheduler Picker"
+    }
+  },
+  "53:380": {
+    "inputs": {
+      "value": 4
+    },
+    "class_type": "VNCCS_Integer",
+    "_meta": {
+      "title": "Sampler Steps count"
+    }
+  },
+  "53:381": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "VNCCS_Float",
+    "_meta": {
+      "title": "Sampler CFG"
+    }
+  },
+  "28:70": {
+    "inputs": {
+      "lora_name": "DMD2\\dmd2_sdxl_4step_lora_fp16.safetensors",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": [
+        "53:4",
+        0
+      ],
+      "clip": [
+        "53:4",
+        1
+      ]
+    },
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "dmd2"
+    }
+  },
+  "54:24": {
+    "inputs": {
+      "model_name": "sam_vit_b_01ec64.pth",
+      "device_mode": "AUTO"
+    },
+    "class_type": "SAMLoader",
+    "_meta": {
+      "title": "SAMLoader (Impact)"
+    }
+  },
+  "54:23": {
+    "inputs": {
+      "model_name": "bbox/face_yolov8m.pt"
+    },
+    "class_type": "UltralyticsDetectorProvider",
+    "_meta": {
+      "title": "UltralyticsDetectorProvider"
+    }
+  },
+  "54:25": {
+    "inputs": {
+      "model_name": "segm/face_yolov8m-seg_60.pt"
+    },
+    "class_type": "UltralyticsDetectorProvider",
+    "_meta": {
+      "title": "UltralyticsDetectorProvider"
+    }
+  },
+  "54:7": {
+    "inputs": {
+      "guide_size": 1536,
+      "guide_size_for": true,
+      "max_size": 1536,
+      "seed": [
+        "40",
+        5
+      ],
+      "steps": [
+        "40",
+        6
+      ],
+      "cfg": [
+        "40",
+        7
+      ],
+      "sampler_name": [
+        "40",
+        10
+      ],
+      "scheduler": "simple",
+      "denoise": 0.65,
+      "feather": 50,
+      "noise_mask": true,
+      "force_inpaint": true,
+      "bbox_threshold": 0.10000000000000002,
+      "bbox_dilation": 10,
+      "bbox_crop_factor": 1.7,
+      "sam_detection_hint": "center-1",
+      "sam_dilation": 25,
+      "sam_threshold": 0.93,
+      "sam_bbox_expansion": 0,
+      "sam_mask_hint_threshold": 0.7,
+      "sam_mask_hint_use_negative": "False",
+      "drop_size": 10,
+      "wildcard": [
+        "54:385",
+        0
+      ],
+      "cycle": 1,
+      "inpaint_model": false,
+      "noise_mask_feather": 20,
+      "tiled_encode": true,
+      "tiled_decode": true,
+      "image": [
+        "69",
+        0
+      ],
+      "model": [
+        "40",
+        0
+      ],
+      "clip": [
+        "40",
+        1
+      ],
+      "vae": [
+        "40",
+        2
+      ],
+      "positive": [
+        "54:382",
+        0
+      ],
+      "negative": [
+        "54:383",
+        0
+      ],
+      "bbox_detector": [
+        "54:23",
+        0
+      ],
+      "sam_model_opt": [
+        "54:24",
+        0
+      ],
+      "segm_detector_opt": [
+        "54:25",
+        1
+      ]
+    },
+    "class_type": "FaceDetailer",
+    "_meta": {
+      "title": "FaceDetailer"
+    }
+  },
+  "54:382": {
+    "inputs": {
+      "text": [
+        "54:384",
+        0
+      ],
+      "clip": [
+        "40",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "54:383": {
+    "inputs": {
+      "text": [
+        "54:57",
+        0
+      ],
+      "clip": [
+        "40",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "54:57": {
+    "inputs": {
+      "value": [
+        "69",
+        5
+      ]
+    },
+    "class_type": "VNCCS_String",
+    "_meta": {
+      "title": "VNCCS String"
+    }
+  },
+  "54:384": {
+    "inputs": {
+      "value": [
+        "69",
+        4
+      ]
+    },
+    "class_type": "VNCCS_String",
+    "_meta": {
+      "title": "VNCCS String"
+    }
+  },
+  "54:385": {
+    "inputs": {
+      "value": [
+        "69",
+        1
+      ]
+    },
+    "class_type": "VNCCS_String",
+    "_meta": {
+      "title": "VNCCS String"
+    }
+  }
+}
