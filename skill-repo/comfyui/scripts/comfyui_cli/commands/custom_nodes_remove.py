@@ -36,6 +36,15 @@ def run_remove(
         raise ComfyError(
             f"Custom node {name!r} is not installed at {target}.",
         )
+    if target.is_symlink():
+        raise ComfyError(
+            f"Refusing to remove symlink: {target}",
+            detail=(
+                "Target is a symlink — recursive delete could escape "
+                "custom_nodes/. Remove the symlink manually with `rm` / "
+                "`del` if you're sure."
+            ),
+        )
     if not target.is_dir():
         raise ComfyError(
             f"Refusing to remove non-directory: {target}",

@@ -228,11 +228,16 @@ def run_subprocess(
 
 
 def _rmtree_handle_readonly(func, path, exc_info):
-    """shutil.rmtree onerror callback that flips the read-only bit and retries.
+    """shutil.rmtree onerror/onexc callback that flips the read-only bit and retries.
 
     Git stores files in `.git/objects/` as read-only; on Windows shutil.rmtree
-    fails on those without this handler. Cross-platform safe — chmod 0o700 is
-    a no-op on POSIX where the parent dir owner can already remove children.
+    fails on those without this handler. Also needed on POSIX when files are
+    chmod'd read-only (the parent directory's write bit alone isn't always
+    enough on restrictive umasks).
+
+    Signature is compatible with both the pre-3.12 `onerror` callback
+    (receives `exc_info` tuple) and the 3.12+ `onexc` callback (receives a
+    bare exception). Either way we ignore the third argument.
     """
     import os
     import stat as _stat
@@ -246,10 +251,17 @@ def _rmtree_handle_readonly(func, path, exc_info):
 
 
 def safe_rmtree(path: Path) -> None:
-    """Recursive delete that handles Windows read-only files (e.g. .git/)."""
+    """Recursive delete that handles read-only files (e.g. git objects on Windows).
+
+    Uses `onexc` on Python 3.12+ (where `onerror` is deprecated) and falls
+    back to `onerror` on older interpreters.
+    """
     if not path.exists():
         return
-    shutil.rmtree(str(path), onerror=_rmtree_handle_readonly)
+    if sys.version_info >= (3, 12):
+        shutil.rmtree(str(path), onexc=_rmtree_handle_readonly)
+    else:
+        shutil.rmtree(str(path), onerror=_rmtree_handle_readonly)
 
 
 def http_client(base_url: str, timeout: float = 30.0) -> httpx.Client:

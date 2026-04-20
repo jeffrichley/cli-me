@@ -47,7 +47,10 @@ uv run comfyui_cli.py custom-nodes list
 ### Install variants
 
 ```bash
-# Custom directory name (default: derived from URL — strips .git, takes last segment)
+# Custom directory name (default: derived from URL — strips trailing `.git`
+# case-insensitively, trims whitespace from both the URL and the final
+# segment, takes the last path segment). Names containing `/`, `\`, or `..`,
+# or that are exactly `.` / `..`, are rejected to prevent path traversal.
 custom-nodes install https://example.com/myorg/MyNode.git --name MyBar
 
 # Skip pip install (e.g., when you'll manage deps manually)
@@ -101,9 +104,14 @@ and the next pack continues.
 custom-nodes remove ComfyUI_VNCCS --yes
 ```
 
-`--yes` is required (no implicit confirmation). Names containing `/`, `\`, `..`,
-or `.` are rejected to prevent accidental escapes from `custom_nodes/`. The
-delete handles read-only files (notably `.git/objects/` on Windows) automatically.
+`--yes` is required (no implicit confirmation). Names containing `/`, `\`, or
+`..`, or that are exactly `.` / `..`, are rejected to prevent accidental
+escapes from `custom_nodes/`. If the target is a **symlink**, remove refuses
+rather than following it — a symlinked custom node pointing outside
+`custom_nodes/` would otherwise have its contents recursively deleted.
+Remove the symlink manually (`rm` / `del`) if you're sure. The delete handles
+read-only files (notably `.git/objects/` on Windows and any files chmod'd
+read-only on POSIX) automatically.
 
 ## Restart ComfyUI
 

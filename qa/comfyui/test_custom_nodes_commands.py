@@ -142,6 +142,12 @@ class TestDeriveName:
             ("https://github.com/AHEKOT/ComfyUI_VNCCS/", "ComfyUI_VNCCS"),
             ("git@github.com:foo/bar.git", "bar"),
             ("ssh://git@github.com/foo/baz", "baz"),
+            # Case-insensitive `.git` strip (R3 must-fix #4)
+            ("http://example.com/foo/bar.GIT", "bar"),
+            # Trailing whitespace inside the segment must be stripped
+            ("http://example.com/foo/bar .git", "bar"),
+            # Outer whitespace around the whole URL must be stripped
+            (" http://example.com/foo/bar.git ", "bar"),
         ],
     )
     def test_common_urls(self, url, expected):
@@ -189,17 +195,20 @@ class TestRunInstall:
             target_dir.mkdir(parents=True, exist_ok=True)
             return MagicMock(stdout="", stderr="", returncode=0)
 
+        url = "https://github.com/foo/ExistingNode.git"
         with patch.object(custom_nodes_install, "run_subprocess", side_effect=fake_run):
             result = custom_nodes_install.run_install(
-                "https://github.com/foo/ExistingNode.git",
+                url,
                 comfy_path=str(comfy),
                 force=True,
             )
         assert result["skipped"] is False
         # Old contents gone
         assert not (existing / "old_file.txt").exists()
-        # git clone called
-        assert captured[0][:2] == ["git", "clone"]
+        # Exact git-clone argv — catches dropping `--depth 1` or reordering
+        # (R4 must-fix #6).
+        expected_target = str(comfy / "custom_nodes" / "ExistingNode")
+        assert captured[0] == ["git", "clone", "--depth", "1", url, expected_target]
 
     def test_install_with_requirements_runs_pip(self, tmp_path, monkeypatch):
         monkeypatch.delenv("COMFY_PATH", raising=False)
@@ -228,7 +237,16 @@ class TestRunInstall:
         assert result["deps_installed"] is True
         # Both git clone and pip install ran
         assert any(c[:2] == ["git", "clone"] for c in commands_run)
-        assert any("pip" in c for c in commands_run)
+        # Pip invoked via the resolved comfy_python interpreter, NOT
+        # sys.executable (R4 must-fix #7). Walk the pip argv and assert the
+        # interpreter path is `py.resolve()`.
+        pip_cmds = [
+            c
+            for c in commands_run
+            if len(c) >= 3 and c[1:3] == ["-m", "pip"]
+        ]
+        assert pip_cmds, f"expected a `<python> -m pip` invocation, got: {commands_run}"
+        assert Path(pip_cmds[0][0]) == py.resolve()
 
     def test_no_deps_skips_pip_install(self, tmp_path, monkeypatch):
         monkeypatch.delenv("COMFY_PATH", raising=False)
@@ -288,6 +306,29 @@ class TestRunInstall:
             custom_nodes_install.run_install(
                 "https://github.com/foo/.git",
                 name=".",
+                comfy_path=str(comfy),
+            )
+
+    @pytest.mark.parametrize(
+        "bad_name",
+        [
+            "..",
+            ".",
+            "../escape",
+            "a/b",
+            "a\\b",
+            "foo/../bar",
+            "foo/..",
+        ],
+    )
+    def test_install_rejects_malicious_name(self, bad_name, tmp_path, monkeypatch):
+        """R3 must-fix #2: `--name` must reject path separators / traversal."""
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "comfy")
+        with pytest.raises(ComfyError):
+            custom_nodes_install.run_install(
+                "https://github.com/foo/Legit.git",
+                name=bad_name,
                 comfy_path=str(comfy),
             )
 
@@ -358,6 +399,47 @@ class TestRunList:
         assert nodes[0]["has_requirements"] is True
         assert nodes[0]["is_git"] is True
 
+    def test_iterdir_oserror_becomes_comfy_path_error(self, tmp_path, monkeypatch):
+        """R3 must-fix #3: iterdir() failures must raise ComfyPathError
+        with a clean message, not leak the raw OSError/PermissionError."""
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "comfy")
+
+        real_iterdir = Path.iterdir
+
+        def fake_iterdir(self):
+            # Only fail for the custom_nodes dir, let everything else through.
+            if self.name == "custom_nodes":
+                raise PermissionError(f"simulated EACCES on {self}")
+            return real_iterdir(self)
+
+        with patch.object(Path, "iterdir", fake_iterdir):
+            with pytest.raises(ComfyPathError) as exc:
+                custom_nodes_list.run_list(comfy_path=str(comfy))
+        assert "could not read" in exc.value.message.lower()
+        assert "simulated EACCES" in (exc.value.detail or "")
+
+    def test_ordering_is_alphabetic_regardless_of_creation_order(
+        self, tmp_path, monkeypatch
+    ):
+        """R4 nice-to-fix #1: list must sort by name, not filesystem / creation order."""
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "comfy")
+        # Create in deliberately non-alphabetic order.
+        for name in ("zeta", "alpha", "mike", "bravo"):
+            (comfy / "custom_nodes" / name).mkdir()
+        nodes = custom_nodes_list.run_list(comfy_path=str(comfy))
+        assert [n["name"] for n in nodes] == ["alpha", "bravo", "mike", "zeta"]
+
+    def test_pycache_subdir_is_filtered(self, tmp_path, monkeypatch):
+        """R4 nice-to-fix #2: a `__pycache__/` subdir of custom_nodes/ is ignored."""
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "comfy")
+        (comfy / "custom_nodes" / "__pycache__").mkdir()
+        (comfy / "custom_nodes" / "RealNode").mkdir()
+        nodes = custom_nodes_list.run_list(comfy_path=str(comfy))
+        assert [n["name"] for n in nodes] == ["RealNode"]
+
 
 # ---------------------------------------------------------------------------
 # run_update
@@ -417,6 +499,10 @@ class TestRunUpdate:
 
         def fake_run(cmd, **kwargs):
             commands_run.append(list(cmd))
+            # Return identical SHA for both pre- and post-pull rev-parse —
+            # triggers the locale-independent "already up to date" detection.
+            if cmd[:2] == ["git", "rev-parse"]:
+                return MagicMock(stdout="abc1234\n", stderr="", returncode=0)
             return MagicMock(stdout="Already up to date.\n", stderr="", returncode=0)
 
         with patch.object(custom_nodes_update, "run_subprocess", side_effect=fake_run):
@@ -427,6 +513,61 @@ class TestRunUpdate:
         assert result[0]["deps_installed"] is False
         # Pip was NOT called (skipped because no actual update)
         assert not any("pip" in c for c in commands_run)
+
+    def test_sha_change_means_not_up_to_date(self, tmp_path, monkeypatch):
+        """R3 must-fix #5: pre/post SHA comparison is locale-independent.
+
+        Different SHAs pre/post pull must set already_up_to_date=False even
+        when git's stdout would have matched the old English-text heuristic
+        (or, as here, is completely unrelated text from a translated locale).
+        """
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        monkeypatch.delenv("COMFY_PYTHON", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "comfy")
+        node = comfy / "custom_nodes" / "Advancing"
+        node.mkdir()
+        (node / ".git").mkdir()
+
+        # Serve different SHAs for the two rev-parse calls (pre and post).
+        sha_values = iter(["aaaa111", "bbbb222"])
+
+        def fake_run(cmd, **kwargs):
+            if cmd[:2] == ["git", "rev-parse"]:
+                return MagicMock(
+                    stdout=next(sha_values) + "\n", stderr="", returncode=0
+                )
+            # git pull output in a non-English locale would normally break
+            # the old text heuristic — use a deliberately unparseable string.
+            return MagicMock(
+                stdout="Déjà à jour.\n", stderr="", returncode=0
+            )
+
+        with patch.object(custom_nodes_update, "run_subprocess", side_effect=fake_run):
+            result = custom_nodes_update.run_update(
+                "Advancing", comfy_path=str(comfy)
+            )
+        assert result[0]["already_up_to_date"] is False
+
+    def test_sha_identical_means_up_to_date(self, tmp_path, monkeypatch):
+        """R3 must-fix #5: identical pre/post SHAs ⇒ already_up_to_date=True
+        even when git's stdout is translated (non-English locale)."""
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        monkeypatch.delenv("COMFY_PYTHON", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "comfy")
+        node = comfy / "custom_nodes" / "Steady"
+        node.mkdir()
+        (node / ".git").mkdir()
+
+        def fake_run(cmd, **kwargs):
+            if cmd[:2] == ["git", "rev-parse"]:
+                return MagicMock(stdout="deadbeef\n", stderr="", returncode=0)
+            return MagicMock(stdout="Déjà à jour.\n", stderr="", returncode=0)
+
+        with patch.object(custom_nodes_update, "run_subprocess", side_effect=fake_run):
+            result = custom_nodes_update.run_update(
+                "Steady", comfy_path=str(comfy)
+            )
+        assert result[0]["already_up_to_date"] is True
 
     def test_all_continues_after_per_node_failure(self, tmp_path, monkeypatch):
         monkeypatch.delenv("COMFY_PATH", raising=False)
@@ -468,18 +609,74 @@ class TestRunRemove:
         with pytest.raises(ComfyError, match="confirmation"):
             custom_nodes_remove.run_remove("Foo", comfy_path=str(comfy))
 
+    def test_run_remove_without_yes_leaves_directory(self, tmp_path, monkeypatch):
+        """R4 must-fix #9: after refusing (no --yes), the target dir must
+        still exist on disk. Catches a regression where the --yes check is
+        moved after rmtree."""
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "comfy")
+        target = comfy / "custom_nodes" / "Foo"
+        target.mkdir()
+        (target / "sentinel.txt").write_text("still here\n")
+
+        with pytest.raises(ComfyError):
+            custom_nodes_remove.run_remove("Foo", comfy_path=str(comfy))
+
+        # Filesystem-state assertion: the dir AND its contents survived.
+        assert target.exists()
+        assert (target / "sentinel.txt").read_text() == "still here\n"
+
     def test_unknown_name_raises(self, tmp_path, monkeypatch):
         monkeypatch.delenv("COMFY_PATH", raising=False)
         comfy = _make_fake_comfy(tmp_path / "comfy")
         with pytest.raises(ComfyError, match="not installed"):
             custom_nodes_remove.run_remove("Ghost", comfy_path=str(comfy), yes=True)
 
-    @pytest.mark.parametrize("bad", ["..", ".", "../escape", "a/b", "a\\b"])
+    @pytest.mark.parametrize(
+        "bad",
+        [
+            "..",
+            ".",
+            "../escape",
+            "a/b",
+            "a\\b",
+            # R4 nice-to-fix #5: absolute paths + empty string
+            "/etc",
+            "C:/Windows",
+            "",
+        ],
+    )
     def test_path_traversal_rejected(self, bad, tmp_path, monkeypatch):
         monkeypatch.delenv("COMFY_PATH", raising=False)
         comfy = _make_fake_comfy(tmp_path / "comfy")
         with pytest.raises(ComfyError, match="(?i)invalid"):
             custom_nodes_remove.run_remove(bad, comfy_path=str(comfy), yes=True)
+
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="symlink creation on Windows requires elevated privileges or dev mode",
+    )
+    def test_symlink_target_refused(self, tmp_path, monkeypatch):
+        """R3 must-fix #1: if the target is a symlink, remove must refuse
+        rather than follow it and rmtree its contents."""
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "comfy")
+        # Something outside custom_nodes/ that the symlink will point at.
+        outside = tmp_path / "outside"
+        outside.mkdir()
+        (outside / "precious.txt").write_text("do not delete\n")
+
+        link = comfy / "custom_nodes" / "EvilLink"
+        link.symlink_to(outside, target_is_directory=True)
+
+        with pytest.raises(ComfyError, match="(?i)symlink"):
+            custom_nodes_remove.run_remove(
+                "EvilLink", comfy_path=str(comfy), yes=True
+            )
+
+        # The link and — most importantly — the outside directory survived.
+        assert link.is_symlink()
+        assert (outside / "precious.txt").exists()
 
     def test_happy_path_removes_dir(self, tmp_path, monkeypatch):
         monkeypatch.delenv("COMFY_PATH", raising=False)
@@ -526,3 +723,58 @@ class TestRunSubprocess:
             with pytest.raises(ComfySubprocessError) as exc:
                 backend.run_subprocess(["nonexistent_binary_xyz"], op_name="probe")
         assert "command not found" in exc.value.message.lower()
+
+    def test_timeout_surfaces_clear_error(self):
+        """R4 must-fix #10: subprocess.TimeoutExpired must translate to
+        ComfySubprocessError with 'timed out' in the message and original
+        info in detail."""
+        import subprocess as _sp
+
+        def fake_run(*args, **kwargs):
+            raise _sp.TimeoutExpired(cmd=["git"], timeout=1.0)
+
+        with patch.object(backend.subprocess, "run", side_effect=fake_run):
+            with pytest.raises(ComfySubprocessError) as exc:
+                backend.run_subprocess(
+                    ["git", "--version"], timeout=1.0, op_name="test"
+                )
+        assert "timed out" in exc.value.message.lower()
+        # Original TimeoutExpired repr includes the command + timeout value.
+        assert exc.value.detail and "1" in exc.value.detail
+
+
+# ---------------------------------------------------------------------------
+# safe_rmtree (read-only handler)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.command_graph
+class TestSafeRmtree:
+    def test_safe_rmtree_handles_readonly(self, tmp_path):
+        """R4 must-fix #8: safe_rmtree must succeed when the tree contains
+        a read-only file (the `_rmtree_handle_readonly` callback must fire).
+
+        On POSIX the parent-dir write bit usually lets the owner unlink
+        anyway, but we still want to verify the callback is wired up and
+        doesn't error. On Windows this is the primary failure mode.
+        """
+        import os
+
+        parent = tmp_path / "to_delete"
+        parent.mkdir()
+        ro_file = parent / "readonly.txt"
+        ro_file.write_text("locked\n")
+        os.chmod(ro_file, 0o444)
+        try:
+            backend.safe_rmtree(parent)
+        finally:
+            # Best-effort cleanup if the test fails and the file survives.
+            if ro_file.exists():
+                os.chmod(ro_file, 0o644)
+        assert not parent.exists()
+
+    def test_safe_rmtree_no_op_on_missing_path(self, tmp_path):
+        """Missing path is a no-op, not an error."""
+        target = tmp_path / "nope"
+        backend.safe_rmtree(target)  # should not raise
+        assert not target.exists()

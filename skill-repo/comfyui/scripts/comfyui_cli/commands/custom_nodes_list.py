@@ -6,14 +6,14 @@ import subprocess
 from pathlib import Path
 from typing import Optional
 
-from comfyui_cli.backend import get_comfy_path
+from comfyui_cli.backend import ComfyPathError, get_comfy_path
 
 # Subdirectories of custom_nodes/ that are not real custom nodes — skip them.
+# Note: only directory names belong here; `.py` / `.py.example` files are
+# already filtered by the `is_dir()` check below.
 _IGNORE_NAMES = {
     "__pycache__",
     ".DS_Store",
-    "websocket_image_save.py",  # Built-in single-file example
-    "example_node.py.example",  # Built-in disabled example
 }
 
 
@@ -64,8 +64,16 @@ def run_list(*, comfy_path: Optional[str] = None) -> list[dict]:
     comfy = get_comfy_path(comfy_path)
     custom_nodes = comfy / "custom_nodes"
 
+    try:
+        entries = sorted(custom_nodes.iterdir())
+    except OSError as e:
+        raise ComfyPathError(
+            f"Could not read custom_nodes directory: {custom_nodes}",
+            detail=str(e),
+        ) from e
+
     nodes: list[dict] = []
-    for entry in sorted(custom_nodes.iterdir()):
+    for entry in entries:
         if entry.name in _IGNORE_NAMES:
             continue
         if not entry.is_dir():

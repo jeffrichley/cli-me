@@ -12,7 +12,6 @@ from comfyui_cli import backend
 from comfyui_cli.backend import (
     ComfyError,
     ComfyPathError,
-    ComfySubprocessError,
     get_comfy_path,
     get_comfy_python,
     run_subprocess,
@@ -25,19 +24,23 @@ _console = Console()
 def derive_name(repo_url: str) -> str:
     """Derive the install directory name from a git URL.
 
-    Strips trailing `.git`, takes the last path segment.
+    Strips trailing `.git` (case-insensitive), takes the last path segment.
+    Whitespace around the raw URL and around the final segment is stripped
+    so copy-paste URLs like `"  https://.../foo .git  "` don't produce
+    a directory name with a trailing space.
+
         https://github.com/AHEKOT/ComfyUI_VNCCS.git -> ComfyUI_VNCCS
         git@github.com:foo/bar.git                  -> bar
     """
     raw = repo_url.strip().rstrip("/")
-    if raw.endswith(".git"):
+    if raw.lower().endswith(".git"):
         raw = raw[:-4]
     # SSH form: git@host:path
     if ":" in raw and not raw.startswith(("http://", "https://", "ssh://")):
         raw = raw.split(":", 1)[-1]
     parsed = urlparse(raw)
     path = parsed.path or raw
-    segments = [s for s in path.split("/") if s]
+    segments = [s.strip() for s in path.split("/") if s.strip()]
     if not segments:
         raise ValueError(f"Cannot derive a name from {repo_url!r}")
     return segments[-1]
@@ -68,9 +71,16 @@ def run_install(
           (ComfyUI does not hot-reload custom nodes).
     """
     install_name = name or derive_name(repo_url)
-    if not install_name or install_name in (".", ".."):
+    if (
+        not install_name
+        or install_name in (".", "..")
+        or "/" in install_name
+        or "\\" in install_name
+        or ".." in install_name
+    ):
         raise ComfyError(
-            f"Refusing to install with name {install_name!r} — pick something safer with --name."
+            f"Refusing to install with name {install_name!r} — pick something safer with --name.",
+            detail="Names cannot contain path separators ('/', '\\\\'), '..', or be '.' / '..'.",
         )
 
     comfy = get_comfy_path(comfy_path)

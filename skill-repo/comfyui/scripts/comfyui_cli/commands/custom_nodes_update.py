@@ -25,6 +25,24 @@ def _list_git_dirs(custom_nodes: Path) -> list[Path]:
     )
 
 
+def _rev_parse_head(node_dir: Path) -> Optional[str]:
+    """Return the short SHA at HEAD, or None if the probe fails.
+
+    Used to detect "already up to date" in a locale-independent way:
+    compare the SHA before and after `git pull` rather than parsing
+    English stdout text.
+    """
+    try:
+        result = run_subprocess(
+            ["git", "rev-parse", "--short", "HEAD"],
+            cwd=node_dir,
+            op_name=f"git rev-parse ({node_dir.name})",
+        )
+    except ComfySubprocessError:
+        return None
+    return result.stdout.strip() or None
+
+
 def _update_one(
     node_dir: Path,
     *,
@@ -32,13 +50,23 @@ def _update_one(
     no_deps: bool,
 ) -> dict:
     """Run git pull on one custom node dir and optionally reinstall its requirements."""
+    sha_before = _rev_parse_head(node_dir)
     pull_result = run_subprocess(
         ["git", "pull", "--ff-only"],
         cwd=node_dir,
         op_name=f"git pull ({node_dir.name})",
     )
     pulled = pull_result.stdout.strip()
-    already_up_to_date = "up to date" in pulled.lower() or "up-to-date" in pulled.lower()
+    sha_after = _rev_parse_head(node_dir)
+    # Compare HEAD SHA pre/post pull — locale-independent.
+    # If either probe failed (sha is None), fall back to stdout parsing
+    # which is better than nothing.
+    if sha_before is not None and sha_after is not None:
+        already_up_to_date = sha_before == sha_after
+    else:
+        already_up_to_date = (
+            "up to date" in pulled.lower() or "up-to-date" in pulled.lower()
+        )
 
     deps_installed = False
     requirements = node_dir / "requirements.txt"

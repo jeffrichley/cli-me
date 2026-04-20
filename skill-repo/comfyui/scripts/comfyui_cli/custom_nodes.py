@@ -182,6 +182,10 @@ def update(
             continue
         marker = "[dim]up to date[/dim]" if r["already_up_to_date"] else "[green]updated[/green]"
         _console.print(f"{marker}: {r['name']}")
+        # Surface git's stdout when the pull actually advanced HEAD — helps
+        # users see which commits landed (e.g. "Fast-forward ... 3 files changed").
+        if not r["already_up_to_date"] and r.get("git_output"):
+            _console.print(f"  [dim]{r['git_output']}[/dim]")
         if r["deps_installed"]:
             _console.print("  requirements.txt reinstalled")
 
