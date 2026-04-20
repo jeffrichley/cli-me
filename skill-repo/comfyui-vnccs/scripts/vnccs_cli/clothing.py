@@ -20,7 +20,7 @@ from rich.table import Table
 
 from vnccs_cli import backend
 from vnccs_cli.backend import VnccsError
-from vnccs_cli.commands import clothing_list
+from vnccs_cli.commands import clothing_add, clothing_list
 
 app = typer.Typer(
     help="Add / list / remove / pick clothing variants per VNCCS character.",
@@ -91,3 +91,84 @@ def list_(
             _render_picked(row["picked_variant"]),
         )
     _console.print(table)
+
+
+@app.command("add")
+def add(
+    character: Annotated[str, typer.Argument(help="Character name (must exist on disk).")],
+    costume: Annotated[
+        str,
+        typer.Option("--name", help="New costume name (directory under Sheets/<character>/)."),
+    ],
+    description: Annotated[
+        str,
+        typer.Option(
+            "--description",
+            help="Clothing description. Routed to CharacterAssetSelector.top (most visible slot).",
+        ),
+    ],
+    variants: Annotated[
+        int,
+        typer.Option("--variants", help="Number of variant submissions (each with a distinct seed)."),
+    ] = 1,
+    seed: Annotated[
+        Optional[int],
+        typer.Option(
+            "--seed",
+            help="Base seed; per-variant seeds are (base+0), (base+1)... If omitted, random.",
+        ),
+    ] = None,
+    path: Annotated[
+        Optional[str],
+        typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
+    ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option("--state-dir", help="VNCCS state directory (overrides VNCCS_STATE_DIR env)."),
+    ] = None,
+    url: Annotated[
+        Optional[str],
+        typer.Option("--url", help="ComfyUI base URL (overrides COMFY_URL env)."),
+    ] = None,
+    timeout: Annotated[
+        float,
+        typer.Option("--timeout", help="Max seconds per variant submission."),
+    ] = 600.0,
+    wait: Annotated[
+        bool,
+        typer.Option("--wait/--no-wait", help="Poll /history until each variant finishes."),
+    ] = True,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON instead of Rich summary."),
+    ] = False,
+) -> None:
+    """Generate N clothing variants for CHARACTER (stage 2, SDXL legacy)."""
+    try:
+        result = clothing_add.run_add(
+            character,
+            costume,
+            description,
+            variants=variants,
+            seed=seed,
+            comfy_path=path,
+            state_dir=state_dir,
+            url=url,
+            wait=wait,
+            timeout=timeout,
+        )
+    except VnccsError as err:
+        backend.print_error_and_exit(err)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2, default=str))
+        return
+    _console.print(
+        f"[bold cyan]{character}[/bold cyan] / [magenta]{costume}[/magenta] — "
+        f"{variants} variant(s) submitted"
+    )
+    for sub in result["submissions"]:
+        _console.print(
+            f"  variant {sub['variant_index']} seed={sub['variant_seed']} "
+            f"prompt_id=[green]{sub['prompt_id']}[/green]"
+        )

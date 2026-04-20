@@ -21,7 +21,12 @@ from rich.table import Table
 
 from vnccs_cli import backend
 from vnccs_cli.backend import VnccsError
-from vnccs_cli.commands import character_list, character_show
+from vnccs_cli.commands import (
+    character_clone,
+    character_create,
+    character_list,
+    character_show,
+)
 
 app = typer.Typer(
     help="Create / clone / list / inspect / prune VNCCS characters.",
@@ -175,3 +180,133 @@ def _render_show_rich(record: dict) -> None:
         f"{'[green]exists[/green]' if ds['exists'] else '[yellow]absent[/yellow]'} "
         f"({ds['row_count']} rows) {ds['path']}"
     )
+
+
+@app.command("create")
+def create(
+    name: Annotated[str, typer.Argument(help="New character name (becomes the directory under the VNCCS state dir).")],
+    description: Annotated[
+        str,
+        typer.Option(
+            "--description",
+            help="Freeform character description. Routed to CharacterCreator.additional_details.",
+        ),
+    ],
+    pose: Annotated[
+        Optional[str],
+        typer.Option(
+            "--pose",
+            help="Pose preset filename (without .png). Enumerate with `vnccs pose list`.",
+        ),
+    ] = None,
+    seed: Annotated[
+        Optional[int],
+        typer.Option("--seed", help="Override the workflow's seed (default leaves it untouched)."),
+    ] = None,
+    url: Annotated[
+        Optional[str],
+        typer.Option("--url", help="ComfyUI base URL (overrides COMFY_URL env)."),
+    ] = None,
+    timeout: Annotated[
+        float,
+        typer.Option("--timeout", help="Max seconds to wait for the prompt to complete."),
+    ] = 600.0,
+    wait: Annotated[
+        bool,
+        typer.Option("--wait/--no-wait", help="Poll /history until the prompt finishes (default)."),
+    ] = True,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON instead of Rich table."),
+    ] = False,
+) -> None:
+    """Generate a new character sheet from a prompt (stage 1, SDXL legacy)."""
+    try:
+        result = character_create.run_create(
+            name,
+            description,
+            pose=pose,
+            seed=seed,
+            url=url,
+            wait=wait,
+            timeout=timeout,
+        )
+    except VnccsError as err:
+        backend.print_error_and_exit(err)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2, default=str))
+        return
+    _console.print(f"[bold cyan]{name}[/bold cyan] submitted")
+    _console.print(f"prompt_id: [green]{result['prompt_id']}[/green]")
+    if wait:
+        _console.print("[green]finished[/green]")
+
+
+@app.command("clone")
+def clone(
+    name: Annotated[str, typer.Argument(help="New (derived) character name.")],
+    from_: Annotated[
+        str,
+        typer.Option(
+            "--from",
+            help="Existing source character name. Must already exist under the state dir.",
+        ),
+    ],
+    prompt: Annotated[
+        Optional[str],
+        typer.Option(
+            "--prompt",
+            help="Optional override description. Routed to CharacterCreator.additional_details.",
+        ),
+    ] = None,
+    seed: Annotated[
+        Optional[int],
+        typer.Option("--seed", help="Override the workflow's seed."),
+    ] = None,
+    path: Annotated[
+        Optional[str],
+        typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
+    ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option("--state-dir", help="VNCCS state directory (overrides VNCCS_STATE_DIR env)."),
+    ] = None,
+    url: Annotated[
+        Optional[str],
+        typer.Option("--url", help="ComfyUI base URL (overrides COMFY_URL env)."),
+    ] = None,
+    timeout: Annotated[
+        float,
+        typer.Option("--timeout", help="Max seconds to wait for the prompt."),
+    ] = 600.0,
+    wait: Annotated[
+        bool,
+        typer.Option("--wait/--no-wait", help="Poll /history until finished."),
+    ] = True,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON."),
+    ] = False,
+) -> None:
+    """Derive a new character from an existing one (stage 1.1, QWEN clone)."""
+    try:
+        result = character_clone.run_clone(
+            name,
+            from_,
+            prompt=prompt,
+            seed=seed,
+            comfy_path=path,
+            state_dir=state_dir,
+            url=url,
+            wait=wait,
+            timeout=timeout,
+        )
+    except VnccsError as err:
+        backend.print_error_and_exit(err)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2, default=str))
+        return
+    _console.print(f"[bold cyan]{name}[/bold cyan] cloned from [dim]{from_}[/dim]")
+    _console.print(f"prompt_id: [green]{result['prompt_id']}[/green]")

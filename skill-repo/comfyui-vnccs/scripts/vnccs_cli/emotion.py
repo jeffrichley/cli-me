@@ -27,7 +27,12 @@ from rich.table import Table
 
 from vnccs_cli import backend
 from vnccs_cli.backend import VnccsError
-from vnccs_cli.commands import emotion_list, emotion_preview, emotion_show
+from vnccs_cli.commands import (
+    emotion_add,
+    emotion_list,
+    emotion_preview,
+    emotion_show,
+)
 
 app = typer.Typer(
     help="Add / list / show / preview emotion sheets for VNCCS characters.",
@@ -198,3 +203,89 @@ def preview(
     # Non-JSON: just print the path. Parseable by shell tools; Rich would
     # needlessly wrap a single absolute path on narrow terminals.
     typer.echo(info["path"])
+
+
+@app.command("add")
+def add(
+    character: Annotated[str, typer.Argument(help="Character name (must exist on disk).")],
+    emotion: Annotated[
+        str,
+        typer.Option("--emotion", help="Emotion type (e.g. 'happy', 'radiant-smile')."),
+    ],
+    costume: Annotated[
+        str,
+        typer.Option("--costume", help="Costume name for this emotion sheet."),
+    ] = "Naked",
+    legacy: Annotated[
+        bool,
+        typer.Option("--legacy", help="Use the V1SDXL legacy workflow (DEFAULT — stable)."),
+    ] = True,
+    qwen: Annotated[
+        bool,
+        typer.Option(
+            "--qwen",
+            help="Opt into upstream QWEN workflow (currently broken — refuses with exit 4).",
+        ),
+    ] = False,
+    denoise: Annotated[
+        Optional[float],
+        typer.Option("--denoise", help="Denoise strength (reserved for QWEN path)."),
+    ] = None,
+    seed: Annotated[
+        Optional[int],
+        typer.Option("--seed", help="Override the workflow's seed."),
+    ] = None,
+    path: Annotated[
+        Optional[str],
+        typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
+    ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option("--state-dir", help="VNCCS state directory (overrides VNCCS_STATE_DIR env)."),
+    ] = None,
+    url: Annotated[
+        Optional[str],
+        typer.Option("--url", help="ComfyUI base URL (overrides COMFY_URL env)."),
+    ] = None,
+    timeout: Annotated[
+        float,
+        typer.Option("--timeout", help="Max seconds to wait."),
+    ] = 600.0,
+    wait: Annotated[
+        bool,
+        typer.Option("--wait/--no-wait", help="Poll /history until finished."),
+    ] = True,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON."),
+    ] = False,
+) -> None:
+    """Generate an emotion sheet. --legacy (default) uses V1SDXL; --qwen is broken upstream."""
+    # If --qwen is given explicitly, disable legacy (they default to True).
+    actual_legacy = legacy and not qwen
+    try:
+        result = emotion_add.run_add(
+            character,
+            emotion,
+            costume=costume,
+            legacy=actual_legacy,
+            qwen=qwen,
+            denoise=denoise,
+            seed=seed,
+            comfy_path=path,
+            state_dir=state_dir,
+            url=url,
+            wait=wait,
+            timeout=timeout,
+        )
+    except VnccsError as err:
+        backend.print_error_and_exit(err)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2, default=str))
+        return
+    _console.print(
+        f"[bold cyan]{character}[/bold cyan] / [magenta]{costume}[/magenta] / "
+        f"[yellow]{emotion}[/yellow] submitted"
+    )
+    _console.print(f"prompt_id: [green]{result['prompt_id']}[/green]")

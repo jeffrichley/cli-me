@@ -16,7 +16,7 @@ from rich.table import Table
 
 from vnccs_cli import backend
 from vnccs_cli.backend import VnccsError
-from vnccs_cli.commands import dataset_preview
+from vnccs_cli.commands import dataset_export, dataset_preview
 
 app = typer.Typer(
     help="Export VNCCS-generated sprites as LoRA training datasets.",
@@ -111,3 +111,76 @@ def preview(
         "\n[dim]No files written — this is a dry-run. "
         "Run `vnccs dataset export` to produce the kohya-ss dataset.[/dim]"
     )
+
+
+@app.command("export")
+def export(
+    character: Annotated[str, typer.Argument(help="Character name (must exist on disk).")],
+    out: Annotated[
+        Optional[str],
+        typer.Option(
+            "--out",
+            help="Destination dir — VNCCS's lora/ tree is copied here after completion.",
+        ),
+    ] = None,
+    game_name: Annotated[
+        Optional[str],
+        typer.Option(
+            "--game-name",
+            help="kohya caption prefix / folder tag (default: 'VN'). Matches DatasetGenerator.game_name.",
+        ),
+    ] = None,
+    path: Annotated[
+        Optional[str],
+        typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
+    ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option("--state-dir", help="VNCCS state directory (overrides VNCCS_STATE_DIR env)."),
+    ] = None,
+    url: Annotated[
+        Optional[str],
+        typer.Option("--url", help="ComfyUI base URL (overrides COMFY_URL env)."),
+    ] = None,
+    timeout: Annotated[
+        float,
+        typer.Option("--timeout", help="Max seconds to wait."),
+    ] = 900.0,
+    wait: Annotated[
+        bool,
+        typer.Option("--wait/--no-wait", help="Poll /history until finished (required for --out)."),
+    ] = True,
+    json_output: Annotated[
+        bool,
+        typer.Option("--json", help="Emit JSON."),
+    ] = False,
+) -> None:
+    """Submit stage-5 dataset workflow; copy VNCCS's lora/ to --out on success."""
+    try:
+        result = dataset_export.run_export(
+            character,
+            out=out,
+            game_name=game_name,
+            comfy_path=path,
+            state_dir=state_dir,
+            url=url,
+            wait=wait,
+            timeout=timeout,
+        )
+    except VnccsError as err:
+        backend.print_error_and_exit(err)
+
+    if json_output:
+        typer.echo(json.dumps(result, indent=2, default=str))
+        return
+    _console.print(
+        f"[bold cyan]{character}[/bold cyan] dataset (game=[magenta]{result['game_name']}[/magenta]) submitted"
+    )
+    sub = result["submission"]
+    _console.print(f"prompt_id: [green]{sub['prompt_id']}[/green]")
+    if "out" in result:
+        stats = result["copy_stats"]
+        _console.print(
+            f"copied to [bold]{result['out']}[/bold]: "
+            f"{stats['png_count']} PNGs + {stats['txt_count']} captions"
+        )
