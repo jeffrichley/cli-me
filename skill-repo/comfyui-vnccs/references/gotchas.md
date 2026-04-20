@@ -1,0 +1,82 @@
+# comfyui-vnccs Gotchas
+
+Known upstream bugs, environmental footguns, and sharp edges. All verified
+against VNCCS 2.1.0 at pin time (commit `7c3281f`).
+
+## ⚠️ Stage 3 QWEN workflow is broken upstream
+
+`VN_Step3_QWEN_EmotionStudio_V1.json` references two node class types that
+are **not registered** in any published VNCCS branch:
+
+- `VNCCS_QWEN_Detailer`
+- `VNCCS_BBox_Extractor`
+
+Confirmed by searching `main` (2.1.0), `origin/CharacterStudio`, and
+`origin/cleanup` branches — these names appear only in workflow JSONs,
+never in any `.py` file's `NODE_CLASS_MAPPINGS`. Even the newer v2.3
+workflows in the `cleanup` branch still reference `VNCCS_BBox_Extractor`
+with no Python class to back it. The upstream author appears to be
+mid-refactor with the missing classes in a private dev environment.
+
+**Mitigation in this skill:** `vnccs emotion add` defaults to `--legacy`
+(uses `V1SDXL/VN_Step3_CharEmotionGeneratorV6.json` — a stable SDXL
+workflow that works today). `--qwen` flag opts into the broken workflow
+for when upstream ships the missing node classes.
+
+## Sprite render has no per-costume filter
+
+`SpriteGenerator` (stage 4) ignores any filter and renders every
+(costume × emotion) combination the character has on disk. There is no
+`--costume`-only flag upstream, and Jeff's explicit scope decision was
+"render everything, no filter" for v0.1.
+
+If you want selective rendering, delete un-needed costume/emotion
+directories before running `sprite render`.
+
+## Hardcoded output paths
+
+`sprite_generator.py` and `dataset_generator.py` append
+`VN_CharacterCreatorSuit/` to their output path regardless of ComfyUI's
+`--output-directory` flag. The wrapper's `list` / `show` commands know
+about this and look in the right place, but if you're inspecting outputs
+manually, check `<comfyui-output>/VN_CharacterCreatorSuit/`.
+
+## All QWEN workflows are GUI-format with subgraphs
+
+Model filenames (checkpoints, LoRAs, ControlNets) live inside nested
+`definitions.subgraphs[*].nodes[*].widgets_values`, NOT at top-level
+nodes. The wrapper parameterizes by descending into subgraphs OR
+pre-converting GUI → API format before submission to ComfyUI's `/prompt`
+endpoint. The sibling `comfyui` skill's `workflow run` command handles
+the conversion.
+
+## ComfyUI has no hot-reload for custom nodes
+
+After installing new packs or updating VNCCS, you MUST restart ComfyUI
+before the wrapper's commands will succeed. The `comfyui custom-nodes`
+commands print a reminder after each install/update/remove.
+
+## COMFY_PATH must be set
+
+Every command that reads VNCCS's state (character sheets, costumes,
+emotions on disk) needs to know where ComfyUI lives. Set `COMFY_PATH`
+once per shell, or pass `--path` to every command.
+
+## Model footprint is large
+
+Full VNCCS capability requires **~28 GB (QWEN-only)** to **~42-46 GB
+(QWEN + SDXL + upscalers)** of models. `vnccs check models` reports
+what's missing with download URLs. Plan disk accordingly.
+
+## pip might not be in ComfyUI's venv
+
+If you're using `uv venv` to manage ComfyUI's Python environment, pip
+isn't installed by default. The sibling `comfyui custom-nodes install`
+command will fail when trying to install requirements.txt. Fix:
+
+```bash
+<comfy>/.venv/Scripts/python.exe -m ensurepip --upgrade
+```
+
+Or install `uv` globally and the wrapper (post-SWOT improvement) will
+use `uv pip install --python <path>` automatically.

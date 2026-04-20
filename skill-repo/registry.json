@@ -16,6 +16,26 @@
       "dependencies": []
     },
     {
+      "name": "comfyui-vnccs",
+      "description": "Visual novel character sprite pipeline on top of ComfyUI_VNCCS \u2014 character sheets, clothing, emotions, sprites, LoRA datasets",
+      "category": "graphics",
+      "tags": [
+        "comfyui",
+        "vnccs",
+        "visual-novel",
+        "sprites",
+        "character-design",
+        "lora-dataset",
+        "anime"
+      ],
+      "version": "0.1.0",
+      "software_url": "https://github.com/AHEKOT/ComfyUI_VNCCS",
+      "source_repo": "https://github.com/AHEKOT/ComfyUI_VNCCS",
+      "dependencies": [
+        "comfyui"
+      ]
+    },
+    {
       "name": "demucs",
       "description": "Music source separation CLI for Demucs \u2014 separate audio into stems (vocals, drums, bass, other), extract vocals, isolate instruments, karaoke, acapella, stem splitting",
       "category": "media",
