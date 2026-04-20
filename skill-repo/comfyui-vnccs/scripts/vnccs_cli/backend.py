@@ -21,6 +21,10 @@ from rich.console import Console
 
 DEFAULT_COMFY_URL = "http://127.0.0.1:8188"
 VNCCS_CUSTOM_NODE_DIR_NAME = "ComfyUI_VNCCS"
+# Subdirectory of ComfyUI's output root where VNCCS persists every
+# character's tree. Hard-coded in `utils.base_output_dir()`; see
+# references/source-analysis/state-management.md §Root directory.
+VNCCS_STATE_SUBDIR = "VN_CharacterCreatorSuit"
 
 # Custom-node packs VNCCS's workflows depend on, by install-directory name.
 # Used by `vnccs check nodes` to verify all deps are present.
@@ -34,6 +38,135 @@ REQUIRED_CUSTOM_NODE_PACKS = (
     "was-node-suite-comfyui",
     "ComfyUI_UltimateSDUpscale",
     "rgthree-comfy",
+)
+
+
+# Required model files VNCCS 2.1.0 workflows reference.
+# Source: references/source-analysis/required-models.md (the 15 explicitly-referenced
+# models, plus optional RMBG variants that are auto-downloaded at first use).
+#
+# `subdir` is relative to `<COMFY_PATH>/models/`. VNCCS workflow JSONs author
+# Windows-style backslashes (e.g. `Illustrious\ILFlatMix.safetensors`), but on
+# disk the file lives at `models/checkpoints/Illustrious/ILFlatMix.safetensors`.
+# We store the filename + subdir already-normalized here so both Windows and
+# Linux checks work against Path / forward-slashes.
+#
+# `optional=True` entries warn-but-don't-fail per playbook.md (RMBG variants).
+REQUIRED_MODELS: tuple[dict, ...] = (
+    {
+        "filename": "qwen-image-edit-2511-Q5_0.gguf",
+        "subdir": "unet",
+        "type": "UNet (GGUF)",
+        "download_url": "https://huggingface.co/unsloth/Qwen-Image-Edit-2511-GGUF",
+        "optional": False,
+    },
+    {
+        "filename": "Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+        "subdir": "loras/qwen",
+        "type": "LoRA (Qwen Lightning)",
+        "download_url": "https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning",
+        "optional": False,
+    },
+    {
+        "filename": "qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        "subdir": "clip",
+        "type": "CLIP (Qwen 2.5 VL)",
+        "download_url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+        "optional": False,
+    },
+    {
+        "filename": "qwen_image_vae.safetensors",
+        "subdir": "vae",
+        "type": "VAE (Qwen)",
+        "download_url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/main/split_files/vae/qwen_image_vae.safetensors",
+        "optional": False,
+    },
+    {
+        "filename": "ILFlatMix.safetensors",
+        "subdir": "checkpoints/Illustrious",
+        "type": "SDXL Checkpoint",
+        "download_url": "https://civitai.com (search 'Illustrious ILFlatMix')",
+        "optional": False,
+    },
+    {
+        "filename": "mimimeter.safetensors",
+        "subdir": "loras/IL",
+        "type": "LoRA (SDXL)",
+        "download_url": "https://huggingface.co/MIUProject/VNCCS/tree/main",
+        "optional": False,
+    },
+    {
+        "filename": "AnytestV4.safetensors",
+        "subdir": "controlnet/SDXL",
+        "type": "ControlNet (SDXL)",
+        "download_url": "https://civitai.com (search 'AnytestV4 ControlNet SDXL')",
+        "optional": False,
+    },
+    {
+        "filename": "IllustriousXL_openpose.safetensors",
+        "subdir": "controlnet/SDXL",
+        "type": "ControlNet (SDXL OpenPose)",
+        "download_url": "https://civitai.com (search 'IllustriousXL OpenPose ControlNet')",
+        "optional": False,
+    },
+    {
+        "filename": "poser_helper_v2_000004200.safetensors",
+        "subdir": "loras/qwen/VNCCS",
+        "type": "LoRA (VNCCS Pose Helper)",
+        "download_url": "https://huggingface.co/MIUProject/VNCCS/tree/main",
+        "optional": False,
+    },
+    {
+        "filename": "ClothesHelperUltimateV1_000005100.safetensors",
+        "subdir": "loras/qwen/VNCCS",
+        "type": "LoRA (VNCCS Clothes Helper)",
+        "download_url": "https://huggingface.co/MIUProject/VNCCS/tree/main",
+        "optional": False,
+    },
+    {
+        "filename": "TransferClothes_000006700.safetensors",
+        "subdir": "loras/qwen/VNCCS",
+        "type": "LoRA (VNCCS Clothes Transfer)",
+        "download_url": "https://huggingface.co/MIUProject/VNCCS/tree/main",
+        "optional": False,
+    },
+    {
+        "filename": "EmotionCoreV1_000003000.safetensors",
+        "subdir": "loras/qwen/VNCCS",
+        "type": "LoRA (VNCCS Emotion Core)",
+        "download_url": "https://huggingface.co/MIUProject/VNCCS/tree/main",
+        "optional": False,
+    },
+    {
+        "filename": "face_yolov8m.pt",
+        "subdir": "ultralytics/bbox",
+        "type": "YOLO bbox (face)",
+        "download_url": "https://huggingface.co/Bingsu/adetailer/blob/main/face_yolov8m.pt",
+        "optional": False,
+    },
+    {
+        "filename": "2x_APISR_RRDB_GAN_generator.pth",
+        "subdir": "upscale_models",
+        "type": "Upscaler (2x APISR)",
+        "download_url": "https://github.com/Kiteretsu77/APISR/releases",
+        "optional": False,
+    },
+    {
+        "filename": "seedvr2_ema_3b_fp16.safetensors",
+        "subdir": "diffusion_models",
+        "type": "SeedVR2 DiT",
+        "download_url": "https://huggingface.co/numz/SeedVR2_comfyUI",
+        "optional": False,
+    },
+    # Optional RMBG variants — auto-downloaded lazily by the VNCCS_RMBG2 node.
+    # Missing these should warn but not fail per playbook.md §check models.
+    {
+        "filename": "model.safetensors",
+        "subdir": "RMBG/RMBG-2.0",
+        "type": "RMBG BiRefNet (optional)",
+        "download_url": "https://huggingface.co/1038lab/RMBG-2.0",
+        "optional": True,
+    },
 )
 
 
@@ -141,6 +274,32 @@ def get_vnccs_install_dir(comfy_path: Optional[str] = None) -> Path:
             ),
         )
     return vnccs
+
+
+def get_vnccs_state_dir(
+    comfy_path: Optional[str] = None,
+    *,
+    state_dir: Optional[str] = None,
+) -> Path:
+    """Return the root directory where VNCCS persists per-character state.
+
+    Resolution precedence:
+      1. Explicit `state_dir` argument (from a `--state-dir` flag).
+      2. `VNCCS_STATE_DIR` env var (lets users override when ComfyUI was
+         launched with `--output-directory` pointing elsewhere).
+      3. Default `<COMFY_PATH>/output/VN_CharacterCreatorSuit`.
+
+    The directory is NOT required to exist — missing-dir is a normal
+    "no characters have been created yet" state. The caller decides
+    whether to treat a non-existent root as empty or as an error.
+    """
+    if state_dir:
+        return Path(state_dir).expanduser().resolve()
+    env_override = os.environ.get("VNCCS_STATE_DIR")
+    if env_override:
+        return Path(env_override).expanduser().resolve()
+    comfy = get_comfy_path(comfy_path)
+    return (comfy / "output" / VNCCS_STATE_SUBDIR).resolve()
 
 
 # --- Bundled workflow loading ----------------------------------------------
