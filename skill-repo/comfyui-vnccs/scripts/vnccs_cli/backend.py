@@ -13,10 +13,13 @@ from __future__ import annotations
 import json
 import os
 import sys
+import time
+import uuid
 from functools import lru_cache
 from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
 
+import httpx
 from rich.console import Console
 
 DEFAULT_COMFY_URL = "http://127.0.0.1:8188"
@@ -342,6 +345,254 @@ def load_bundled_workflow(name: str) -> dict:
             f"Bundled workflow is not valid JSON: {name}",
             detail=f"{path}: {e}",
         ) from e
+
+
+def _api_workflow_path(name: str) -> Path:
+    """Resolve a bundled API-format workflow file. Hookable by tests."""
+    here = Path(__file__).resolve().parent.parent
+    return here / "workflows" / "api" / name
+
+
+def load_api_workflow(name: str) -> dict:
+    """Load a bundled API-format workflow JSON from scripts/workflows/api/<name>.
+
+    `name` may contain a subdirectory prefix (e.g. ``V1SDXL/VN_Step3_...json``).
+    Raises VnccsWorkflowError (exit 7) if the file is missing or unparseable.
+    """
+    path = _api_workflow_path(name)
+    if not path.exists():
+        raise VnccsWorkflowError(
+            f"Bundled API workflow missing: {name}",
+            detail=(
+                f"Expected at {path}. It ships with the skill; re-install "
+                "the comfyui-vnccs skill to restore the workflow bundle."
+            ),
+        )
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        raise VnccsWorkflowError(
+            f"Bundled API workflow is not valid JSON: {name}",
+            detail=f"{path}: {e}",
+        ) from e
+
+
+# --- Workflow patching -----------------------------------------------------
+
+
+def patch_workflow_node(
+    workflow: dict,
+    *,
+    class_type: Optional[str] = None,
+    title: Optional[str] = None,
+    inputs: Optional[dict[str, Any]] = None,
+) -> int:
+    """Patch matching nodes' ``inputs`` dict in-place. Returns count patched.
+
+    A node matches when its ``class_type`` equals ``class_type`` (if given)
+    AND its ``_meta.title`` equals ``title`` (if given). At least one
+    selector must be provided. Missing input keys are added; existing keys
+    are overwritten. Non-dict top-level values (``_version``, arrays, etc.)
+    are ignored.
+    """
+    if class_type is None and title is None:
+        raise ValueError(
+            "patch_workflow_node requires at least one of class_type or title."
+        )
+    if not inputs:
+        return 0
+    count = 0
+    for node in workflow.values():
+        if not isinstance(node, dict):
+            continue
+        if class_type is not None and node.get("class_type") != class_type:
+            continue
+        if title is not None:
+            meta = node.get("_meta") or {}
+            if meta.get("title") != title:
+                continue
+        node_inputs = node.setdefault("inputs", {})
+        node_inputs.update(inputs)
+        count += 1
+    return count
+
+
+# --- Workflow submission + wait --------------------------------------------
+
+
+WAIT_POLL_INTERVAL: float = 1.0
+
+
+def _is_ui_format(workflow: dict) -> bool:
+    """UI-format workflow = top-level ``nodes`` list + ``links`` list.
+
+    API format (what /prompt accepts) is a dict keyed by node id → node
+    record. Anything with top-level ``nodes``/``links`` arrays must be
+    converted via the sibling comfyui skill first.
+    """
+    return (
+        isinstance(workflow, dict)
+        and isinstance(workflow.get("nodes"), list)
+        and isinstance(workflow.get("links"), list)
+    )
+
+
+def submit_workflow(
+    workflow: dict,
+    *,
+    url: Optional[str] = None,
+    client_id: Optional[str] = None,
+    timeout: float = 30.0,
+) -> dict:
+    """POST an API-format workflow to ComfyUI's ``/prompt`` endpoint.
+
+    Returns a dict with keys ``prompt_id``, ``client_id``, ``number``,
+    ``node_errors``. Raises:
+
+    - ``VnccsValidationError`` (exit 3) if the workflow is UI-format or
+      ComfyUI returns non-empty ``node_errors``.
+    - ``VnccsConnectionError`` (exit 2) if the server is unreachable.
+    - ``VnccsExecutionError`` (exit 4) if ComfyUI returns HTTP >= 400.
+    """
+    if _is_ui_format(workflow):
+        raise VnccsValidationError(
+            "UI-format workflow detected — cannot submit directly.",
+            detail=(
+                "Convert via the sibling comfyui skill's workflow_run/"
+                "graphToPrompt pipeline. See scripts/workflows/README.md."
+            ),
+        )
+
+    cid = client_id or str(uuid.uuid4())
+    base = get_comfy_url(url)
+    payload = {"prompt": workflow, "client_id": cid}
+
+    try:
+        with httpx.Client(base_url=base, timeout=timeout) as client:
+            response = client.post("/prompt", json=payload)
+    except (
+        httpx.ConnectError,
+        httpx.ConnectTimeout,
+        httpx.ReadTimeout,
+        httpx.WriteTimeout,
+        httpx.PoolTimeout,
+    ) as exc:
+        raise VnccsConnectionError(
+            f"Cannot reach ComfyUI at {base}",
+            detail=str(exc),
+        ) from exc
+
+    if response.status_code >= 400:
+        try:
+            body = response.json()
+            detail = json.dumps(body)[:1000]
+        except (json.JSONDecodeError, ValueError):
+            detail = response.text[:500]
+        raise VnccsExecutionError(
+            f"ComfyUI rejected workflow (HTTP {response.status_code}).",
+            detail=detail,
+        )
+
+    try:
+        data = response.json()
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise VnccsExecutionError(
+            "ComfyUI returned non-JSON response from /prompt.",
+            detail=str(exc),
+        ) from exc
+
+    node_errors = data.get("node_errors") or {}
+    if node_errors:
+        raise VnccsValidationError(
+            "ComfyUI node validation failed.",
+            detail=json.dumps(node_errors)[:1000],
+        )
+
+    return {
+        "prompt_id": data.get("prompt_id"),
+        "client_id": cid,
+        "number": data.get("number"),
+        "node_errors": node_errors,
+    }
+
+
+def _extract_execution_error_detail(status: dict) -> Optional[str]:
+    for ev, payload in status.get("messages") or []:
+        if ev == "execution_error" and isinstance(payload, dict):
+            msg = payload.get("exception_message")
+            etype = payload.get("exception_type")
+            if msg:
+                return f"[{etype}] {msg}" if etype else str(msg)
+    return None
+
+
+def wait_for_prompt(
+    prompt_id: str,
+    *,
+    url: Optional[str] = None,
+    timeout: float = 600.0,
+) -> dict:
+    """Poll ``GET /history/<prompt_id>`` until the prompt completes.
+
+    Returns the history entry dict on success. Raises:
+
+    - ``VnccsExecutionError`` (exit 4) if the prompt ended with a non-success
+      status.
+    - ``VnccsConnectionError`` (exit 2) if the server becomes unreachable.
+    - ``VnccsError`` (exit 1, generic) if the timeout is exceeded before the
+      prompt finishes.
+    """
+    base = get_comfy_url(url)
+    deadline = time.monotonic() + float(timeout)
+
+    with httpx.Client(base_url=base, timeout=10.0) as client:
+        while True:
+            try:
+                response = client.get(f"/history/{prompt_id}")
+            except (
+                httpx.ConnectError,
+                httpx.ConnectTimeout,
+                httpx.ReadTimeout,
+                httpx.WriteTimeout,
+                httpx.PoolTimeout,
+            ) as exc:
+                raise VnccsConnectionError(
+                    f"Cannot reach ComfyUI at {base}",
+                    detail=str(exc),
+                ) from exc
+
+            if response.status_code >= 400:
+                raise VnccsExecutionError(
+                    f"ComfyUI /history returned HTTP {response.status_code}.",
+                    detail=response.text[:500],
+                )
+
+            try:
+                data = response.json()
+            except (json.JSONDecodeError, ValueError) as exc:
+                raise VnccsExecutionError(
+                    "ComfyUI returned non-JSON response from /history.",
+                    detail=str(exc),
+                ) from exc
+
+            if data:
+                entry = data.get(prompt_id) or next(iter(data.values()), {})
+                status = entry.get("status") or {}
+                status_str = status.get("status_str", "")
+                if status_str == "success":
+                    return entry
+                detail = _extract_execution_error_detail(status)
+                raise VnccsExecutionError(
+                    f"Prompt {prompt_id} ended with status={status_str!r}.",
+                    detail=detail,
+                )
+
+            if time.monotonic() >= deadline:
+                raise VnccsError(
+                    f"Timed out waiting for prompt_id={prompt_id} after {timeout}s.",
+                )
+
+            time.sleep(WAIT_POLL_INTERVAL)
 
 
 # --- Pretty error printing -------------------------------------------------
