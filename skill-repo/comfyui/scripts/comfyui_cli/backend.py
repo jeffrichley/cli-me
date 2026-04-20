@@ -8,7 +8,10 @@
 from __future__ import annotations
 
 import os
+import shutil
+import subprocess
 import sys
+from pathlib import Path
 from typing import Optional
 
 import httpx
@@ -71,6 +74,18 @@ class ComfyNotFoundError(ComfyError):
     exit_code = 5
 
 
+class ComfyPathError(ComfyError):
+    """ComfyUI install path is not set, missing, or doesn't look like a ComfyUI install."""
+
+    exit_code = 6
+
+
+class ComfySubprocessError(ComfyError):
+    """git or pip subprocess failed; stderr is surfaced in `detail`."""
+
+    exit_code = 7
+
+
 # --- URL / client helpers --------------------------------------------------
 
 
@@ -82,6 +97,159 @@ def get_base_url(cli_url: Optional[str] = None) -> str:
     """
     url = cli_url or os.environ.get("COMFY_URL") or DEFAULT_BASE_URL
     return url.rstrip("/")
+
+
+def get_comfy_path(cli_path: Optional[str] = None) -> Path:
+    """Resolve the ComfyUI install directory.
+
+    Precedence: --path flag > COMFY_PATH env > error. Validates the path
+    exists and contains a `custom_nodes/` subdirectory (the canonical
+    marker that this is a ComfyUI install root).
+
+    Raises:
+        ComfyPathError: when the path is unset, missing, or doesn't have
+            a custom_nodes/ subdir.
+    """
+    raw = cli_path or os.environ.get("COMFY_PATH")
+    if not raw:
+        raise ComfyPathError(
+            "ComfyUI install path not set.",
+            detail=(
+                "Pass --path /path/to/ComfyUI, or set the COMFY_PATH env var.\n"
+                "This should be the directory that contains custom_nodes/, models/, etc."
+            ),
+        )
+    path = Path(raw).expanduser().resolve()
+    if not path.exists():
+        raise ComfyPathError(
+            f"ComfyUI path does not exist: {path}",
+            detail=f"Resolved from {'--path' if cli_path else 'COMFY_PATH'}={raw!r}.",
+        )
+    custom_nodes_dir = path / "custom_nodes"
+    if not custom_nodes_dir.is_dir():
+        raise ComfyPathError(
+            f"Path is not a ComfyUI install: {path}",
+            detail=(
+                f"Expected '{custom_nodes_dir}' to be a directory.\n"
+                "Point --path or COMFY_PATH at the directory that contains main.py "
+                "and custom_nodes/."
+            ),
+        )
+    return path
+
+
+def _candidate_pythons(comfy_path: Path) -> list[Path]:
+    """Return likely Python interpreter paths for ComfyUI's environment, in priority order."""
+    candidates = []
+    if sys.platform == "win32":
+        candidates += [
+            comfy_path / "python_embeded" / "python.exe",  # portable Windows install
+            comfy_path / ".venv" / "Scripts" / "python.exe",
+            comfy_path / "venv" / "Scripts" / "python.exe",
+        ]
+    else:
+        candidates += [
+            comfy_path / ".venv" / "bin" / "python",
+            comfy_path / "venv" / "bin" / "python",
+        ]
+    return candidates
+
+
+def get_comfy_python(
+    comfy_path: Path, cli_python: Optional[str] = None
+) -> Optional[Path]:
+    """Resolve the Python interpreter that runs ComfyUI.
+
+    Used to `pip install -r requirements.txt` for newly-installed custom
+    nodes into the right environment. Custom nodes loaded by ComfyUI must
+    have their requirements installed in ComfyUI's own Python.
+
+    Precedence: --python flag > COMFY_PYTHON env > auto-detect candidates
+    next to comfy_path. Returns None if nothing is found — callers should
+    skip pip install and warn the user with a clear instruction.
+    """
+    raw = cli_python or os.environ.get("COMFY_PYTHON")
+    if raw:
+        path = Path(raw).expanduser().resolve()
+        if not path.exists():
+            raise ComfyPathError(
+                f"Specified Python interpreter does not exist: {path}",
+                detail=f"Resolved from {'--python' if cli_python else 'COMFY_PYTHON'}={raw!r}.",
+            )
+        return path
+    for cand in _candidate_pythons(comfy_path):
+        if cand.exists():
+            return cand
+    return None
+
+
+def run_subprocess(
+    cmd: list[str],
+    *,
+    cwd: Optional[Path] = None,
+    timeout: float = 600.0,
+    op_name: str = "subprocess",
+) -> subprocess.CompletedProcess:
+    """Run a subprocess and translate failures into ComfySubprocessError.
+
+    On non-zero exit, raises ComfySubprocessError with stderr surfaced in
+    `detail`. This is the equivalent of the pandoc backend's run_pandoc
+    pattern — wrapped tools' stderr must reach the user instead of a
+    Python traceback.
+    """
+    if not cmd or not cmd[0]:
+        raise ComfySubprocessError(f"{op_name}: empty command", detail=str(cmd))
+    exe = shutil.which(cmd[0]) or cmd[0]
+    full_cmd = [exe] + cmd[1:]
+    try:
+        result = subprocess.run(
+            full_cmd,
+            cwd=str(cwd) if cwd else None,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except FileNotFoundError as e:
+        raise ComfySubprocessError(
+            f"{op_name}: command not found: {cmd[0]}",
+            detail=str(e),
+        ) from e
+    except subprocess.TimeoutExpired as e:
+        raise ComfySubprocessError(
+            f"{op_name}: timed out after {timeout}s",
+            detail=str(e),
+        ) from e
+    if result.returncode != 0:
+        raise ComfySubprocessError(
+            f"{op_name} failed (exit {result.returncode})",
+            detail=(result.stderr or result.stdout or "").strip(),
+        )
+    return result
+
+
+def _rmtree_handle_readonly(func, path, exc_info):
+    """shutil.rmtree onerror callback that flips the read-only bit and retries.
+
+    Git stores files in `.git/objects/` as read-only; on Windows shutil.rmtree
+    fails on those without this handler. Cross-platform safe — chmod 0o700 is
+    a no-op on POSIX where the parent dir owner can already remove children.
+    """
+    import os
+    import stat as _stat
+
+    try:
+        os.chmod(path, _stat.S_IWRITE | _stat.S_IREAD)
+        func(path)
+    except Exception:
+        # Re-raise the original error to the caller; we tried.
+        raise
+
+
+def safe_rmtree(path: Path) -> None:
+    """Recursive delete that handles Windows read-only files (e.g. .git/)."""
+    if not path.exists():
+        return
+    shutil.rmtree(str(path), onerror=_rmtree_handle_readonly)
 
 
 def http_client(base_url: str, timeout: float = 30.0) -> httpx.Client:

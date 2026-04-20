@@ -19,6 +19,7 @@
 - [Flow acquisition](techniques/flow-acquisition.md) — finding existing workflows (examples repo, OpenArt, Civitai, reddit PNGs), dependency chain
 - [Input / output](techniques/input-output.md) — /upload/image, /view, /history output shape
 - [Server info and errors](techniques/server-info-and-errors.md) — /system_stats, origin-guard, HTTP error codes
+- [Custom nodes](techniques/custom-nodes.md) — install/update/remove custom node packs from git
 
 ## Operational
 

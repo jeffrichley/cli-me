@@ -49,6 +49,7 @@ uv run comfyui_cli.py <group> <command> --help
 | `model` | List and find checkpoint/LoRA/VAE/etc. model files |
 | `input` | Upload and list input images |
 | `output` | Download and inspect workflow outputs |
+| `custom-nodes` | Install/list/update/remove ComfyUI custom node packs (git-based) |
 
 ### Commands
 
@@ -81,12 +82,20 @@ uv run comfyui_cli.py <group> <command> --help
 - `output download PROMPT_ID [--dir DIR]` — resolve `/history` then GET `/view` per image
 - `output show PROMPT_ID` — JSON dump of the outputs section
 
+**custom-nodes**
+- `custom-nodes install REPO_URL [--name N] [--path P] [--python P] [--no-deps] [--force]` — git clone into `<ComfyUI>/custom_nodes/`, optionally `pip install -r requirements.txt`
+- `custom-nodes list [--path P] [--json]` — enumerate installed packs with git ref + remote
+- `custom-nodes update [NAME|--all] [--path P] [--python P] [--no-deps]` — `git pull --ff-only` + reinstall reqs (when changed)
+- `custom-nodes remove NAME [--path P] --yes` — delete the directory (requires explicit `--yes`)
+
+  Requires `COMFY_PATH` env var or `--path` flag pointing at the ComfyUI install directory (the one containing `custom_nodes/`). For `requirements.txt` installs, the wrapper auto-detects ComfyUI's Python at `python_embeded/`, `.venv/`, or `venv/`; override with `--python` or `COMFY_PYTHON` env. ComfyUI must be **restarted** after install/update/remove for changes to take effect (no hot-reload).
+
 ### Default Behavior
 
 - **Base URL:** `http://127.0.0.1:8188`, overridable via `COMFY_URL` env or `--url` flag.
 - **Origin header:** the CLI sets `Origin: <base_url>` on every request to satisfy ComfyUI's origin-guard (see `references/gotchas.md`).
 - **Outputs download to the current working directory** unless `--output-dir` is specified.
-- **Exit codes:** `2` = connection/origin error, `3` = validation error (bad workflow), `4` = execution error, `5` = output not found.
+- **Exit codes:** `2` = connection/origin error, `3` = validation error (bad workflow), `4` = execution error, `5` = output not found, `6` = ComfyUI install path missing/invalid (custom-nodes group), `7` = git/pip subprocess failure (custom-nodes group).
 
 ## Knowledge Base
 
