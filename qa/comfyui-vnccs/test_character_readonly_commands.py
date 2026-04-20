@@ -177,8 +177,10 @@ class TestCharacterList:
     def test_character_with_costumes_and_emotions_counts(self, tmp_path, clean_env):
         state = tmp_path / "state"
         state.mkdir()
-        # Alina: 2 costumes ("Naked" + "Casual"), 2 emotion dirs on Casual
-        # + 1 on Naked = 3 emotions total (neutral counts as a dir too).
+        # Alina: 2 costumes ("Naked" + "Casual"), 2 real emotions on Casual
+        # (happy + sad; `neutral` is the base-sheet dir, NOT an emotion —
+        # matches character_show's _list_emotions and VNCCS's EMOTIONS=["neutral"]
+        # base-label semantics at utils.py:13).
         _make_character_dir(
             state,
             "Alina",
@@ -193,8 +195,9 @@ class TestCharacterList:
         assert len(result) == 1
         r = result[0]
         assert r["costume_count"] == 2
-        # emotion_count sums across costumes (neutral dirs included).
-        assert r["emotion_count"] == 3 + 1
+        # emotion_count excludes `neutral` dirs to stay consistent with
+        # character show's emotions[] (which excludes neutral).
+        assert r["emotion_count"] == 2
 
     def test_non_directory_entries_skipped(self, tmp_path, clean_env):
         state = tmp_path / "state"

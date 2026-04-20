@@ -121,6 +121,33 @@ def test_check_nodes_empty_dir_is_missing(fake_comfy, monkeypatch):
     assert "no .py files" in result.output or "missing" in result.output.lower()
 
 
+def test_check_nodes_accepts_nested_init_only(fake_comfy, monkeypatch):
+    """A pack with no top-level __init__.py but a nested subpackage .py file
+    must be reported as present.
+
+    This is how real `ComfyUI-Impact-Pack` ships: only `impact/__init__.py`,
+    no top-level `__init__.py`. A `(pack / "__init__.py").is_file()` check
+    would wrongly flag every real install as missing. Verifies the
+    implementation walks the tree (rglob) rather than checking a single
+    file (r4/check synthetic-fixture-trap finding K1).
+    """
+    monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
+    _populate_required_packs(fake_comfy)
+    # Rebuild ComfyUI-Impact-Pack with ONLY a nested __init__.py (like real).
+    pack = "ComfyUI-Impact-Pack"
+    pack_dir = fake_comfy / "custom_nodes" / pack
+    for py in pack_dir.rglob("*.py"):
+        py.unlink()
+    nested = pack_dir / "impact"
+    nested.mkdir(parents=True, exist_ok=True)
+    (nested / "__init__.py").write_text("# nested\n", encoding="utf-8")
+    # Confirm NO top-level .py.
+    assert not (pack_dir / "__init__.py").exists()
+
+    result = runner.invoke(check_app, ["nodes"])
+    assert result.exit_code == 0, result.output
+
+
 def test_check_nodes_no_vnccs(fake_comfy_no_vnccs, monkeypatch):
     """A ComfyUI install without VNCCS → VNCCS pack flagged missing → exit 5."""
     monkeypatch.setenv("COMFY_PATH", str(fake_comfy_no_vnccs))

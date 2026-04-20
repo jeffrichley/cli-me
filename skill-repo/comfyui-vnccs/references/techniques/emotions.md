@@ -80,25 +80,33 @@ vnccs emotion add "Aria" \
 
 The legacy node accepts a single comma-separated string and fans out to all costumes.
 
-### Browse available emotions
-
-```bash
-vnccs emotion list                      # all 200+ keys grouped by category
-vnccs emotion list --category Anger     # 19 anger variants
-vnccs emotion show angry-pout           # safe_name, description, natural_prompt, emoji
-vnccs emotion preview happy             # streams the preview image from /vnccs/get_emotion_image
-```
-
-`emotion list` reads `emotions-config/emotions.json` directly (or via the `/vnccs/get_emotions` HTTP route if it's up) and prints a grouped table. `emotion preview` uses the `/vnccs/get_emotion_image` endpoint.
-
 ### List what emotions exist for a character
 
 ```bash
-vnccs emotion ls "Aria"                 # per-costume list of folders under Faces/<costume>/
-vnccs emotion ls "Aria" --costume casual
+vnccs emotion list Aria                 # every (costume, emotion) pair with a rendered sheet
+vnccs emotion list Aria --json          # same, JSON-formatted
 ```
 
-This is a disk walk, not a config read — emotions exist when their folder has a successful `sheet_<emotion>_*.png`.
+`emotion list` is a disk walk (not a config read): rows appear only when their `Sheets/<costume>/<emotion>/` folder contains at least one `sheet_<emotion>_NNNNN_.png`. Sorted by costume then emotion. Requires `CHARACTER` (positional).
+
+### Inspect one emotion's latest render
+
+```bash
+vnccs emotion show Aria --emotion happy
+vnccs emotion show Aria --emotion happy --costume casual  # disambiguate when needed
+vnccs emotion show Aria --emotion happy --json
+```
+
+`show` returns the path, size, and mtime of the highest-`NNNNN` sheet under `Sheets/<costume>/<emotion>/`. If the emotion exists in multiple costumes and `--costume` is omitted, `show` exits 5 listing the candidates.
+
+### Preview the bundled reference image for an emotion
+
+```bash
+vnccs emotion preview Aria --emotion angry          # prints the absolute path
+vnccs emotion preview Aria --emotion radiant-smile --json
+```
+
+**The preview is character-agnostic** — it's the generic reference image VNCCS ships under `<VNCCS>/emotions-config/images/<safe_name>.png`. The `CHARACTER` argument is accepted for API symmetry and to fail fast on typos, but doesn't change which file is returned.
 
 ## Output layout
 

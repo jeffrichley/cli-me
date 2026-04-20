@@ -141,6 +141,7 @@ def clean_env(monkeypatch: pytest.MonkeyPatch) -> None:
     """
     monkeypatch.delenv("COMFY_PATH", raising=False)
     monkeypatch.delenv("COMFY_URL", raising=False)
+    monkeypatch.delenv("VNCCS_STATE_DIR", raising=False)
 
 
 # ---------------------------------------------------------------------------

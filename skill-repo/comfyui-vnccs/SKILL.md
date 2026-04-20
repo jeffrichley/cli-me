@@ -23,7 +23,7 @@ This skill composes on top of the sibling `comfyui` cli-me skill — it loads bu
   - `was-node-suite-comfyui` — provides `Save Text File` (stage 5)
   - `ComfyUI_UltimateSDUpscale` — provides `UltimateSDUpscale`
   - `rgthree-comfy` — provides utility/layout nodes
-- **Models** — see `references/source-analysis/required-models.md` for the 15 model files + 4 optional RMBG variants needed. Run `vnccs check models` to see what's missing. Full install footprint: **~28-46 GB**.
+- **Models** — see `references/source-analysis/required-models.md` for the 16 required model files (including the SeedVR2 DiT + VAE pair) plus 1 optional RMBG variant. Three additional RMBG variants (INSPYRENET, BEN, BEN2) are auto-downloaded lazily by VNCCS's RMBG2 node at first use and don't need pre-fetching. Run `vnccs check models` to see what's missing. Full install footprint: **~28-46 GB**.
 - **Python 3.12+**
 
 Verify setup (run from the skill's `scripts/` directory):

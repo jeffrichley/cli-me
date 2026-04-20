@@ -58,6 +58,27 @@ def _flat(output: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Contract tests for the REQUIRED_MODELS list itself.
+# ---------------------------------------------------------------------------
+
+
+def test_required_models_includes_seedvr2_dit_and_vae():
+    """SeedVR2 needs BOTH the DiT and its matched VAE — upstream workflows
+    (see references/source-analysis/workflow-stages.md:99-101, 135-136)
+    load both files at the same subgraph. A missing VAE entry meant
+    `check models` reported green on installs that would crash at
+    upscale-time. Pin the pair so regressions surface (r3/check HIGH fix).
+    """
+    filenames = {entry["filename"] for entry in backend.REQUIRED_MODELS}
+    assert "seedvr2_ema_3b_fp16.safetensors" in filenames
+    assert "ema_vae_fp16.safetensors" in filenames
+    # Both required (not optional).
+    by_name = {e["filename"]: e for e in backend.REQUIRED_MODELS}
+    assert by_name["seedvr2_ema_3b_fp16.safetensors"]["optional"] is False
+    assert by_name["ema_vae_fp16.safetensors"]["optional"] is False
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 

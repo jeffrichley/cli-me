@@ -9,33 +9,49 @@ from __future__ import annotations
 
 import os
 import re
+import tomllib
 from pathlib import Path
 from typing import Optional
 
 from vnccs_cli.backend import (
     DEFAULT_COMFY_URL,
     VNCCS_CUSTOM_NODE_DIR_NAME,
-    VnccsPathError,
     get_comfy_path,
+    get_vnccs_state_dir,
 )
 
 
 def _parse_vnccs_version(vnccs_dir: Path) -> str:
-    """Read the VNCCS node pack's pyproject.toml for a version string.
+    """Read ``[project].version`` from the VNCCS node pack's pyproject.toml.
 
-    Falls back to "unknown" if pyproject.toml is missing, unreadable, or
-    has no parseable version line. Does NOT use tomllib so the parse is
-    resilient to partially-written or non-standard TOML the user may have
-    edited.
+    Uses ``tomllib`` so we correctly scope to the ``[project]`` table
+    (not a ``[tool.poetry.dependencies.*]`` block that happens to have a
+    ``version`` line before ``[project]``). Falls back to a lenient regex
+    and finally to ``"unknown"`` when both fail — matches the intent of
+    the docstring contract: never raise, always return a string.
     """
     pyproject = vnccs_dir / "pyproject.toml"
     if not pyproject.is_file():
         return "unknown"
     try:
-        text = pyproject.read_text(encoding="utf-8")
+        raw = pyproject.read_bytes()
     except OSError:
         return "unknown"
-    # Match a top-level `version = "x.y.z"` line (common in [project] block).
+    try:
+        data = tomllib.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, tomllib.TOMLDecodeError):
+        # Malformed TOML — fall back to the lenient regex below.
+        data = None
+    if isinstance(data, dict):
+        project = data.get("project")
+        if isinstance(project, dict):
+            version = project.get("version")
+            if isinstance(version, str) and version:
+                return version
+    try:
+        text = raw.decode("utf-8", errors="replace")
+    except Exception:
+        return "unknown"
     match = re.search(r'^\s*version\s*=\s*"([^"]+)"', text, re.MULTILINE)
     if match:
         return match.group(1)
@@ -62,7 +78,12 @@ def run_show(*, comfy_path: Optional[str] = None, url: Optional[str] = None) -> 
       - vnccs_version       parsed from pyproject.toml or "unknown"
       - bundled_workflow_dir absolute path to scripts/workflows/
       - models_root         <comfy_path>/models
-      - output_dir          <comfy_path>/output
+      - vnccs_state_dir     resolved via get_vnccs_state_dir (honors
+                            VNCCS_STATE_DIR env); this is what every
+                            command actually reads, so it's what we
+                            report rather than a hard-coded
+                            <comfy_path>/output that other commands
+                            would disagree with.
 
     Raises:
         VnccsPathError: COMFY_PATH unresolvable (exit 6). The VNCCS install
@@ -72,6 +93,7 @@ def run_show(*, comfy_path: Optional[str] = None, url: Optional[str] = None) -> 
     """
     comfy = get_comfy_path(comfy_path)
     vnccs_dir = comfy / "custom_nodes" / VNCCS_CUSTOM_NODE_DIR_NAME
+    state_dir = get_vnccs_state_dir(comfy_path)
 
     resolved_url = url or os.environ.get("COMFY_URL") or DEFAULT_COMFY_URL
     resolved_url = resolved_url.rstrip("/")
@@ -83,5 +105,5 @@ def run_show(*, comfy_path: Optional[str] = None, url: Optional[str] = None) -> 
         "vnccs_version": _parse_vnccs_version(vnccs_dir),
         "bundled_workflow_dir": str(_bundled_workflow_dir()),
         "models_root": str(comfy / "models"),
-        "output_dir": str(comfy / "output"),
+        "vnccs_state_dir": str(state_dir),
     }

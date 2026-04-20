@@ -35,7 +35,7 @@ _FIELD_LABELS: list[tuple[str, str]] = [
     ("vnccs_version", "VNCCS version"),
     ("bundled_workflow_dir", "Bundled workflow dir"),
     ("models_root", "Models root"),
-    ("output_dir", "Output dir"),
+    ("vnccs_state_dir", "VNCCS state dir"),
 ]
 
 

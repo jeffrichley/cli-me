@@ -158,6 +158,13 @@ REQUIRED_MODELS: tuple[dict, ...] = (
         "download_url": "https://huggingface.co/numz/SeedVR2_comfyUI",
         "optional": False,
     },
+    {
+        "filename": "ema_vae_fp16.safetensors",
+        "subdir": "diffusion_models",
+        "type": "SeedVR2 VAE",
+        "download_url": "https://huggingface.co/numz/SeedVR2_comfyUI",
+        "optional": False,
+    },
     # Optional RMBG variants — auto-downloaded lazily by the VNCCS_RMBG2 node.
     # Missing these should warn but not fail per playbook.md §check models.
     {

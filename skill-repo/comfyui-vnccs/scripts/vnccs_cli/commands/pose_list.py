@@ -1,8 +1,11 @@
 """Logic for `vnccs pose list` — enumerate bundled pose presets.
 
 Pure filesystem enumeration of `<VNCCS_INSTALL>/presets/poses/`. No HTTP
-calls. The VNCCS node pack ships a set of reference pose images the user
-can select from when running character sheet generation.
+calls. VNCCS ships pose presets as JSON files (each one describes a
+BODY_25 skeleton), not as images — the stock install has
+`vnccs_poseset.json` with 12 poses. This matches what the VNCCS REST
+endpoint `/vnccs/pose_presets` enumerates (see `__init__.py:180-199` in
+the VNCCS node pack).
 """
 
 from __future__ import annotations
@@ -12,10 +15,7 @@ from typing import Optional
 
 from vnccs_cli.backend import get_vnccs_install_dir
 
-# Image extensions recognized as pose presets. Matches what the VNCCS UI
-# accepts (its poses dropdown reads any image file from the directory).
-# Lower-case only — comparison is case-insensitive via `.lower()`.
-SUPPORTED_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp"}
+SUPPORTED_EXTENSIONS = {".json"}
 
 
 def run_list(*, comfy_path: Optional[str] = None) -> list[dict]:

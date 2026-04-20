@@ -20,20 +20,9 @@ import re
 from pathlib import Path
 from typing import List, Optional
 
-from vnccs_cli.backend import VnccsNotFoundError, get_comfy_path
+from vnccs_cli.backend import VnccsNotFoundError, get_vnccs_state_dir
 
-VNCCS_STATE_SUBDIR = "VN_CharacterCreatorSuit"
 SHEET_NEUTRAL_PATTERN = re.compile(r"sheet_neutral_(\d+)_?\.png$")
-
-
-def _state_root(comfy_path: Path) -> Path:
-    """Return ``<comfy>/output/VN_CharacterCreatorSuit``."""
-    return comfy_path / "output" / VNCCS_STATE_SUBDIR
-
-
-def _character_dir(comfy_path: Path, character: str) -> Path:
-    """Resolved on-disk directory for a VNCCS character."""
-    return _state_root(comfy_path) / character
 
 
 def _load_config(char_dir: Path) -> dict:
@@ -140,14 +129,18 @@ def run_list(
     character: Optional[str] = None,
     *,
     comfy_path: Optional[str] = None,
+    state_dir: Optional[str] = None,
 ) -> List[dict]:
     """Return a list of costume rows.
 
     Args:
         character: If given, list that character's costumes only. If
-            omitted, list costumes across every character under
-            ``<comfy>/output/VN_CharacterCreatorSuit/``.
+            omitted, list costumes across every character under the
+            resolved VNCCS state directory.
         comfy_path: Optional override for COMFY_PATH.
+        state_dir: Optional override for the VNCCS state directory
+            (precedence: this arg > VNCCS_STATE_DIR env >
+            ``<comfy>/output/VN_CharacterCreatorSuit``).
 
     Returns:
         A list of dicts: ``{character, costume, variant_count,
@@ -162,11 +155,10 @@ def run_list(
             root simply yields ``[]`` — that's not an error (fresh VNCCS
             install with no characters yet).
     """
-    comfy = get_comfy_path(comfy_path)
-    state_root = _state_root(comfy)
+    state_root = get_vnccs_state_dir(comfy_path, state_dir=state_dir)
 
     if character is not None:
-        char_dir = _character_dir(comfy, character)
+        char_dir = state_root / character
         if not char_dir.is_dir():
             raise VnccsNotFoundError(
                 f"Character not found: {character!r}",

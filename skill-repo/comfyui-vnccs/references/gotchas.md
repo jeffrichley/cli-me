@@ -62,6 +62,28 @@ Every command that reads VNCCS's state (character sheets, costumes,
 emotions on disk) needs to know where ComfyUI lives. Set `COMFY_PATH`
 once per shell, or pass `--path` to every command.
 
+## `picked_variant` is wrapper-only metadata (not read by VNCCS)
+
+The wrapper's `clothing list` (and Wave 2's planned `clothing pick`)
+surface a `picked_variant` field per costume, written to
+`<character>_config.json` under `costumes[<name>].picked_variant`.
+**VNCCS itself does not read this key.** Upstream `utils.load_character_sheet`
+always picks the file with the highest `NNNNN` sequence (greatest on
+disk), ignoring any user selection.
+
+This means:
+
+- `clothing pick` alone does NOT change which variant subsequent stages
+  (sprite render, emotion add) use. If you want the user's choice to
+  actually take effect in VNCCS's pipeline, the picker must RENAME or
+  RENUMBER files so the chosen variant has the highest `NNNNN` on disk.
+- `clothing list`'s "Picked" column is informational — a lightweight
+  wrapper-layer bookmark, not an authoritative selection.
+
+Wave 2's `clothing pick` must either (a) implement the rename/renumber
+strategy to make the choice effective, or (b) stay as wrapper-only
+metadata with this limitation documented. Decision pending.
+
 ## Model footprint is large
 
 Full VNCCS capability requires **~28 GB (QWEN-only)** to **~42-46 GB

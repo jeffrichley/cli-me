@@ -43,6 +43,13 @@ def preview(
         Optional[str],
         typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
     ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option(
+            "--state-dir",
+            help="VNCCS state directory (overrides VNCCS_STATE_DIR env; default <COMFY_PATH>/output/VN_CharacterCreatorSuit).",
+        ),
+    ] = None,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Emit JSON instead of a Rich table."),
@@ -50,16 +57,17 @@ def preview(
 ) -> None:
     """Dry-run `dataset export` for CHARACTER — no files are created.
 
-    Reports sprite count, caption count, would-be output layout, and the
-    first N sprite filenames so you can sanity-check the export before
-    committing to the full stage-5 run. Pure filesystem inspection; no
-    ComfyUI HTTP calls.
+    Reports face count, sprite count, total pair count, would-be output
+    layout, and a sample of interleaved face+sprite filenames so you can
+    sanity-check the export before committing to the full stage-5 run.
+    Pure filesystem inspection; no ComfyUI HTTP calls.
     """
     try:
         result = dataset_preview.run_preview(
             character,
             game_name=game_name,
             comfy_path=path,
+            state_dir=state_dir,
         )
     except VnccsError as err:
         backend.print_error_and_exit(err)
@@ -76,19 +84,23 @@ def preview(
     )
     summary.add_column("Field", style="cyan", no_wrap=True)
     summary.add_column("Value")
-    summary.add_row("character", result["character"])
+    summary.add_row("character (dir)", result["character"])
+    summary.add_row("character (name)", result["character_name"])
     summary.add_row("game-name", result["game_name"])
+    summary.add_row("faces found", str(result["face_count"]))
     summary.add_row("sprites found", str(result["sprite_count"]))
+    summary.add_row("total pairs", str(result["pair_count"]))
     summary.add_row("caption files", str(result["caption_count"]))
     summary.add_row("output lora dir", layout["lora_dir"])
-    summary.add_row("filename pattern", layout["filename_pattern"])
+    summary.add_row("face filename pattern", layout["face_filename_pattern"])
+    summary.add_row("sprite filename pattern", layout["sprite_filename_pattern"])
     summary.add_row("caption prefix", layout["caption_prefix"])
     _console.print(summary)
 
-    samples = result["sprite_samples"]
+    samples = result["samples"]
     total = result["total_samples"]
     if samples:
-        _console.print(f"\n[bold]Sprite samples[/bold] (showing {len(samples)} of {total}):")
+        _console.print(f"\n[bold]Samples[/bold] (showing {len(samples)} of {total}):")
         for name in samples:
             _console.print(f"  - {name}")
         remaining = total - len(samples)

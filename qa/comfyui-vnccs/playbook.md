@@ -211,7 +211,7 @@ Dry-run — prints what would be exported without creating files.
 
 **Signature:** `vnccs pose list [--json]`
 
-**Behavior:** enumerate preset pose images from `<VNCCS>/presets/poses/`. Print filename + thumbnail-size per preset.
+**Behavior:** enumerate preset pose JSON files from `<VNCCS>/presets/poses/`. Each JSON file describes a BODY_25 skeleton pose set (stock install ships `vnccs_poseset.json` with 12 poses). Print filename + size per preset. This mirrors VNCCS's own `/vnccs/pose_presets` REST endpoint (see `__init__.py:180-199` in the node pack).
 
 ---
 

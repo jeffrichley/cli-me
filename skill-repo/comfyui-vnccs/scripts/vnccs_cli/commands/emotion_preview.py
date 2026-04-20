@@ -23,20 +23,14 @@ from typing import List, Optional
 
 from vnccs_cli.backend import (
     VnccsNotFoundError,
-    get_comfy_path,
     get_vnccs_install_dir,
+    get_vnccs_state_dir,
 )
-
-VNCCS_STATE_SUBDIR = "VN_CharacterCreatorSuit"
 
 # Image extensions we'll accept for a preview. The bundled images-dir
 # ships ``.png`` in practice; we tolerate the common alternatives in
 # case upstream adds them later.
 PREVIEW_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp")
-
-
-def _character_dir(comfy_path: Path, character: str) -> Path:
-    return comfy_path / "output" / VNCCS_STATE_SUBDIR / character
 
 
 def _emotions_images_dir(vnccs_install: Path) -> Path:
@@ -72,6 +66,7 @@ def run_preview(
     *,
     emotion: str,
     comfy_path: Optional[str] = None,
+    state_dir: Optional[str] = None,
 ) -> dict:
     """Return the path to the bundled preview image for ``emotion``.
 
@@ -99,8 +94,8 @@ def run_preview(
         VnccsNotFoundError: character directory missing, or emotion
             unknown in the bundled emotions-config (exit 5).
     """
-    comfy = get_comfy_path(comfy_path)
-    char_dir = _character_dir(comfy, character)
+    state_root = get_vnccs_state_dir(comfy_path, state_dir=state_dir)
+    char_dir = state_root / character
     if not char_dir.is_dir():
         raise VnccsNotFoundError(
             f"Character not found: {character!r}",

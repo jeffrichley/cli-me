@@ -47,12 +47,16 @@ class TestRunPreviewHappyPath:
         )
 
         assert result["character"] == "Aria"
+        # character_info.name absent from minimal fixture — falls back to dir name.
+        assert result["character_name"] == "Aria"
         assert result["game_name"] == "VN"  # default
+        assert result["face_count"] == 0
         assert result["sprite_count"] == 5
-        # 1:1 caption/sprite per DatasetGenerator contract
-        assert result["caption_count"] == result["sprite_count"]
+        assert result["pair_count"] == 5
+        # 1:1 caption/pair per DatasetGenerator contract
+        assert result["caption_count"] == result["pair_count"]
         assert result["total_samples"] == 5
-        assert len(result["sprite_samples"]) == 5
+        assert len(result["samples"]) == 5
 
     def test_game_name_flows_into_layout_and_prefix(self, tmp_path, monkeypatch):
         monkeypatch.delenv("COMFY_PATH", raising=False)
@@ -64,7 +68,8 @@ class TestRunPreviewHappyPath:
         )
 
         assert result["game_name"] == "MyVN"
-        # kohya caption-prefix convention: <game>_<character>
+        # kohya caption-prefix convention: <game>_<character_info.name>
+        # (falls back to dir name when config absent)
         assert result["output_layout"]["caption_prefix"] == "MyVN_Aria"
 
     def test_sample_list_truncates_to_ten(self, tmp_path, monkeypatch):
@@ -77,7 +82,7 @@ class TestRunPreviewHappyPath:
         assert result["sprite_count"] == 25
         assert result["total_samples"] == 25
         # Samples capped at SAMPLE_LIMIT so the table/JSON stays compact.
-        assert len(result["sprite_samples"]) == dataset_preview.SAMPLE_LIMIT == 10
+        assert len(result["samples"]) == dataset_preview.SAMPLE_LIMIT == 10
 
     def test_multiple_costumes_and_emotions_aggregate(self, tmp_path, monkeypatch):
         monkeypatch.delenv("COMFY_PATH", raising=False)
@@ -92,6 +97,59 @@ class TestRunPreviewHappyPath:
 
         result = dataset_preview.run_preview("Aria", comfy_path=str(comfy))
         assert result["sprite_count"] == 7
+        assert result["pair_count"] == 7
+
+    def test_faces_and_sprites_both_counted(self, tmp_path, monkeypatch):
+        """Preview MUST walk BOTH Faces/ and Sprites/ trees — the single
+        most load-bearing contract for dataset preview. Walking only one
+        undercounts by ~50% (r3/dataset finding D1)."""
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "ComfyUI")
+        char_dir = make_fake_character_with_sprites(comfy, "Aria", sprite_count=5)
+        # Plant 3 face PNGs mimicking what Stage 3 (emotion add) writes.
+        faces_dir = char_dir / "Faces" / "casual" / "happy"
+        faces_dir.mkdir(parents=True)
+        for i in range(1, 4):
+            (faces_dir / f"face_happy_{i:05d}_.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+
+        result = dataset_preview.run_preview("Aria", comfy_path=str(comfy))
+        assert result["face_count"] == 3
+        assert result["sprite_count"] == 5
+        assert result["pair_count"] == 8
+        assert result["caption_count"] == 8
+
+    def test_faces_only_character_is_valid(self, tmp_path, monkeypatch):
+        """A character with Faces but no Sprites is valid (portrait-only
+        LoRA). Preview must NOT exit 5 in that case."""
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "ComfyUI")
+        char_dir = comfy / "output" / "VN_CharacterCreatorSuit" / "Portrait"
+        faces_dir = char_dir / "Faces" / "casual" / "happy"
+        faces_dir.mkdir(parents=True)
+        for i in range(1, 3):
+            (faces_dir / f"face_happy_{i:05d}_.png").write_bytes(b"\x89PNG")
+
+        result = dataset_preview.run_preview("Portrait", comfy_path=str(comfy))
+        assert result["face_count"] == 2
+        assert result["sprite_count"] == 0
+        assert result["pair_count"] == 2
+
+    def test_character_info_name_used_for_caption(self, tmp_path, monkeypatch):
+        """Caption prefix must use character_info.name from config when
+        present, not the directory name. Matches upstream
+        dataset_generator.py:128-132."""
+        monkeypatch.delenv("COMFY_PATH", raising=False)
+        comfy = _make_fake_comfy(tmp_path / "ComfyUI")
+        char_dir = make_fake_character_with_sprites(comfy, "aria_v2", sprite_count=1)
+        config_file = char_dir / "aria_v2_config.json"
+        config_file.write_text(
+            json.dumps({"character_info": {"name": "Aria"}}), encoding="utf-8"
+        )
+
+        result = dataset_preview.run_preview("aria_v2", comfy_path=str(comfy))
+        assert result["character"] == "aria_v2"  # directory name preserved
+        assert result["character_name"] == "Aria"  # from config
+        assert result["output_layout"]["caption_prefix"] == "VN_Aria"
 
     def test_non_sprite_files_are_ignored(self, tmp_path, monkeypatch):
         monkeypatch.delenv("COMFY_PATH", raising=False)
@@ -99,8 +157,9 @@ class TestRunPreviewHappyPath:
         char_dir = make_fake_character_with_sprites(
             comfy, "Aria", sprite_count=3
         )
-        # Stray non-sprite files must not inflate the count (matches
-        # DatasetGenerator.generate_dataset filter).
+        # Stray non-sprite files must not inflate the sprite count.
+        # face_*.png under Sprites/ is a misfiled portrait — should NOT
+        # be counted (lives in wrong tree).
         emotion_dir = char_dir / "Sprites" / "casual" / "happy"
         (emotion_dir / "thumb.txt").write_text("not a sprite", encoding="utf-8")
         (emotion_dir / "face_happy_00001_.png").write_bytes(b"\x89PNG")
@@ -108,6 +167,9 @@ class TestRunPreviewHappyPath:
 
         result = dataset_preview.run_preview("Aria", comfy_path=str(comfy))
         assert result["sprite_count"] == 3
+        # The misfiled face under Sprites/ is not picked up by the sprite
+        # walker (prefix check). No Faces/ tree exists, so face_count is 0.
+        assert result["face_count"] == 0
 
 
 # ---------------------------------------------------------------------------
@@ -134,7 +196,10 @@ class TestRunPreviewErrors:
         with pytest.raises(VnccsNotFoundError) as exc:
             dataset_preview.run_preview("Ghost", comfy_path=str(comfy))
 
-        assert "sprites" in exc.value.message.lower()
+        # Message mentions training images (faces + sprites both counted)
+        # and the character name so operators can fix the typo.
+        assert "training images" in exc.value.message.lower()
+        assert "Ghost" in exc.value.message
         assert exc.value.exit_code == 5
 
     def test_character_with_only_non_sprite_files_raises(self, tmp_path, monkeypatch):
@@ -173,14 +238,32 @@ class TestFormatJson:
         # Documented contract — reviewers pin this shape.
         assert set(parsed.keys()) == {
             "character",
+            "character_name",
+            "game_name",
+            "face_count",
             "sprite_count",
+            "pair_count",
             "caption_count",
             "output_layout",
-            "sprite_samples",
+            "samples",
         }
         assert parsed["character"] == "Aria"
         assert parsed["sprite_count"] == 2
-        assert isinstance(parsed["sprite_samples"], list)
+        assert parsed["pair_count"] == 2
+        assert isinstance(parsed["samples"], list)
+        # layout sub-keys also pinned so mutations renaming them don't slip.
+        layout = parsed["output_layout"]
+        assert set(layout.keys()) == {
+            "lora_dir",
+            "face_filename_pattern",
+            "sprite_filename_pattern",
+            "caption_prefix",
+            "face_pairs",
+            "sprite_pairs",
+            "estimated_pairs",
+        }
+        assert layout["lora_dir"] == "Aria/lora/"
+        assert layout["estimated_pairs"] == 2
 
 
 # ---------------------------------------------------------------------------
@@ -200,7 +283,7 @@ class TestCliDispatch:
             root_app,
             ["dataset", "preview", "Aria", "--path", str(comfy)],
         )
-        assert result.exit_code == 0, result.stderr or result.stdout
+        assert result.exit_code == 0, result.output
         assert "Aria" in result.stdout
 
     def test_preview_json_flag_emits_parseable_json(self, tmp_path, monkeypatch):
@@ -212,10 +295,11 @@ class TestCliDispatch:
             root_app,
             ["dataset", "preview", "Aria", "--path", str(comfy), "--json"],
         )
-        assert result.exit_code == 0, result.stderr or result.stdout
+        assert result.exit_code == 0, result.output
         payload = json.loads(result.stdout)
         assert payload["character"] == "Aria"
         assert payload["sprite_count"] == 4
+        assert payload["pair_count"] == 4
         assert payload["caption_count"] == 4
 
     def test_preview_game_name_flows_into_json(self, tmp_path, monkeypatch):
@@ -232,7 +316,7 @@ class TestCliDispatch:
                 "--json",
             ],
         )
-        assert result.exit_code == 0, result.stderr or result.stdout
+        assert result.exit_code == 0, result.output
         payload = json.loads(result.stdout)
         assert payload["output_layout"]["caption_prefix"] == "MyVN_Aria"
 

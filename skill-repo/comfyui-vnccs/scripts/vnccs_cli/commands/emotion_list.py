@@ -15,22 +15,12 @@ import re
 from pathlib import Path
 from typing import List, Optional
 
-from vnccs_cli.backend import VnccsNotFoundError, get_comfy_path
-
-VNCCS_STATE_SUBDIR = "VN_CharacterCreatorSuit"
+from vnccs_cli.backend import VnccsNotFoundError, get_vnccs_state_dir
 
 # Matches sheet files for any emotion (the emotion name is captured as
 # part of the directory walk, so we just need to confirm the filename
 # pattern to tell a real emotion-sheet dir from a random empty one).
 SHEET_PATTERN = re.compile(r"^sheet_[^/\\]+_\d+_?\.png$")
-
-
-def _state_root(comfy_path: Path) -> Path:
-    return comfy_path / "output" / VNCCS_STATE_SUBDIR
-
-
-def _character_dir(comfy_path: Path, character: str) -> Path:
-    return _state_root(comfy_path) / character
 
 
 def _has_sheet_file(emotion_dir: Path) -> bool:
@@ -48,13 +38,17 @@ def run_list(
     character: str,
     *,
     comfy_path: Optional[str] = None,
+    state_dir: Optional[str] = None,
 ) -> List[dict]:
     """Return one row per (costume, emotion) pair that has rendered sheets.
 
     Args:
-        character: Character directory name. Must exist under
-            ``<comfy>/output/VN_CharacterCreatorSuit/``.
+        character: Character directory name. Must exist under the resolved
+            VNCCS state directory.
         comfy_path: Optional override for COMFY_PATH.
+        state_dir: Optional override for the VNCCS state directory
+            (precedence: this arg > VNCCS_STATE_DIR env >
+            ``<comfy>/output/VN_CharacterCreatorSuit``).
 
     Returns:
         List of dicts: ``{costume, emotion, path}`` where ``path`` is
@@ -67,8 +61,8 @@ def run_list(
         VnccsPathError: COMFY_PATH unresolvable (exit 6).
         VnccsNotFoundError: character directory missing (exit 5).
     """
-    comfy = get_comfy_path(comfy_path)
-    char_dir = _character_dir(comfy, character)
+    state_root = get_vnccs_state_dir(comfy_path, state_dir=state_dir)
+    char_dir = state_root / character
     if not char_dir.is_dir():
         raise VnccsNotFoundError(
             f"Character not found: {character!r}",

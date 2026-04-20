@@ -96,13 +96,15 @@ def _list_costumes(char_dir: Path, config: Optional[dict[str, Any]]) -> list[dic
         config_costumes = config["costumes"]
 
     try:
-        entries = sorted(sheets_root.iterdir(), key=lambda p: p.name)
+        entries = [e for e in sheets_root.iterdir() if e.is_dir()]
     except OSError:
         return costumes
 
+    # VNCCS contract (utils.py:list_costumes): Naked first, then the rest
+    # alphabetically. Matches state-management.md:237-240.
+    entries.sort(key=lambda p: (0 if p.name == "Naked" else 1, p.name))
+
     for entry in entries:
-        if not entry.is_dir():
-            continue
         neutral_dir = entry / "neutral"
         variant_count = 0
         if neutral_dir.is_dir():

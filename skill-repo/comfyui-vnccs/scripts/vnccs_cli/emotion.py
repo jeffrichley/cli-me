@@ -57,6 +57,13 @@ def list_(
         Optional[str],
         typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
     ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option(
+            "--state-dir",
+            help="VNCCS state directory (overrides VNCCS_STATE_DIR env).",
+        ),
+    ] = None,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Emit JSON instead of a Rich table."),
@@ -64,7 +71,7 @@ def list_(
 ) -> None:
     """List every (costume, emotion) pair that has at least one rendered sheet."""
     try:
-        rows = emotion_list.run_list(character, comfy_path=path)
+        rows = emotion_list.run_list(character, comfy_path=path, state_dir=state_dir)
     except VnccsError as err:
         backend.print_error_and_exit(err)
 
@@ -103,6 +110,13 @@ def show(
         Optional[str],
         typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
     ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option(
+            "--state-dir",
+            help="VNCCS state directory (overrides VNCCS_STATE_DIR env).",
+        ),
+    ] = None,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Emit JSON instead of a Rich table."),
@@ -115,6 +129,7 @@ def show(
             emotion=emotion,
             costume=costume,
             comfy_path=path,
+            state_dir=state_dir,
         )
     except VnccsError as err:
         backend.print_error_and_exit(err)
@@ -153,6 +168,13 @@ def preview(
         Optional[str],
         typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
     ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option(
+            "--state-dir",
+            help="VNCCS state directory (overrides VNCCS_STATE_DIR env).",
+        ),
+    ] = None,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Emit JSON instead of plain-text path."),
@@ -164,6 +186,7 @@ def preview(
             character,
             emotion=emotion,
             comfy_path=path,
+            state_dir=state_dir,
         )
     except VnccsError as err:
         backend.print_error_and_exit(err)

@@ -124,7 +124,7 @@ class TestCharacterListIntegration:
         monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
         # State root does not exist yet — the command must NOT error.
         result = runner.invoke(root_app, ["character", "list"])
-        assert result.exit_code == 0, result.stderr
+        assert result.exit_code == 0, result.output
         assert "No characters found" in result.stdout
 
     def test_rich_table_lists_both_characters(self, fake_comfy, monkeypatch):
@@ -134,7 +134,7 @@ class TestCharacterListIntegration:
         _make_full_character(fake_comfy, "Alina")
 
         result = runner.invoke(root_app, ["character", "list"])
-        assert result.exit_code == 0, result.stderr
+        assert result.exit_code == 0, result.output
         # Both names appear; Alina's sheets-subdir walk reports 3 costumes
         # (Naked + Casual + Formal) and some emotion total > 0.
         assert "Alina" in result.stdout
@@ -147,7 +147,7 @@ class TestCharacterListIntegration:
         _make_full_character(fake_comfy, "Alina")
 
         result = runner.invoke(root_app, ["character", "list", "--json"])
-        assert result.exit_code == 0, result.stderr
+        assert result.exit_code == 0, result.output
         data = json.loads(result.stdout)
         by_name = {c["name"]: c for c in data}
         assert set(by_name) == {"Alina", "Empty"}
@@ -155,9 +155,10 @@ class TestCharacterListIntegration:
         alina = by_name["Alina"]
         # 3 costume dirs under Sheets: Naked, Casual, Formal.
         assert alina["costume_count"] == 3
-        # Emotions summed across costumes: Naked/neutral + Casual/{neutral,
-        # happy, shy-blush} + Formal/{neutral, angry} = 1 + 3 + 2 = 6.
-        assert alina["emotion_count"] == 6
+        # Real emotions summed across costumes (neutral dirs excluded to
+        # match character show's emotions[]): Casual/{happy, shy-blush} +
+        # Formal/{angry} = 2 + 1 = 3.
+        assert alina["emotion_count"] == 3
 
         empty = by_name["Empty"]
         assert empty["costume_count"] == 0
@@ -178,7 +179,7 @@ class TestCharacterListIntegration:
         result = runner.invoke(
             root_app, ["character", "list", "--state-dir", str(other_state), "--json"]
         )
-        assert result.exit_code == 0, result.stderr
+        assert result.exit_code == 0, result.output
         data = json.loads(result.stdout)
         names = {c["name"] for c in data}
         assert names == {"OtherChar"}
@@ -196,7 +197,7 @@ class TestCharacterShowIntegration:
         result = runner.invoke(root_app, ["character", "show", "NONEXISTENT"])
         assert result.exit_code == 5
         # Error message should reference the name so the user can fix the typo.
-        assert "NONEXISTENT" in (result.stderr or "") + result.stdout
+        assert "NONEXISTENT" in result.output
 
     def test_full_character_json(self, fake_comfy, monkeypatch):
         monkeypatch.delenv("VNCCS_STATE_DIR", raising=False)
@@ -206,7 +207,7 @@ class TestCharacterShowIntegration:
         result = runner.invoke(
             root_app, ["character", "show", "Alina", "--json"]
         )
-        assert result.exit_code == 0, result.stderr
+        assert result.exit_code == 0, result.output
         rec = json.loads(result.stdout)
 
         assert rec["name"] == "Alina"
@@ -248,7 +249,7 @@ class TestCharacterShowIntegration:
         result = runner.invoke(
             root_app, ["character", "show", "Empty", "--json"]
         )
-        assert result.exit_code == 0, result.stderr
+        assert result.exit_code == 0, result.output
         rec = json.loads(result.stdout)
         assert rec["config"]["present"] is False
         assert rec["character_sheet"]["present"] is False
@@ -263,7 +264,7 @@ class TestCharacterShowIntegration:
         _make_full_character(fake_comfy, "Alina")
 
         result = runner.invoke(root_app, ["character", "show", "Alina"])
-        assert result.exit_code == 0, result.stderr
+        assert result.exit_code == 0, result.output
         # Structural assertions — tolerant of column widths / Rich styling.
         assert "Alina" in result.stdout
         assert "Casual" in result.stdout

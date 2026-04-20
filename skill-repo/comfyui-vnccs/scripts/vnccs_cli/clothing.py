@@ -47,6 +47,13 @@ def list_(
         Optional[str],
         typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
     ] = None,
+    state_dir: Annotated[
+        Optional[str],
+        typer.Option(
+            "--state-dir",
+            help="VNCCS state directory (overrides VNCCS_STATE_DIR env).",
+        ),
+    ] = None,
     json_output: Annotated[
         bool,
         typer.Option("--json", help="Emit JSON instead of a Rich table."),
@@ -54,7 +61,7 @@ def list_(
 ) -> None:
     """List costumes (and their variant counts) for one or all characters."""
     try:
-        rows = clothing_list.run_list(character, comfy_path=path)
+        rows = clothing_list.run_list(character, comfy_path=path, state_dir=state_dir)
     except VnccsError as err:
         backend.print_error_and_exit(err)
 

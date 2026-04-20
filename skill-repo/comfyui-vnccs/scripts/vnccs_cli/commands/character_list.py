@@ -34,11 +34,14 @@ from vnccs_cli.backend import get_vnccs_state_dir
 
 
 def _count_costumes_and_emotions(char_dir: Path) -> tuple[int, int]:
-    """Count costumes and total emotion directories under a character.
+    """Count costumes and emotion directories under a character.
 
     A "costume" is any subdirectory of `Sheets/` (VNCCS creates them
-    there via `ensure_costume_structure`). Emotions are subdirectories
-    under each costume directory. The count is summed across costumes.
+    there via `ensure_costume_structure`). An "emotion" is any non-`neutral`
+    subdirectory under a costume (VNCCS uses `neutral` as the base-sheet
+    folder, not as a user-facing emotion — see `utils.py:13` where
+    `EMOTIONS = ["neutral"]` is labelled the base, and `character show`'s
+    `_list_emotions` which excludes `neutral` for the same reason).
 
     Tolerant: missing `Sheets/` = zero costumes / zero emotions.
     """
@@ -54,7 +57,10 @@ def _count_costumes_and_emotions(char_dir: Path) -> tuple[int, int]:
                 continue
             costume_count += 1
             try:
-                emotion_count += sum(1 for e in entry.iterdir() if e.is_dir())
+                emotion_count += sum(
+                    1 for e in entry.iterdir()
+                    if e.is_dir() and e.name != "neutral"
+                )
             except OSError:
                 # Unreadable costume subdir — treat as zero emotions.
                 pass

@@ -12,9 +12,11 @@ six workflows, plus the on-demand models downloaded at runtime by the
 RMBG2 node. The wrapper's `vnccs models check` command should probe for
 each of these and emit install hints for missing ones.
 
-**Total explicitly-referenced model files**: 15 across the six current
-workflows. Plus 4-6 on-demand RMBG/BEN/INSPYRENET variants downloaded
-lazily from Hugging Face to `models/RMBG/`.
+**Total explicitly-referenced model files**: 16 across the six current
+workflows (15 independent files plus the SeedVR2 DiT+VAE pair, both
+required at the same subgraph per workflow-stages.md:99-101). Plus 4-6
+on-demand RMBG/BEN/INSPYRENET variants downloaded lazily from Hugging
+Face to `models/RMBG/`.
 
 ## Directory map
 
@@ -157,14 +159,23 @@ separators.
 - **Used in stages**: 1 only (Character Generation subgraph `UpscaleModelLoader`)
 - **Where to download**: https://github.com/Kiteretsu77/APISR/releases (official releases; grab `2x_APISR_RRDB_GAN_generator.pth`). ONNX mirror: https://huggingface.co/Xenova/2x_APISR_RRDB_GAN_generator-onnx
 
-### 15. `seedvr2_ema_3b_fp16.safetensors` + `ema_vae_fp16.safetensors`
+### 15. `seedvr2_ema_3b_fp16.safetensors` (SeedVR2 DiT)
 
-- **Type**: SeedVR2 Video Upscaler (DiT model + matched VAE) — used here for still-image upscaling
-- **ComfyUI directory**: typically `models/diffusion_models/` or a custom `models/seedvr2/` folder (depends on the SeedVR2 custom node's conventions)
-- **Approx size**: DiT ~6 GB (3B params at FP16), VAE ~300 MB
+- **Type**: SeedVR2 Video Upscaler DiT model (used here for still-image upscaling)
+- **ComfyUI directory**: `models/diffusion_models/` (default; the ComfyUI-SeedVR2_VideoUpscaler node reads from here)
+- **Approx size**: ~6 GB (3B params at FP16)
 - **Used in stages**: 1, 1.1, 2 (multiple Upscaler subgraphs)
-- **Where to download**: https://huggingface.co/numz/SeedVR2_comfyUI (DiT + VAE weights packaged for the ComfyUI-SeedVR2 node pack).
-- **Notes**: Requires the SeedVR2 custom node pack (`SeedVR2LoadDiTModel`, `SeedVR2LoadVAEModel`, `SeedVR2VideoUpscaler`). `vnccs check` should verify.
+- **Where to download**: https://huggingface.co/numz/SeedVR2_comfyUI
+- **Notes**: Requires the SeedVR2 custom node pack (`SeedVR2LoadDiTModel`, `SeedVR2VideoUpscaler`). Paired with `ema_vae_fp16.safetensors` below.
+
+### 16. `ema_vae_fp16.safetensors` (SeedVR2 VAE)
+
+- **Type**: SeedVR2 matched VAE (decodes the DiT's latent output)
+- **ComfyUI directory**: `models/diffusion_models/` (same folder as the DiT)
+- **Approx size**: ~300 MB
+- **Used in stages**: 1, 1.1, 2 (same Upscaler subgraphs as the DiT — loaded via `SeedVR2LoadVAEModel`)
+- **Where to download**: https://huggingface.co/numz/SeedVR2_comfyUI
+- **Notes**: Always required alongside the DiT. Missing the VAE means stages 1/1.1/2 crash during the upscale step; `vnccs check models` treats it as a required file to prevent false-green checks on installs missing it.
 
 ## RMBG-family models (auto-downloaded)
 
