@@ -593,6 +593,40 @@ def load_api_workflow(name: str) -> dict:
 # --- Workflow patching -----------------------------------------------------
 
 
+def prune_orphaned_output_nodes(workflow: dict) -> list[str]:
+    """Remove PreviewImage/SaveImage nodes with missing or None images input.
+
+    Bundled VNCCS workflows carry debug-only PreviewImage / SaveImage
+    nodes that the upstream author left unwired. ComfyUI's validator
+    rejects the whole prompt with ``required_input_missing`` when it
+    sees one. Safe to delete: these nodes only emit UI previews and
+    have no downstream consumers.
+
+    Matches two forms of orphanhood:
+      1. ``inputs`` dict is empty / missing ``images`` key entirely
+         (e.g. ``{"inputs": {}}``).
+      2. ``inputs["images"]`` is literally None.
+
+    Returns the list of node IDs that were removed.
+    """
+    removed: list[str] = []
+    OUTPUT_TYPES = {"PreviewImage", "SaveImage"}
+    to_delete: list[str] = []
+    for nid, node in workflow.items():
+        if not isinstance(node, dict):
+            continue
+        if node.get("class_type") not in OUTPUT_TYPES:
+            continue
+        node_inputs = node.get("inputs") or {}
+        images = node_inputs.get("images", "__missing__")
+        if images == "__missing__" or images is None:
+            to_delete.append(nid)
+    for nid in to_delete:
+        del workflow[nid]
+        removed.append(nid)
+    return removed
+
+
 def patch_workflow_node(
     workflow: dict,
     *,

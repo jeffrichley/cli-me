@@ -145,16 +145,17 @@ extra_model_paths-mapped location for the bulk; the four affected
 files need a one-time copy to canonical. Future: a `vnccs setup`
 command should automate this copy.
 
-## Live-environment prep for `character create`
+## Live-environment prep across Wave 2 commands
 
-Three workflow widget defaults shipped by upstream don't match the
-current VNCCS / ComfyUI runtime; the wrapper patches them automatically
-in `character_create.run_create`:
+Workflow widget defaults shipped by upstream don't match the current
+VNCCS / ComfyUI runtime. The wrapper patches them automatically. Each
+command has its own set of adjustments:
+
+### `character create` (Step1 SDXL)
 
 1. **`existing_character` is a dropdown of EXISTING characters.** A
-   newly-named character can't be in the dropdown until VNCCS writes
-   its config, so the wrapper calls `/vnccs/create?name=NAME` first
-   (which creates the dir + config) before submitting the workflow.
+   newly-named character isn't in the dropdown until VNCCS writes its
+   config, so the wrapper calls `/vnccs/create?name=NAME` first.
 2. **LoadImage `Character sheet` defaults to `short_body6.png`** —
    a stale leftover from the upstream author's local ComfyUI install.
    The wrapper auto-copies VNCCS's bundled `CharacterSheetTemplate.png`
@@ -166,9 +167,28 @@ in `character_create.run_create`:
    background to key out. `'Alpha'` would feed RGBA into a 3-channel
    conv and crash.
 
-Live-verified end-to-end: a stage-1 character create produces
-1 character sheet (6144×6144 RGBA, ~17 MB) + 12 face crops in
-~12 min on a single GPU.
+### `clothing add` (Step2 SDXL)
+
+4. **Three `VNCCS_RMBG2` instances**: same `'Color' → 'Green'` patch
+   needed as Step1.
+5. **Orphaned `PreviewImage` node** with empty `inputs: {}` —
+   ComfyUI's validator rejects it with `required_input_missing`. The
+   wrapper calls `backend.prune_orphaned_output_nodes` which deletes
+   any `PreviewImage`/`SaveImage` whose `images` input is missing or
+   None (safe — they're UI-only, no downstream consumers).
+
+### `character clone` (Step1.1 QWEN)
+
+6. **LoadImage reference default is a stale hash-named `.jpg`** from
+   the upstream author's environment. The wrapper auto-copies the
+   source character's newest `sheet_neutral_NNNNN_.png` into
+   `<COMFY_PATH>/input/` as `clone_ref_<source>.png` and patches
+   the LoadImage to use it. Users can override with `--ref-image`.
+7. **Three `VNCCS_RMBG2` instances**: same `'Color' → 'Green'` patch.
+8. **Orphaned preview nodes**: same prune as Step2.
+
+Live-verified end-to-end for `character create`: produces 1 character
+sheet (6144×6144 RGBA, ~17 MB) + 12 face crops in ~12 min on a single GPU.
 
 ## REQUIRED_MODELS list grew during integration
 

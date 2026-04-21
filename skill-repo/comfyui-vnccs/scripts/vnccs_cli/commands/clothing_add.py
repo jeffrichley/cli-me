@@ -79,6 +79,18 @@ def _build_workflow(
     patch_workflow_node(
         workflow, class_type="CharacterCreator", inputs={"seed": int(seed)}
     )
+    # Live-env prep (same as character_create): VNCCS_RMBG2's default
+    # ``background='Color'`` was removed in current node versions; patch all
+    # three instances in Step2 to ``'Green'`` so the downstream
+    # VNCCSChromaKey node can key out the background.
+    patch_workflow_node(
+        workflow, class_type="VNCCS_RMBG2", inputs={"background": "Green"}
+    )
+    # Step2 contains at least one orphaned PreviewImage (``images=None``)
+    # that ComfyUI's validator rejects with ``required_input_missing``.
+    # Safe to drop — UI-only previews with no downstream consumers.
+    from vnccs_cli.backend import prune_orphaned_output_nodes
+    prune_orphaned_output_nodes(workflow)
     return workflow
 
 

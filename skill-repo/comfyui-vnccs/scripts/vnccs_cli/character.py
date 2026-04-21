@@ -265,6 +265,16 @@ def clone(
         Optional[int],
         typer.Option("--seed", help="Override the workflow's seed."),
     ] = None,
+    ref_image: Annotated[
+        Optional[str],
+        typer.Option(
+            "--ref-image",
+            help=(
+                "Reference image filename (must exist in ComfyUI/input/). "
+                "Default: source character's newest sheet_neutral PNG auto-copied."
+            ),
+        ),
+    ] = None,
     path: Annotated[
         Optional[str],
         typer.Option("--path", help="ComfyUI install directory (overrides COMFY_PATH env)."),
@@ -280,7 +290,7 @@ def clone(
     timeout: Annotated[
         float,
         typer.Option("--timeout", help="Max seconds to wait for the prompt."),
-    ] = 600.0,
+    ] = 900.0,
     wait: Annotated[
         bool,
         typer.Option("--wait/--no-wait", help="Poll /history until finished."),
@@ -297,6 +307,7 @@ def clone(
             from_,
             prompt=prompt,
             seed=seed,
+            ref_image=ref_image,
             comfy_path=path,
             state_dir=state_dir,
             url=url,

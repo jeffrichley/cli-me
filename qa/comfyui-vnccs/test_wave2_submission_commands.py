@@ -118,6 +118,7 @@ def init_recorder(monkeypatch):
     rec = InitRecorder()
     monkeypatch.setattr(backend, "init_character_via_rest", rec)
     monkeypatch.setattr(character_create, "init_character_via_rest", rec)
+    monkeypatch.setattr(character_clone, "init_character_via_rest", rec)
     return rec
 
 
@@ -234,21 +235,83 @@ def test_character_create_wait_false_skips_polling(
 # ---------------------------------------------------------------------------
 
 
-def test_character_clone_patches_both_names(submit_recorder, wait_recorder, fake_comfy, monkeypatch):
+def _seed_source_character(fake_comfy, name: str):
+    """Pre-populate a source character's dir + one neutral sheet PNG."""
+    char = fake_comfy / "output" / "VN_CharacterCreatorSuit" / name
+    sheet = char / "Sheets" / "Naked" / "neutral"
+    sheet.mkdir(parents=True)
+    (sheet / "sheet_neutral_00001_.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+
+
+def test_character_clone_patches_both_names(
+    submit_recorder, wait_recorder, init_recorder, fake_comfy, monkeypatch,
+):
     monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
-    # Pre-populate the source character dir
-    (fake_comfy / "output" / "VN_CharacterCreatorSuit" / "Parent").mkdir(parents=True)
+    _seed_source_character(fake_comfy, "Parent")
 
     result = character_clone.run_clone(
         "Child", "Parent", prompt="younger version", seed=42
     )
+    # REST init for the NEW name
+    assert init_recorder.calls == [{"name": "Child", "url": None}]
+
     assert len(submit_recorder.calls) == 1
     inputs = _find_node_inputs(submit_recorder.calls[0]["workflow"], "CharacterCreator")
+    # existing_character now points at the newly-init'd target name so VNCCS
+    # writes outputs under the correct directory.
     assert inputs["new_character_name"] == "Child"
-    assert inputs["existing_character"] == "Parent"
+    assert inputs["existing_character"] == "Child"
     assert inputs["additional_details"] == "younger version"
     assert inputs["seed"] == 42
+    # LoadImage is patched with the auto-copied ref name
+    loader = _find_node_inputs(submit_recorder.calls[0]["workflow"], "LoadImage")
+    assert loader["image"] == "clone_ref_Parent.png"
+    assert result["ref_image"] == "clone_ref_Parent.png"
+    # Source sheet was copied into input/
+    assert (fake_comfy / "input" / "clone_ref_Parent.png").is_file()
+    # RMBG2 patched
+    rmbg = _find_node_inputs(submit_recorder.calls[0]["workflow"], "VNCCS_RMBG2")
+    assert rmbg["background"] == "Green"
+
     assert result["history"]["status"]["status_str"] == "success"
+
+
+def test_character_clone_explicit_ref_image_override(
+    submit_recorder, wait_recorder, init_recorder, fake_comfy, monkeypatch,
+):
+    """--ref-image points at a file the user pre-placed in ComfyUI/input/."""
+    monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
+    _seed_source_character(fake_comfy, "Parent")
+    (fake_comfy / "input").mkdir(parents=True, exist_ok=True)
+    (fake_comfy / "input" / "my_ref.png").write_bytes(b"\x89PNG\r\n\x1a\n")
+
+    result = character_clone.run_clone(
+        "Child", "Parent", ref_image="my_ref.png"
+    )
+    loader = _find_node_inputs(submit_recorder.calls[0]["workflow"], "LoadImage")
+    assert loader["image"] == "my_ref.png"
+    assert result["ref_image"] == "my_ref.png"
+
+
+def test_character_clone_missing_ref_image_raises(
+    submit_recorder, wait_recorder, init_recorder, fake_comfy, monkeypatch,
+):
+    from vnccs_cli.backend import VnccsPathError
+    monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
+    _seed_source_character(fake_comfy, "Parent")
+    with pytest.raises(VnccsPathError):
+        character_clone.run_clone("Child", "Parent", ref_image="does_not_exist.png")
+    assert submit_recorder.calls == []
+
+
+def test_character_clone_source_with_no_sheet_exits_five(
+    submit_recorder, wait_recorder, init_recorder, fake_comfy, monkeypatch,
+):
+    """Source character exists but has no sheet_neutral_*.png yet."""
+    monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
+    (fake_comfy / "output" / "VN_CharacterCreatorSuit" / "Empty").mkdir(parents=True)
+    with pytest.raises(VnccsNotFoundError):
+        character_clone.run_clone("Child", "Empty")
 
 
 def test_character_clone_missing_source_exits_five(submit_recorder, fake_comfy, monkeypatch):
@@ -259,13 +322,15 @@ def test_character_clone_missing_source_exits_five(submit_recorder, fake_comfy, 
     assert submit_recorder.calls == [], "must not submit when source missing"
 
 
-def test_character_clone_does_not_require_prompt(submit_recorder, wait_recorder, fake_comfy, monkeypatch):
+def test_character_clone_does_not_require_prompt(
+    submit_recorder, wait_recorder, init_recorder, fake_comfy, monkeypatch,
+):
     monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
-    (fake_comfy / "output" / "VN_CharacterCreatorSuit" / "Source").mkdir(parents=True)
+    _seed_source_character(fake_comfy, "Source")
     character_clone.run_clone("Derived", "Source")
     inputs = _find_node_inputs(submit_recorder.calls[0]["workflow"], "CharacterCreator")
     assert inputs["new_character_name"] == "Derived"
-    assert inputs["existing_character"] == "Source"
+    assert inputs["existing_character"] == "Derived"
 
 
 # ---------------------------------------------------------------------------
