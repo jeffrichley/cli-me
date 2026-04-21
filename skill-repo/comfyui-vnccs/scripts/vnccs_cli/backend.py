@@ -314,6 +314,115 @@ def get_vnccs_state_dir(
     return (comfy / "output" / VNCCS_STATE_SUBDIR).resolve()
 
 
+# --- ComfyUI extra_model_paths.yaml -----------------------------------------
+
+
+def parse_extra_model_paths(comfy_path: Path) -> list[tuple[str, Path]]:
+    """Parse ``<comfy_path>/extra_model_paths.yaml`` if present.
+
+    Returns a list of ``(model_type, dir)`` pairs — one per search location.
+    ComfyUI lets users redirect model directories via this YAML; without
+    parsing it the wrapper would falsely report installed models as missing
+    (real bug seen in the field where models live at ``E:/data/comfy/models/``
+    rather than under the ComfyUI install).
+
+    Format (subset we support):
+    ::
+        section_name:
+            base_path: /absolute/path/
+            checkpoints: checkpoints/
+            loras: loras/
+            text_encoders: |
+                text_encoders/
+                clip/
+
+    Each non-``base_path`` non-``is_default`` key under each section is a
+    ComfyUI model type (``checkpoints``, ``loras``, ``unet``, ``vae``, …);
+    its value is one or more whitespace-separated relative subdirs. Multiple
+    sections are allowed (e.g. one per ComfyUI/A1111 install).
+
+    Returns ``[]`` on missing file, parse failure, or YAML lib not installed
+    — the caller degrades to the default ``<COMFY_PATH>/models/`` location.
+    """
+    yaml_file = comfy_path / "extra_model_paths.yaml"
+    if not yaml_file.is_file():
+        return []
+    try:
+        import yaml  # PyYAML; optional dep — fall back silently if missing
+    except ImportError:
+        return []
+    try:
+        data = yaml.safe_load(yaml_file.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return []
+    if not isinstance(data, dict):
+        return []
+
+    result: list[tuple[str, Path]] = []
+    for section in data.values():
+        if not isinstance(section, dict):
+            continue
+        base_raw = section.get("base_path")
+        if not base_raw or not isinstance(base_raw, str):
+            continue
+        base = Path(base_raw).expanduser()
+        for key, value in section.items():
+            if key in ("base_path", "is_default"):
+                continue
+            if not isinstance(value, str):
+                continue
+            for line in value.split():
+                stripped = line.strip().rstrip("/").rstrip("\\")
+                if stripped:
+                    result.append((key, base / stripped))
+    return result
+
+
+def find_model_path(
+    comfy_path: Path, subdir: str, filename: str
+) -> tuple[Path, bool]:
+    """Locate a model file across the canonical + extra_model_paths dirs.
+
+    ``subdir`` is the model's path relative to ``models/`` as recorded in
+    ``REQUIRED_MODELS`` (e.g. ``"checkpoints/Illustrious"``,
+    ``"loras/qwen/VNCCS"``). Splits on the first component to find the
+    ComfyUI model type and treats the rest as a subtree under each
+    candidate root.
+
+    Returns ``(path, present)``. ``path`` is the first matching real file,
+    or — if missing everywhere — the default ``<COMFY_PATH>/models/<subdir>/
+    <filename>`` (so error messages show the canonical location).
+    A 0-byte file is treated as missing (partial-download guard).
+    """
+    default = comfy_path / "models" / subdir / filename
+
+    parts = Path(subdir).parts
+    if not parts:
+        # Defensive: empty subdir is a config bug; just probe the default.
+        try:
+            return default, default.is_file() and default.stat().st_size > 0
+        except OSError:
+            return default, False
+
+    model_type = parts[0]
+    subtree = Path(*parts[1:]) if len(parts) > 1 else None
+
+    candidates: list[Path] = [default]
+    for type_name, type_dir in parse_extra_model_paths(comfy_path):
+        if type_name != model_type:
+            continue
+        candidate = type_dir / subtree if subtree else type_dir
+        candidates.append(candidate / filename)
+
+    for c in candidates:
+        try:
+            if c.is_file() and c.stat().st_size > 0:
+                return c, True
+        except OSError:
+            continue
+    return default, False
+
+
 # --- Bundled workflow loading ----------------------------------------------
 
 

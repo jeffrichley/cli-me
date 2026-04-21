@@ -1,9 +1,12 @@
 """Logic for `vnccs check models` — verify required model files on disk.
 
 Per playbook.md §check models:
-- Cross-reference `backend.REQUIRED_MODELS` against the actual files on
-  disk under `<COMFY_PATH>/models/`.
-- A model is "missing" if the file doesn't exist at its expected subdir.
+- Cross-reference `backend.REQUIRED_MODELS` against actual files on disk.
+- A model is "missing" if the file doesn't exist at any candidate path.
+- Searches both ``<COMFY_PATH>/models/`` AND every directory listed in
+  ``<COMFY_PATH>/extra_model_paths.yaml`` (ComfyUI's standard mechanism
+  for redirecting model dirs — bug fixed when a real install was found
+  with all models living at ``E:/data/comfy/models/``).
 - A partial-download file (size 0) is also treated as missing.
 - Optional entries (e.g. RMBG variants) warn but don't fail — they are
   tagged `optional=True` in the report so the caller can decide exit code.
@@ -11,26 +14,9 @@ Per playbook.md §check models:
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Optional
 
-from vnccs_cli.backend import REQUIRED_MODELS, get_comfy_path
-
-
-def _model_present(full_path: Path) -> bool:
-    """True iff the model file exists and is non-empty on disk.
-
-    A 0-byte file is treated as missing (partial-download guard per
-    playbook.md §check models edge cases). OS errors (e.g. permission
-    denied) are reported as missing — the user will see the file path
-    in the table and can diagnose.
-    """
-    try:
-        if not full_path.is_file():
-            return False
-        return full_path.stat().st_size > 0
-    except OSError:
-        return False
+from vnccs_cli.backend import REQUIRED_MODELS, find_model_path, get_comfy_path
 
 
 def run_check_models(*, comfy_path: Optional[str] = None) -> list[dict]:
@@ -40,7 +26,8 @@ def run_check_models(*, comfy_path: Optional[str] = None) -> list[dict]:
         "filename": str,
         "type": str,
         "subdir": str,
-        "full_path": str,
+        "full_path": str,    # the location where the file was FOUND, or
+                             # the canonical default if missing
         "present": bool,
         "download_url": str,
         "optional": bool,
@@ -50,12 +37,12 @@ def run_check_models(*, comfy_path: Optional[str] = None) -> list[dict]:
         VnccsPathError: COMFY_PATH unset / not a ComfyUI install (exit 6).
     """
     comfy = get_comfy_path(comfy_path)
-    models_root = comfy / "models"
 
     results: list[dict] = []
     for model in REQUIRED_MODELS:
-        full_path = models_root / model["subdir"] / model["filename"]
-        present = _model_present(full_path)
+        full_path, present = find_model_path(
+            comfy, model["subdir"], model["filename"]
+        )
         results.append(
             {
                 "filename": model["filename"],
