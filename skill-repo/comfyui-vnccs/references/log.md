@@ -63,3 +63,66 @@ Test totals at end of session: 259 passing, 1 skipped.
 Pending after model downloads complete:
 - Live Wave 2 smoke test via `tmp/vnccs_live_test.py`
 - Phase 3.5 R5 wiki execution (currently deferred while validating models)
+
+---
+
+**2026-04-21 (later same session)** — All 23 models downloaded + live
+end-to-end verified.
+
+Model acquisition (~46 GB total):
+- 16 main + 1 optional via `tmp/vnccs_download_models.py` (HuggingFace
+  repos: MIUProject/VNCCS for 8, Comfy-Org/Qwen-Image_ComfyUI for 2,
+  unsloth/lightx2v/Bingsu/numz/1038lab for the rest).
+- 5 missing-from-original-list models discovered by audit + downloaded
+  via `tmp/vnccs_download_extras.py`: DMD2 LoRA, vn_character_sheet_v4,
+  4x_APISR_GRL upscaler, sam_vit_b, face_yolov8m-seg_60.
+- `face_yolov8m-seg_60.pt` is on `24xx/segm`, NOT `Bingsu/adetailer`
+  (despite naming suggesting otherwise — initial 404 was the giveaway).
+- Civitai WAI-illustrious-SDXL v16 (6.94 GB) used as the Illustrious
+  checkpoint substitute under both filenames the workflows reference.
+  Civitai signed-URL redirect requires httpx (urllib gets 403 from
+  Cloudflare R2). Saved to both ILFlatMixV4_00001_.safetensors AND
+  ILFlatMix.safetensors.
+
+Wrapper bug-fix from is_default semantics: `extra_model_paths.yaml`
+sections marked `is_default: true` apply to ANY model type even ones
+not explicitly listed. Without this fallback, ultralytics/sams models
+in the redirected location were falsely reported missing. Fix:
+`backend.parse_default_base_paths` + extended `find_model_path`.
+
+Live integration findings (4 wrapper bugs caught, all fixed):
+
+1. CharacterCreator's `existing_character` is a runtime dropdown — the
+   wrapper must call `/vnccs/create?name=NAME` first to register the
+   name before submission.
+2. LoadImage 'Character sheet' default `short_body6.png` is a stale
+   upstream-author reference; VNCCS bundles `CharacterSheetTemplate.png`
+   and the wrapper now auto-copies it into `<COMFY_PATH>/input/`.
+3. VNCCS_RMBG2 default `background='Color'` is no longer valid; patch
+   to `'Green'` so downstream VNCCSChromaKey works.
+4. Impact-Subpack ultralytics, Impact-Pack SAMLoader, and VNCCS_RMBG2
+   bypass `extra_model_paths.yaml` and require physical files at
+   canonical `<COMFY_PATH>/models/{ultralytics,sams,RMBG}/` location.
+   Documented; future `vnccs setup` command will automate the copy.
+
+End-to-end live verification (Step1 SDXL on real GPU):
+- live_test_002 (manual orchestration): SUCCESS in 766s, 1 sheet
+  (6144×6144 RGBA, 17 MB) + 12 face crops in correct character dir.
+- live_test_003 (via `vnccs character create` CLI, fully wrapper-driven):
+  SUCCESS in 766s, identical output structure.
+- `vnccs character list` + `vnccs character show live_test_003`
+  correctly reflect live state.
+
+Commits this round: `27cd1d8` (REQUIRED_MODELS expanded to 22),
+`4eaa989` (is_default fallback), `4888971` (live-env prep in
+character_create), `9b5b6b5` (gotchas update).
+
+Test totals: 268 passing, 1 skipped.
+
+Wave 2 commands not yet live-verified (mocked tests pass; same
+live-env prep pattern likely needed for each):
+- character_clone (Step1.1 QWEN — different LoadImage / RMBG defaults?)
+- clothing_add (Step2 SDXL — same RMBG2 issue likely)
+- emotion_add (Step3 SDXL legacy)
+- sprite_render (Step4 — minimal, may just need /vnccs/create-style init)
+- dataset_export (Step5 — minimal)
