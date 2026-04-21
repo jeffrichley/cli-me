@@ -172,3 +172,51 @@ Commits this round: `770838d` (clothing REST-init), plus
 All 6 Wave 2 commands now pass live validation + submission on this
 GPU; 5 run to completion end-to-end; 1 (clone) OOMs on 16 GB and
 needs ≥24 GB VRAM for the QWEN stack.
+
+---
+
+**2026-04-21 (end of session)** — Deferred the remaining work. Current
+state is a clean stopping point: 278 tests passing, all Wave 2
+commands live-verified for submission (5 also verified for
+completion on 16 GB GPU), all discovered bugs documented in
+gotchas.md + fixed in the wrapper.
+
+### Deferred items (pick up next session)
+
+1. **Visual-editor verification of Step3 emotion workflow** — Jeff
+   walked through the manual UI flow through Stage 2 (character
+   create + clothing add) and confirmed the 3 stale defaults
+   (`short_body6.png` / `Color` background × 2) match what the
+   wrapper auto-patches. Stage 3 visual verification (to confirm the
+   `sheet_happy__00001.png` silhouette root cause and identify the
+   correct rewire for SaveImageWithAlpha / node 19) not yet done —
+   paused for Jeff to absorb the pipeline first.
+
+2. **QWEN workflows** — Step1.1 clone, Step2 QWEN, Step3 QWEN
+   remain unverified on this hardware. Step3 QWEN has the broken
+   missing nodes (VNCCS_QWEN_Detailer / VNCCS_BBox_Extractor);
+   wrapper refuses with exit 4. Step1.1 OOMs on 16 GB. Step2 QWEN
+   not tried — wrapper uses V1SDXL legacy by default.
+
+3. **Phase 3.5: R5 wiki execution + URL/link checks (task #47)** —
+   still pending. Can be done any time (stateless).
+
+4. **VNCCS identity-drift quality issues** — Jeff observed that
+   hair + skin-tone aren't perfectly consistent across the 12 poses
+   in the Step1 output. Known VNCCS limitation (FaceDetailer re-runs
+   each face independently). Possible mitigations: tune
+   `vn_character_sheet_v4` LoRA weight, lower FaceDetailer denoise,
+   or switch to the QWEN pipeline (better consistency but OOMs here).
+   Not a wrapper bug — upstream VNCCS tuning territory.
+
+### Next-session entry points
+
+- Resume manual Stage 2/3/4/5 walkthrough for Jeff's education (he
+  got through Stage 1 + started Stage 2).
+- Open `VN_Step3_CharEmotionGeneratorV6.json` in ComfyUI visually
+  and trace what SaveImageWithAlpha (node 19) receives. Most likely
+  fix: rewire `images` from `FaceDetailer.output[0]` to
+  `VAEDecode.output[0]` (or wherever the real composite lives).
+- After the Step3 rewire is confirmed, re-pin the bundled API JSON
+  (update SHA256 in `scripts/workflows/README.md`) and drop the
+  `is_broken_emotion_aggregate` filter.
