@@ -87,13 +87,6 @@ REQUIRED_MODELS: tuple[dict, ...] = (
         "optional": False,
     },
     {
-        "filename": "ILFlatMix.safetensors",
-        "subdir": "checkpoints/Illustrious",
-        "type": "SDXL Checkpoint",
-        "download_url": "https://civitai.com (search 'Illustrious ILFlatMix')",
-        "optional": False,
-    },
-    {
         "filename": "mimimeter.safetensors",
         "subdir": "loras/IL",
         "type": "LoRA (SDXL)",
@@ -178,6 +171,71 @@ REQUIRED_MODELS: tuple[dict, ...] = (
         "type": "RMBG BiRefNet (optional)",
         "download_url": "https://huggingface.co/1038lab/RMBG-2.0",
         "optional": True,
+    },
+    # --- Found by inspecting bundled API workflows (post-init audit) ---
+    # Reference: tmp/inspect_workflow_models.py walked every Loader-class
+    # node across all 9 bundled API workflows and surfaced these literal
+    # filenames — they were missing from the original required-models list
+    # but the workflows fail without them.
+    {
+        "filename": "dmd2_sdxl_4step_lora_fp16.safetensors",
+        "subdir": "loras/DMD2",
+        "type": "LoRA (DMD2 4-step Lightning)",
+        "download_url": "https://huggingface.co/MIUProject/VNCCS/tree/main",
+        "optional": False,
+    },
+    {
+        "filename": "vn_character_sheet_v4.safetensors",
+        "subdir": "loras",
+        "type": "LoRA (VN Character Sheet v4)",
+        "download_url": "https://huggingface.co/MIUProject/VNCCS/tree/main",
+        "optional": False,
+    },
+    {
+        "filename": "4x_APISR_GRL_GAN_generator.pth",
+        "subdir": "upscale_models",
+        "type": "Upscaler (4x APISR GRL)",
+        "download_url": "https://huggingface.co/MIUProject/VNCCS/tree/main",
+        "optional": False,
+    },
+    {
+        "filename": "sam_vit_b_01ec64.pth",
+        "subdir": "sams",
+        "type": "SAM (ViT-B)",
+        "download_url": "https://huggingface.co/MIUProject/VNCCS/tree/main",
+        "optional": False,
+    },
+    {
+        "filename": "face_yolov8m-seg_60.pt",
+        "subdir": "ultralytics/segm",
+        "type": "YOLO segmentation (face)",
+        "download_url": "https://huggingface.co/Bingsu/adetailer/blob/main/face_yolov8m-seg_60.pt",
+        "optional": False,
+    },
+    # Illustrious checkpoint — VNCCS workflows hard-code a specific filename
+    # but the README says "any illustrious based model" works. We pin both
+    # filenames the bundled workflows reference; substitute with WAI-illustrious
+    # from civitai or any compatible Illustrious SDXL checkpoint, saved under
+    # these names. See gotchas.md §illustrious-checkpoint-substitution.
+    {
+        "filename": "ILFlatMixV4_00001_.safetensors",
+        "subdir": "checkpoints/Illustrious",
+        "type": "SDXL Checkpoint (V1SDXL workflows)",
+        "download_url": (
+            "civitai (substitute any Illustrious SDXL checkpoint, "
+            "e.g. https://civitai.com/models/827184/wai-illustrious-sdxl)"
+        ),
+        "optional": False,
+    },
+    {
+        "filename": "ILFlatMix.safetensors",
+        "subdir": "checkpoints/Illustrious",
+        "type": "SDXL Checkpoint (QWEN workflows)",
+        "download_url": (
+            "civitai (substitute any Illustrious SDXL checkpoint, "
+            "e.g. https://civitai.com/models/827184/wai-illustrious-sdxl)"
+        ),
+        "optional": False,
     },
 )
 

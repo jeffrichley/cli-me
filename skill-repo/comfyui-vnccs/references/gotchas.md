@@ -87,8 +87,49 @@ metadata with this limitation documented. Decision pending.
 ## Model footprint is large
 
 Full VNCCS capability requires **~28 GB (QWEN-only)** to **~42-46 GB
-(QWEN + SDXL + upscalers)** of models. `vnccs check models` reports
-what's missing with download URLs. Plan disk accordingly.
+(QWEN + SDXL + upscalers + Illustrious checkpoint)** of models. `vnccs
+check models` reports what's missing with download URLs. Plan disk
+accordingly.
+
+## Illustrious checkpoint substitution
+
+The bundled API workflows hard-code two filenames for the Illustrious
+SDXL checkpoint:
+
+- V1SDXL stack: `Illustrious/ILFlatMixV4_00001_.safetensors`
+- QWEN stack:   `Illustrious/ILFlatMix.safetensors`
+
+Neither is published anywhere we could find — they appear to be the
+upstream author's local merges. The official VNCCS README explicitly
+says **"Any illustrious based model"** works in the checkpoint slot.
+
+**Mitigation:** download a popular Illustrious SDXL checkpoint
+(e.g. `WAI-illustrious-SDXL` from civitai —
+<https://civitai.com/models/827184/wai-illustrious-sdxl>, civitai
+download API works without auth) and save it under both filenames so
+either workflow's CheckpointLoaderSimple resolves. The wrapper's
+download script (`tmp/vnccs_download_extras.py`) does this
+automatically.
+
+## extra_model_paths.yaml support
+
+`vnccs check models` walks both `<COMFY_PATH>/models/` AND every
+directory listed in `<COMFY_PATH>/extra_model_paths.yaml` (ComfyUI's
+multi-location config mechanism). Real bug found in the field where a
+ComfyUI install redirected all models to `E:/data/comfy/models/`;
+without honoring the YAML, the wrapper falsely reported every model
+as missing. See `backend.parse_extra_model_paths` and
+`backend.find_model_path`.
+
+## REQUIRED_MODELS list grew during integration
+
+The original wrapper enumerated 16 required models. End-to-end
+inspection of every Loader-class node across all 9 bundled API
+workflows surfaced 6 more required files (DMD2 LoRA, vn_character_sheet
+v4, 4x_APISR_GRL upscaler, sam_vit_b, face_yolov8m-seg) plus the
+double-named Illustrious checkpoint. The expanded list is now 22
+required + 1 optional — see `backend.REQUIRED_MODELS` and the audit
+script `tmp/inspect_workflow_models.py`.
 
 ## pip might not be in ComfyUI's venv
 

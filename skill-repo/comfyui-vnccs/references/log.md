@@ -17,3 +17,49 @@ Scope decisions locked:
 2. Sprite render: no per-costume filter, render everything.
 3. Workflow conversion: delegate to sibling `comfyui` skill.
 4. VNCCS pinned at `main` 2.1.0 commit `7c3281f`.
+
+---
+
+**2026-04-21** — Phase 3 complete (Wave 1 + 2 + 3) + integration audit.
+
+- **Phase 3.0** shipped (`c5da949`): `load_api_workflow`, `patch_workflow_node`,
+  `submit_workflow`, `wait_for_prompt` in backend.py. UI-format rejection,
+  exit-code mapping (2/3/4), monkeypatchable poll interval. 24 Tier-1 tests.
+- **Wave 2 submission commands** shipped (`4dde178`): character create/clone,
+  clothing add (variants loop with deterministic seed sequence), emotion add
+  (`--legacy` default, `--qwen` refuses with exit 4), sprite render, dataset
+  export with post-completion lora/ copy. 25 Tier-1 mocked tests.
+- **Wave 3 destructive commands** shipped (`b1b7456`): character prune,
+  clothing remove (protects `Naked` base), clothing pick. Path-traversal
+  safe — test-first caught a bug where `Path.relative_to()` without
+  `.resolve()` allowed `character=".."` to escape the state root. Fixed via
+  `.resolve()`-then-parent comparison. 19 Tier-1 tests.
+- **Integration audit (live ComfyUI, training done):**
+  - 11/11 custom-node packs registered with running server (incl. Impact-Subpack
+    and KJNodes added during Phase 2 review).
+  - 46/46 wiki URLs return HTTP 200; 0 broken links / orphan files.
+  - All 55 Tier-2 integration tests pass.
+  - **Bug fixed (`4e6c63e`)**: `check models` now honors
+    `extra_model_paths.yaml`. User's install redirects models to
+    `E:/data/comfy/models/`; the wrapper was probing `<COMFY_PATH>/models/`
+    only and falsely reported every model as missing. New helpers
+    `parse_extra_model_paths` + `find_model_path` + 13 tests.
+  - **REQUIRED_MODELS list grew from 16 → 22**: end-to-end inspection of all
+    Loader-class nodes across the 9 bundled API workflows surfaced 6 more
+    required files (DMD2 LoRA, vn_character_sheet_v4, 4x_APISR_GRL upscaler,
+    sam_vit_b, face_yolov8m-seg_60, plus the doubly-named Illustrious
+    checkpoint). Audit script: `tmp/inspect_workflow_models.py`.
+  - **Illustrious checkpoint substitution**: workflows hard-code
+    `ILFlatMixV4_00001_.safetensors` (V1SDXL) and `ILFlatMix.safetensors`
+    (QWEN), neither published anywhere. README says "any illustrious model"
+    works — substituted `WAI-illustrious-SDXL` from civitai (download API
+    works without auth, but use httpx — urllib's redirect handling drops
+    the Cloudflare R2 signed URL).
+  - **face_yolov8m-seg_60.pt**: not in Bingsu/adetailer despite being the
+    natural-seeming source; lives at `24xx/segm` instead.
+
+Test totals at end of session: 259 passing, 1 skipped.
+
+Pending after model downloads complete:
+- Live Wave 2 smoke test via `tmp/vnccs_live_test.py`
+- Phase 3.5 R5 wiki execution (currently deferred while validating models)
