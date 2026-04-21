@@ -10,6 +10,7 @@ Five command groups (MVP):
 - [citations](#citations-group) — bibliography rendering with citeproc
 - [templates](#templates-group) — print, apply, eisvogel
 - [filters](#filters-group) — apply, crossref-check
+- [slides](#slides-group) — reveal.js HTML decks and beamer PDF decks
 
 For each command:
 - **Signature** — exact CLI shape
@@ -264,6 +265,41 @@ its `--version` output. If missing: print install instructions and exit 1.
 - pandoc-crossref present but version mismatch with pandoc → just report
   the version, don't try to enforce compatibility. Document the matrix in
   the wiki. (Future: `--strict` flag could enforce.)
+
+---
+
+## slides group
+
+### `slides build`
+
+**Signature:**
+```bash
+pandoc-cli slides build INPUT OUTPUT
+  --to beamer|revealjs
+  [--from FORMAT]
+  [--slide-level N]
+  [--incremental]
+  [--standalone / --no-standalone]
+  [--toc]
+  [--metadata KEY=VALUE]
+  [--variable KEY=VALUE]
+  [--pdf-engine ENGINE]
+  [--embed-resources]
+```
+
+**Behavior:** Builds slide-deck output using the dedicated slides workflow.
+Supports only `beamer` and `revealjs`. Shared options are forwarded directly
+to pandoc. Wrapper-level validation rejects incompatible combinations.
+
+**Verification:**
+- reveal.js output: standalone HTML with slide-section markers
+- beamer output: PDF magic when a LaTeX engine is available
+
+**Edge cases:**
+- invalid `--to` value
+- `beamer` + `--embed-resources`
+- `revealjs` + `--pdf-engine`
+- `OUTPUT == "-"` for `beamer`
 
 ---
 

@@ -300,9 +300,7 @@ class TestCitationsRenderCLI:
         assert "--bibliography" in result.output
 
     def test_render_missing_input_exits_one(self, tmp_path: Path):
-        # mix_stderr=False so we can assert the error message reaches stderr,
-        # not just that the exit code is right (R4 nice-to-fix #4).
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         bib = tmp_path / "refs.bib"
         bib.write_text("@article{x, title={X}, year={2020}}\n")
         out = tmp_path / "out.html"
@@ -314,15 +312,14 @@ class TestCitationsRenderCLI:
                     str(tmp_path / "nope.md"),
                     str(out),
                     "--bibliography", str(bib),
-                ],
-            )
+            ],
+        )
             assert result.exit_code == 1
-            assert "input" in result.stderr.lower()
+            assert "input" in result.output.lower()
             mock_run.assert_not_called()
 
     def test_render_missing_bib_exits_one(self, tmp_path: Path):
-        # mix_stderr=False so we can assert the error message reaches stderr.
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         inp = tmp_path / "doc.md"
         inp.write_text("# Hi\n")
         out = tmp_path / "out.html"
@@ -334,16 +331,16 @@ class TestCitationsRenderCLI:
                     str(inp),
                     str(out),
                     "--bibliography", str(tmp_path / "nope.bib"),
-                ],
-            )
+            ],
+        )
             assert result.exit_code == 1
-            assert "bibliography" in result.stderr.lower()
+            assert "bibliography" in result.output.lower()
             mock_run.assert_not_called()
 
     def test_render_missing_csl_exits_one_at_cli(self, tmp_path: Path):
         # New R3 fix surfaced at the CLI surface: --csl pre-flight check
         # exits 1 with a clear message before invoking pandoc.
-        runner = CliRunner(mix_stderr=False)
+        runner = CliRunner()
         inp = tmp_path / "doc.md"
         inp.write_text("# Hi\n")
         bib = tmp_path / "refs.bib"
@@ -358,8 +355,8 @@ class TestCitationsRenderCLI:
                     str(out),
                     "--bibliography", str(bib),
                     "--csl", str(tmp_path / "missing.csl"),
-                ],
-            )
+            ],
+        )
             assert result.exit_code == 1
-            assert "csl" in result.stderr.lower()
+            assert "csl" in result.output.lower()
             mock_run.assert_not_called()

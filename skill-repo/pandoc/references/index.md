@@ -21,6 +21,7 @@ features](#v02-deferred-features) below for what's intentionally not yet wrapped
 - [Templates](techniques/templates.md) — `--template` (text formats), `--reference-doc` (DOCX/ODT/PPTX), `--include-*`
 - [Filters](techniques/filters.md) — Lua filters, JSON filters, pandoc-crossref, filter ordering
 - [Metadata & Frontmatter](techniques/metadata-and-frontmatter.md) — YAML blocks, `--metadata`, `--metadata-file`, `--defaults`
+- [Slides](techniques/slides.md) — build reveal.js HTML decks and beamer PDF decks
 
 ## Operational
 
@@ -34,7 +35,7 @@ features](#v02-deferred-features) below for what's intentionally not yet wrapped
 The MVP intentionally leaves the following for later releases. See
 [future-scope.md](future-scope.md) for full detail.
 
-- Slides (beamer, reveal.js, slidy, S5, DZSlides)
+- Older slide writers (slidy, S5, DZSlides, slideous)
 - Jupyter notebook formats (ipynb reader/writer)
 - Exotic format pairs (MediaWiki, DokuWiki, Jira, Org-mode, AsciiDoc, RST, OPML, Textile, Muse, FB2)
 - Custom Lua-based writers (`--writer=path/to/writer.lua`)

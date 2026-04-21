@@ -1,6 +1,6 @@
 ---
 name: pandoc
-description: Universal document conversion CLI for pandoc — convert markdown to PDF, DOCX, HTML, EPUB, LaTeX with citations, templates, and Lua filters. Use when asked to "convert to pdf", "render markdown", "build docx", "compile thesis", "make epub", "render report", "generate document", "format my paper", "compile to docx", "build a pdf", "apply citations", "use bibtex", "convert markdown to pdf without latex" (uses weasyprint), or to produce a formatted document from markdown. Slides (beamer/reveal.js) and Jupyter notebooks are NOT yet supported — deferred to v0.2.
+description: Universal document conversion CLI for pandoc — convert markdown to PDF, DOCX, HTML, EPUB, LaTeX with citations, templates, and Lua filters. Use when asked to "convert to pdf", "render markdown", "build docx", "compile thesis", "make epub", "render report", "generate document", "format my paper", "compile to docx", "build a pdf", "apply citations", "use bibtex", "convert markdown to pdf without latex" (uses weasyprint), or to produce a formatted document from markdown. Slides (beamer/reveal.js) are supported via `slides build`; Jupyter notebooks are NOT yet supported — deferred to v0.2.
 ---
 
 # pandoc — cli-me skill
@@ -60,9 +60,14 @@ also useful for direct pandoc invocations): `scripts/templates/eisvogel.latex`.
 - `info formats` — list input/output formats
 - `info engines` — list PDF engines available on PATH
 
+**slides** — Slide deck generation
+- `slides build INPUT OUTPUT --to beamer|revealjs` — build a slide deck using the dedicated slide workflow
+
 ### Deferred to v0.2
 
-Slides (beamer/reveal.js), Jupyter notebooks, exotic format pairs (MediaWiki,
+Slides are supported for `beamer` and `revealjs`. Older slide writers
+(`slidy`, `s5`, `dzslides`, `slideous`) and deeper slide-specific helpers
+remain deferred. Jupyter notebooks, exotic format pairs (MediaWiki,
 Org, AsciiDoc, RST, etc.), custom Lua writers, advanced filter patterns, deep
 template authoring, math rendering modes, code highlighting customization,
 extension-flag mastery. See `references/future-scope.md`.

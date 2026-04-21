@@ -7,21 +7,17 @@ authoritative backlog — keep it in sync with the v0.2 task list.
 
 ## Slides
 
-Pandoc generates slide decks via specialized writers:
-- `beamer` — LaTeX slides (compiles to PDF)
-- `revealjs` — HTML slides (modern, browser-based)
-- `slidy` — older HTML slides
-- `s5` — older HTML slides
-- `dzslides` — minimal HTML slides
-- `pptx` — PowerPoint (handled in convert MVP, but slide-specific flags below)
+Older HTML slide writers remain deferred:
+- `slidy`
+- `s5`
+- `dzslides`
+- `slideous`
 
-Slide-specific flags to wrap:
-- `--slide-level=N` (controls heading-level → slide-break mapping)
-- `--incremental` (build lists/items incrementally)
-- `-V theme=...`, `-V transition=...` (reveal.js-specific)
-- Speaker notes via `::: notes` divs
-- Background images per slide
-- Two-column layouts via div syntax
+Deeper slide-specific helpers also remain deferred:
+- Speaker notes helpers
+- Background-image helpers
+- Two-column layout helpers
+- Named theme/transition wrapper flags
 
 ## Jupyter Notebook Formats
 

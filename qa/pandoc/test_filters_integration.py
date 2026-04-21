@@ -109,9 +109,8 @@ class TestFiltersApply:
 
         assert result.exit_code == 1
         assert not out.exists()
-        # Stderr (mixed into output by CliRunner) should name the missing path
-        # so the user can fix the typo.
-        combined = (result.stdout or "") + (str(result.exception) or "")
+        # The runner should report the missing path in its captured output.
+        combined = result.output or ""
         assert "no-such.lua" in combined or "Lua filter not found" in combined
 
     def test_two_lua_filters_applied_in_cli_order_observable(

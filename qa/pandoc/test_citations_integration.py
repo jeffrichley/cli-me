@@ -68,8 +68,7 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def runner() -> CliRunner:
-    # mix_stderr=False so we can assert on stderr separately for warning checks.
-    return CliRunner(mix_stderr=False)
+    return CliRunner()
 
 
 # ---------------------------------------------------------------------------
@@ -99,7 +98,7 @@ def test_render_to_html_contains_smith_and_references(
         ],
     )
 
-    assert result.exit_code == 0, f"stderr: {result.stderr}"
+    assert result.exit_code == 0, f"output: {result.output}"
     assert_html_doctype(out)
 
     text = out.read_text(encoding="utf-8")
@@ -148,7 +147,7 @@ def test_render_to_docx_writes_valid_docx(
         ],
     )
 
-    assert result.exit_code == 0, f"stderr: {result.stderr}"
+    assert result.exit_code == 0, f"output: {result.output}"
     assert_docx_magic(out)
     # Extract word/document.xml and assert the rendered citation actually
     # made it into the body. Without this, a regression that produced
@@ -190,11 +189,11 @@ def test_render_unknown_citation_key_warns_but_succeeds(
     )
 
     # Per playbook: pandoc emits a warning but exits 0 on missing citation key.
-    assert result.exit_code == 0, f"stderr: {result.stderr}"
+    assert result.exit_code == 0, f"output: {result.output}"
     assert_html_doctype(out)
     # Pandoc's exact wording: "[WARNING] Citeproc: citation nonexistent_key_999 not found"
-    assert "not found" in result.stderr.lower(), (
-        f"Expected 'not found' warning in stderr; got: {result.stderr!r}"
+    assert "not found" in result.output.lower(), (
+        f"Expected 'not found' warning in output; got: {result.output!r}"
     )
 
 
@@ -223,7 +222,7 @@ def test_render_missing_bibliography_file_exits_one(
     )
 
     assert result.exit_code == 1
-    assert "bibliography" in result.stderr.lower()
+    assert "bibliography" in result.output.lower()
     assert not out.exists(), "Output should not be created when bib is missing"
 
 
@@ -247,7 +246,7 @@ def test_render_missing_input_file_exits_one(
     )
 
     assert result.exit_code == 1
-    assert "input" in result.stderr.lower()
+    assert "input" in result.output.lower()
     assert not out.exists(), "Output should not be created when input is missing"
 
 
@@ -277,7 +276,7 @@ def test_render_to_pdf_when_latex_available(
         ],
     )
 
-    assert result.exit_code == 0, f"stderr: {result.stderr}"
+    assert result.exit_code == 0, f"output: {result.output}"
     assert_pdf_magic(out)
     assert_file_nonempty(out)
 
@@ -362,7 +361,7 @@ def test_render_with_explicit_csl_renders_citation(
         ],
     )
 
-    assert result.exit_code == 0, f"stderr: {result.stderr}"
+    assert result.exit_code == 0, f"output: {result.output}"
     assert_html_doctype(out)
     body = out.read_text(encoding="utf-8")
     # Author surname must still render through the custom CSL.
@@ -401,7 +400,7 @@ def test_render_with_pandoc_default_csl(
         ],
     )
 
-    assert result.exit_code == 0, f"stderr: {result.stderr}"
+    assert result.exit_code == 0, f"output: {result.output}"
     body = out.read_text(encoding="utf-8")
     assert "Smith" in body, "Expected 'Smith' rendered through default CSL"
 
@@ -430,9 +429,9 @@ def test_render_with_missing_csl_exits_one_before_pandoc(
     )
 
     assert result.exit_code == 1
-    assert "csl" in result.stderr.lower()
-    assert "not found" in result.stderr.lower()
+    assert "csl" in result.output.lower()
+    assert "not found" in result.output.lower()
     # Critically: the Haskell traceback marker must NOT appear — our
     # pre-flight should have caught this before pandoc was invoked.
-    assert "withBinaryFile" not in result.stderr
+    assert "withBinaryFile" not in result.output
     assert not out.exists(), "Output should not be created when CSL is missing"
