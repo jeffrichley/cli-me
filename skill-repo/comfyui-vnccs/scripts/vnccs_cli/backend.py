@@ -664,6 +664,59 @@ def patch_workflow_node(
     return count
 
 
+# --- Known-broken-artifact detection ---------------------------------------
+
+
+# Filename substring that flags VNCCS's "full-sheet aggregate" save from
+# Step3 / Step4. The upstream SaveImageWithAlpha in Step3 emits a
+# silhouette-mask composite (RGB≈0 + character-shape alpha) as
+# sheet_<emotion>__00001.png inside Sheets/<costume>/<emotion>/ for every
+# NON-neutral emotion; Step4's sprite render re-saves it as
+# sprite_<emotion>__00001_.png. See references/gotchas.md §Step3 emotion
+# sheet silhouette misfire.
+_BROKEN_AGGREGATE_MARKER = "__00001"
+
+
+def is_broken_emotion_aggregate(path: Path) -> bool:
+    """Return True iff `path` is a known-broken VNCCS emotion/sprite aggregate.
+
+    Detects the two files that Step3's upstream bug produces:
+
+    - ``Sheets/<costume>/<emotion>/sheet_<emotion>__00001.png`` (emotion
+      != neutral): silhouette misfire from ``SaveImageWithAlpha`` (node 19)
+      wired to ``FaceDetailer.output[0]`` with a character-mask alpha.
+    - ``Sprites/<costume>/<emotion>/sprite_<emotion>__00001_.png``: the
+      sprite render's re-save of the sheet above (same silhouette).
+
+    Valid artifacts preserved:
+    - ``Sheets/<costume>/neutral/sheet_neutral_00001_.png`` (Step1 output)
+    - ``Faces/<costume>/<emotion>/face_<emotion>__00001_.png`` (face crops)
+    - ``Sprites/<costume>/<emotion>/sprite_<emotion>__00002..12_.png``
+      (individual portrait sprites; these are the real VN-ready outputs)
+    """
+    parts = path.parts
+    if len(parts) < 4:
+        return False
+    kind = parts[-4]  # expected: "Sheets" or "Sprites" (or "Faces" — not filtered)
+    emotion_dir = parts[-2]
+    name = path.name
+    if kind == "Sheets":
+        # Neutral sheet is valid — only filter non-neutral emotions.
+        if emotion_dir == "neutral":
+            return False
+        prefix = f"sheet_{emotion_dir}_"
+        return name.startswith(prefix) and _BROKEN_AGGREGATE_MARKER in name
+    if kind == "Sprites":
+        # Neutral sprite_neutral__00001_.png is VNCCS's re-save of the
+        # valid Step1 sheet — colored, not broken. Skip only when the
+        # upstream sheet itself was broken (non-neutral emotion).
+        if emotion_dir == "neutral":
+            return False
+        prefix = f"sprite_{emotion_dir}_"
+        return name.startswith(prefix) and _BROKEN_AGGREGATE_MARKER in name
+    return False
+
+
 # --- Live-environment prep --------------------------------------------------
 
 

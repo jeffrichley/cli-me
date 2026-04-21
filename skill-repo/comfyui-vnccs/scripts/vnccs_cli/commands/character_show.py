@@ -181,14 +181,26 @@ def _list_emotions(char_dir: Path) -> list[dict[str, Any]]:
 
 
 def _count_pngs_recursive(directory: Path) -> int:
-    """Count .png files under `directory` (recursive)."""
+    """Count .png files under `directory` (recursive).
+
+    Skips the known-broken VNCCS emotion aggregates
+    (``sprite_<emotion>__00001_.png`` and
+    ``sheet_<emotion>__00001.png`` for non-neutral emotions — the
+    silhouette misfires from Step3's SaveImageWithAlpha bug). See
+    ``backend.is_broken_emotion_aggregate`` and gotchas.md.
+    """
+    from vnccs_cli.backend import is_broken_emotion_aggregate
+
     if not directory.is_dir():
         return 0
     count = 0
     try:
         for f in directory.rglob("*.png"):
-            if f.is_file():
-                count += 1
+            if not f.is_file():
+                continue
+            if is_broken_emotion_aggregate(f):
+                continue
+            count += 1
     except OSError:
         return 0
     return count

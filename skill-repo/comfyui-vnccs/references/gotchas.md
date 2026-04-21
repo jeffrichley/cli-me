@@ -219,6 +219,48 @@ Live-verified wall clocks on a single RTX 4060 Ti (16 GB):
 | dataset export | Step5 | ~30 sec | kohya-style lora/ tree |
 | character clone | Step1.1 QWEN | **fails** on 16 GB (OOM) | see below |
 
+## Step3 emotion `sheet_*__00001.png` is a silhouette misfire
+
+Live-probed live_test_002 after a successful `emotion add` run:
+`Sheets/Naked/happy/sheet_happy__00001.png` is 6144×6144 RGBA where
+**100% of opaque pixels have RGB=(0,0,0)** — pure silhouette. Same
+pattern propagates into `Sprites/Naked/happy/sprite_happy__00001_.png`
+(that file is the SpriteGenerator's re-save of the full sheet).
+
+Cause (traced in Step3 SDXL legacy workflow `VN_Step3_CharEmotionGeneratorV6_api.json`):
+
+- Node 9 `SaveImage` → wired to `FaceDetailer.output[1]` (cropped_refined
+  face crops), saves 12 usable `face_happy_*.png` files.
+- Node 19 `SaveImageWithAlpha` → wired to `FaceDetailer.output[0]`
+  (full refined image) + `EmotionGeneratorV2.output[7]` (character
+  silhouette mask). The full-image output in this wiring arrives with
+  RGB≈0 across the character region — possibly because FaceDetailer
+  returns a mask-only or pre-VAE tensor at output[0] in this
+  configuration, or because the input image fed to FaceDetailer was
+  already near-black. Combined with the solid alpha mask, the save
+  produces a "character-shaped opaque region filled with black."
+
+**Usable artifacts from a successful emotion run:**
+
+- ✅ `Faces/<costume>/<emotion>/face_<emotion>_*_.png` (12 face crops)
+- ✅ `Sprites/<costume>/<emotion>/sprite_<emotion>_00002..12_.png`
+  (individual portrait sprites produced by CharacterSheetCropper from
+  the neutral sheet with face regions overwritten — SpriteGenerator
+  recovers color even though the sheet file is silhouettes)
+- ❌ `Sheets/<costume>/<emotion>/sheet_<emotion>__00001.png`
+- ❌ `Sprites/<costume>/<emotion>/sprite_<emotion>__00001_.png`
+
+**TODO for Jeff:** open VN_Step3_CharEmotionGeneratorV6 in ComfyUI's
+visual editor, run it interactively, and confirm the intended wiring
+for SaveImageWithAlpha (node 19). If upstream intended a different
+output index on FaceDetailer — or a composite upstream — the workflow
+needs a rewire. Once confirmed, patch the bundled API JSON and
+re-pin the SHA256.
+
+The wrapper's `sprite list` / `emotion show` logic should filter out
+`*__00001*.png` artifacts so agents don't pick up the silhouette masks
+as legitimate outputs.
+
 ## Character clone OOMs on 16 GB VRAM
 
 VNCCS 2.1.0's Step1.1 QWEN clone workflow loads:

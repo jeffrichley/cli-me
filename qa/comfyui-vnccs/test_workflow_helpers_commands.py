@@ -572,3 +572,68 @@ def test_ensure_input_template_missing_source_raises(tmp_path):
     # Note: no character_template/ subdir under VNCCS.
     with pytest.raises(VnccsPathError):
         backend.ensure_input_template(comfy)
+
+
+# ---------------------------------------------------------------------------
+# is_broken_emotion_aggregate — filter for VNCCS Step3 silhouette misfire
+# ---------------------------------------------------------------------------
+
+
+def test_is_broken_aggregate_emotion_sheet(tmp_path):
+    """Sheets/<costume>/<non-neutral>/sheet_<emotion>__00001.png is broken."""
+    f = tmp_path / "char" / "Sheets" / "Naked" / "happy" / "sheet_happy__00001.png"
+    f.parent.mkdir(parents=True)
+    f.write_bytes(b"")
+    assert backend.is_broken_emotion_aggregate(f) is True
+
+
+def test_is_broken_aggregate_emotion_sprite(tmp_path):
+    """Sprites/<costume>/<non-neutral>/sprite_<emotion>__00001_.png is broken."""
+    f = tmp_path / "char" / "Sprites" / "Naked" / "happy" / "sprite_happy__00001_.png"
+    f.parent.mkdir(parents=True)
+    f.write_bytes(b"")
+    assert backend.is_broken_emotion_aggregate(f) is True
+
+
+def test_is_broken_aggregate_individual_sprite_keeps(tmp_path):
+    """Individual cropped sprites (00002+) are valid — not broken."""
+    for i in range(2, 13):
+        f = (tmp_path / "char" / "Sprites" / "Naked" / "happy"
+             / f"sprite_happy__{i:05d}_.png")
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_bytes(b"")
+        assert backend.is_broken_emotion_aggregate(f) is False, \
+            f"sprite index {i} should not be flagged broken"
+
+
+def test_is_broken_aggregate_neutral_sheet_keeps(tmp_path):
+    """Step1 neutral sheet (single-underscore naming, NOT broken)."""
+    f = tmp_path / "char" / "Sheets" / "Naked" / "neutral" / "sheet_neutral_00001_.png"
+    f.parent.mkdir(parents=True)
+    f.write_bytes(b"")
+    assert backend.is_broken_emotion_aggregate(f) is False
+
+
+def test_is_broken_aggregate_neutral_sprite_keeps(tmp_path):
+    """sprite_neutral__00001_.png is a re-save of the valid Step1 sheet,
+    still colored and usable (not a silhouette misfire)."""
+    f = tmp_path / "char" / "Sprites" / "Naked" / "neutral" / "sprite_neutral__00001_.png"
+    f.parent.mkdir(parents=True)
+    f.write_bytes(b"")
+    assert backend.is_broken_emotion_aggregate(f) is False
+
+
+def test_is_broken_aggregate_face_crop_keeps(tmp_path):
+    """Face crops are always valid — even with the __00001 pattern."""
+    f = tmp_path / "char" / "Faces" / "Naked" / "happy" / "face_happy__00001_.png"
+    f.parent.mkdir(parents=True)
+    f.write_bytes(b"")
+    assert backend.is_broken_emotion_aggregate(f) is False
+
+
+def test_is_broken_aggregate_non_matching_kind_keeps(tmp_path):
+    """Files outside Sheets/Sprites/Faces (e.g. lora/) are never flagged."""
+    f = tmp_path / "char" / "lora" / "Naked_happy_sprite_happy__00001_.png"
+    f.parent.mkdir(parents=True)
+    f.write_bytes(b"")
+    assert backend.is_broken_emotion_aggregate(f) is False
