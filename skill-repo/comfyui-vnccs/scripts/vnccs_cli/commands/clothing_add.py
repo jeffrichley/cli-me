@@ -18,8 +18,10 @@ from vnccs_cli.backend import (
     VnccsValidationError,
     VnccsWorkflowError,
     get_vnccs_state_dir,
+    init_costume_via_rest,
     load_api_workflow,
     patch_workflow_node,
+    prune_orphaned_output_nodes,
     submit_workflow,
     wait_for_prompt,
 )
@@ -57,8 +59,13 @@ def _build_workflow(
     # Route the single `--description` to `top` (the most visible clothing
     # slot in VN sprites). Advanced users who need finer slot control can
     # drop to the raw workflow.
+    # `costume` names which costume directory VNCCS writes outputs into;
+    # after init_costume_via_rest runs, the new name is in the dropdown.
+    # Without patching `costume`, VNCCS falls back to the default (Naked)
+    # and writes to the wrong dir.
     inputs: dict[str, Any] = {
         "character": character,
+        "costume": costume,
         "new_costume_name": costume,
         "top": description,
     }
@@ -89,7 +96,6 @@ def _build_workflow(
     # Step2 contains at least one orphaned PreviewImage (``images=None``)
     # that ComfyUI's validator rejects with ``required_input_missing``.
     # Safe to drop — UI-only previews with no downstream consumers.
-    from vnccs_cli.backend import prune_orphaned_output_nodes
     prune_orphaned_output_nodes(workflow)
     return workflow
 
@@ -126,6 +132,11 @@ def run_add(
         character, comfy_path=comfy_path, state_dir=state_dir
     )
 
+    # REST-init the costume so the CharacterAssetSelector dropdown contains
+    # the new name before submission. Idempotent — re-running for the same
+    # costume name returns "already exists" and we proceed to add variants.
+    init_record = init_costume_via_rest(character, costume, url=url)
+
     rng = random.Random(seed)
     submissions: list[dict] = []
     for i in range(variants):
@@ -155,4 +166,5 @@ def run_add(
         "costume": costume,
         "variants": variants,
         "submissions": submissions,
+        "init": init_record,
     }

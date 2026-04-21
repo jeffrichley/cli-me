@@ -706,6 +706,65 @@ def ensure_input_template(comfy_path: Path) -> Path:
     return dst
 
 
+def init_costume_via_rest(
+    character: str,
+    costume: str,
+    *,
+    url: Optional[str] = None,
+    timeout: float = 60.0,
+) -> dict:
+    """Initialize a VNCCS costume via ``/vnccs/create_costume`` REST endpoint.
+
+    Without this call, the CharacterAssetSelector's ``costume`` dropdown
+    doesn't include the new costume name — so even with
+    ``new_costume_name=COSTUME`` patched into the node, VNCCS writes
+    outputs to whatever the dropdown actually points to (usually ``Naked``).
+    The endpoint writes the config entry + creates
+    ``Sheets/<costume>/neutral/`` on disk.
+
+    Idempotent: returns the existing costume error as a 200-but-warning
+    style body if the name already exists (we don't raise in that case
+    because re-running clothing add should be safe).
+
+    Returns the parsed JSON dict.
+    """
+    if not character:
+        raise VnccsError("character is required for costume init")
+    if not costume:
+        raise VnccsError("costume is required for costume init")
+    base = get_comfy_url(url)
+    try:
+        with httpx.Client(base_url=base, timeout=timeout) as client:
+            response = client.get(
+                "/vnccs/create_costume",
+                params={"character": character, "costume": costume},
+            )
+    except (
+        httpx.ConnectError,
+        httpx.ConnectTimeout,
+        httpx.ReadTimeout,
+    ) as exc:
+        raise VnccsConnectionError(
+            f"Cannot reach ComfyUI at {base}",
+            detail=str(exc),
+        ) from exc
+    if response.status_code >= 400:
+        raise VnccsExecutionError(
+            f"VNCCS /vnccs/create_costume failed (HTTP {response.status_code}).",
+            detail=response.text[:1000],
+        )
+    try:
+        data = response.json()
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise VnccsExecutionError(
+            "VNCCS /vnccs/create_costume returned non-JSON.",
+            detail=str(exc),
+        ) from exc
+    # "Costume already exists" comes back as a 200 with error field —
+    # we treat that as idempotent success (caller may be re-adding variants).
+    return data
+
+
 def init_character_via_rest(
     name: str,
     *,

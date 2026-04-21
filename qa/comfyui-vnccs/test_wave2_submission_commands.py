@@ -113,12 +113,31 @@ class InitRecorder:
         return {"ok": True, "name": name, "config_path": f"/fake/{name}/config.json"}
 
 
+class CostumeInitRecorder:
+    """Stub for backend.init_costume_via_rest."""
+
+    def __init__(self):
+        self.calls: list[dict] = []
+
+    def __call__(self, character, costume, *, url=None, timeout=60.0):
+        self.calls.append({"character": character, "costume": costume, "url": url})
+        return {"ok": True, "costume": costume}
+
+
 @pytest.fixture
 def init_recorder(monkeypatch):
     rec = InitRecorder()
     monkeypatch.setattr(backend, "init_character_via_rest", rec)
     monkeypatch.setattr(character_create, "init_character_via_rest", rec)
     monkeypatch.setattr(character_clone, "init_character_via_rest", rec)
+    return rec
+
+
+@pytest.fixture
+def costume_init_recorder(monkeypatch):
+    rec = CostumeInitRecorder()
+    monkeypatch.setattr(backend, "init_costume_via_rest", rec)
+    monkeypatch.setattr(clothing_add, "init_costume_via_rest", rec)
     return rec
 
 
@@ -338,27 +357,38 @@ def test_character_clone_does_not_require_prompt(
 # ---------------------------------------------------------------------------
 
 
-def test_clothing_add_single_variant(submit_recorder, wait_recorder, fake_comfy, monkeypatch):
+def test_clothing_add_single_variant(submit_recorder, wait_recorder, costume_init_recorder, fake_comfy, monkeypatch):
     monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
     (fake_comfy / "output" / "VN_CharacterCreatorSuit" / "Aria").mkdir(parents=True)
 
     result = clothing_add.run_add(
         "Aria", "school", "white sailor fuku", variants=1, seed=100
     )
+    # REST-init registers the costume in the dropdown before submission
+    assert costume_init_recorder.calls == [
+        {"character": "Aria", "costume": "school", "url": None}
+    ]
     assert len(submit_recorder.calls) == 1
     inputs = _find_node_inputs(
         submit_recorder.calls[0]["workflow"], "CharacterAssetSelector"
     )
     assert inputs["character"] == "Aria"
+    # `costume` + `new_costume_name` BOTH set to the new name — without
+    # costume, VNCCS writes outputs to the default Naked dir.
+    assert inputs["costume"] == "school"
     assert inputs["new_costume_name"] == "school"
     assert inputs["top"] == "white sailor fuku"
+    # RMBG2 patched
+    rmbg = _find_node_inputs(submit_recorder.calls[0]["workflow"], "VNCCS_RMBG2")
+    assert rmbg["background"] == "Green"
     assert result["variants"] == 1
     assert len(result["submissions"]) == 1
     assert result["submissions"][0]["variant_index"] == 0
     assert result["submissions"][0]["variant_seed"] == 100
+    assert result["init"]["ok"] is True
 
 
-def test_clothing_add_multiple_variants_distinct_seeds(submit_recorder, wait_recorder, fake_comfy, monkeypatch):
+def test_clothing_add_multiple_variants_distinct_seeds(submit_recorder, wait_recorder, costume_init_recorder, fake_comfy, monkeypatch):
     monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
     (fake_comfy / "output" / "VN_CharacterCreatorSuit" / "Aria").mkdir(parents=True)
 
@@ -371,7 +401,7 @@ def test_clothing_add_multiple_variants_distinct_seeds(submit_recorder, wait_rec
     assert len({s["prompt_id"] for s in result["submissions"]}) == 1  # mock returns same
 
 
-def test_clothing_add_random_seeds_when_none_given(submit_recorder, wait_recorder, fake_comfy, monkeypatch):
+def test_clothing_add_random_seeds_when_none_given(submit_recorder, wait_recorder, costume_init_recorder, fake_comfy, monkeypatch):
     monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
     (fake_comfy / "output" / "VN_CharacterCreatorSuit" / "Aria").mkdir(parents=True)
 
