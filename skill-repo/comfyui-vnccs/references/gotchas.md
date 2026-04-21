@@ -115,11 +115,60 @@ automatically.
 
 `vnccs check models` walks both `<COMFY_PATH>/models/` AND every
 directory listed in `<COMFY_PATH>/extra_model_paths.yaml` (ComfyUI's
-multi-location config mechanism). Real bug found in the field where a
+multi-location config mechanism), including sections marked
+`is_default: true` (which apply to ANY model type, even ones not
+explicitly listed in the section). Real bug found in the field where a
 ComfyUI install redirected all models to `E:/data/comfy/models/`;
 without honoring the YAML, the wrapper falsely reported every model
-as missing. See `backend.parse_extra_model_paths` and
-`backend.find_model_path`.
+as missing. See `backend.parse_extra_model_paths`,
+`backend.parse_default_base_paths`, and `backend.find_model_path`.
+
+## Custom-node packs that DON'T honor extra_model_paths.yaml
+
+A handful of custom-node packs register their own folder paths via
+ComfyUI's `add_folder_path_and_extensions` API, with hard-coded
+locations under `<COMFY_PATH>/models/<type>/`. They do NOT read
+`extra_model_paths.yaml`, so models in your redirected location remain
+invisible to them. Verified by source-reading at integration time:
+
+| Pack | Folder | Affected files |
+|---|---|---|
+| ComfyUI-Impact-Subpack | `ultralytics/{bbox,segm}` | face_yolov8m.pt, face_yolov8m-seg_60.pt |
+| ComfyUI-Impact-Pack | `sams` | sam_vit_b_01ec64.pth |
+| ComfyUI_VNCCS (RMBG2 node) | `RMBG/RMBG-2.0` | model.safetensors |
+
+**Mitigation:** physically copy these files into the canonical
+`<COMFY_PATH>/models/{ultralytics,sams,RMBG}/...` location even when
+`extra_model_paths.yaml` redirects everything else. The wrapper's
+download script (`tmp/vnccs_download_models.py`) writes to the
+extra_model_paths-mapped location for the bulk; the four affected
+files need a one-time copy to canonical. Future: a `vnccs setup`
+command should automate this copy.
+
+## Live-environment prep for `character create`
+
+Three workflow widget defaults shipped by upstream don't match the
+current VNCCS / ComfyUI runtime; the wrapper patches them automatically
+in `character_create.run_create`:
+
+1. **`existing_character` is a dropdown of EXISTING characters.** A
+   newly-named character can't be in the dropdown until VNCCS writes
+   its config, so the wrapper calls `/vnccs/create?name=NAME` first
+   (which creates the dir + config) before submitting the workflow.
+2. **LoadImage `Character sheet` defaults to `short_body6.png`** —
+   a stale leftover from the upstream author's local ComfyUI install.
+   The wrapper auto-copies VNCCS's bundled `CharacterSheetTemplate.png`
+   into `<COMFY_PATH>/input/` and patches the LoadImage to use it
+   (unless `--pose` overrides).
+3. **`VNCCS_RMBG2.background` defaults to `'Color'`** — no longer a
+   valid choice (current set: Alpha/Green/Blue). Wrapper patches to
+   `'Green'` so the downstream `VNCCSChromaKey` node has the right
+   background to key out. `'Alpha'` would feed RGBA into a 3-channel
+   conv and crash.
+
+Live-verified end-to-end: a stage-1 character create produces
+1 character sheet (6144×6144 RGBA, ~17 MB) + 12 face crops in
+~12 min on a single GPU.
 
 ## REQUIRED_MODELS list grew during integration
 
