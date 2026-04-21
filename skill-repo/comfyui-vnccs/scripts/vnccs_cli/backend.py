@@ -436,6 +436,41 @@ def parse_extra_model_paths(comfy_path: Path) -> list[tuple[str, Path]]:
     return result
 
 
+def parse_default_base_paths(comfy_path: Path) -> list[Path]:
+    """Return ``base_path`` directories from sections marked ``is_default: true``.
+
+    ComfyUI treats ``is_default: true`` sections as fall-back search roots
+    for ANY model type (even ones not explicitly listed in the section).
+    Without honoring this, a config like the user's — which redirects
+    ``checkpoints``/``loras``/etc. to ``E:/data/comfy/models/`` and lets
+    ``ultralytics``/``sams`` fall through implicitly — will falsely report
+    those files as missing.
+    """
+    yaml_file = comfy_path / "extra_model_paths.yaml"
+    if not yaml_file.is_file():
+        return []
+    try:
+        import yaml
+    except ImportError:
+        return []
+    try:
+        data = yaml.safe_load(yaml_file.read_text(encoding="utf-8"))
+    except (OSError, yaml.YAMLError):
+        return []
+    if not isinstance(data, dict):
+        return []
+    bases: list[Path] = []
+    for section in data.values():
+        if not isinstance(section, dict):
+            continue
+        if not section.get("is_default"):
+            continue
+        base_raw = section.get("base_path")
+        if isinstance(base_raw, str):
+            bases.append(Path(base_raw).expanduser())
+    return bases
+
+
 def find_model_path(
     comfy_path: Path, subdir: str, filename: str
 ) -> tuple[Path, bool]:
@@ -447,16 +482,23 @@ def find_model_path(
     ComfyUI model type and treats the rest as a subtree under each
     candidate root.
 
+    Search order:
+      1. ``<COMFY_PATH>/models/<subdir>/<filename>`` (canonical)
+      2. Every explicit ``<type>: <dir>`` entry from extra_model_paths.yaml
+         that matches the leading component of ``subdir``.
+      3. Every ``base_path`` from ``is_default: true`` sections, joined with
+         the full ``subdir`` (catches model types that aren't explicitly
+         redirected — the YAML's fall-through behavior).
+
     Returns ``(path, present)``. ``path`` is the first matching real file,
-    or — if missing everywhere — the default ``<COMFY_PATH>/models/<subdir>/
-    <filename>`` (so error messages show the canonical location).
+    or — if missing everywhere — the default canonical location (so error
+    messages point to the spot a fresh install would expect).
     A 0-byte file is treated as missing (partial-download guard).
     """
     default = comfy_path / "models" / subdir / filename
 
     parts = Path(subdir).parts
     if not parts:
-        # Defensive: empty subdir is a config bug; just probe the default.
         try:
             return default, default.is_file() and default.stat().st_size > 0
         except OSError:
@@ -471,6 +513,10 @@ def find_model_path(
             continue
         candidate = type_dir / subtree if subtree else type_dir
         candidates.append(candidate / filename)
+
+    # Fall-through: is_default sections apply to ANY model type.
+    for base in parse_default_base_paths(comfy_path):
+        candidates.append(base / subdir / filename)
 
     for c in candidates:
         try:

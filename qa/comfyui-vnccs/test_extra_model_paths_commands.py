@@ -199,6 +199,55 @@ models:
     assert path == tmp_path / "models" / "loras" / "qwen" / "missing.safetensors"
 
 
+def test_find_model_path_is_default_fallback(tmp_path):
+    """Sections with ``is_default: true`` apply to ANY model type, even
+    types not explicitly listed in the section. Real bug: user's YAML
+    redirects checkpoints/loras/etc but leaves ultralytics/sams to fall
+    through implicitly via ``is_default: true``."""
+    extra = tmp_path / "alt"
+    target = extra / "ultralytics" / "bbox"
+    target.mkdir(parents=True)
+    (target / "face_yolov8m.pt").write_bytes(b"\xff" * 100)
+    (tmp_path / "extra_model_paths.yaml").write_text(
+        f"""\
+models:
+    base_path: {extra}
+    is_default: true
+    checkpoints: checkpoints/
+    loras: loras/
+""",
+        encoding="utf-8",
+    )
+    # Note: ultralytics is NOT explicitly listed, so the fallback rule
+    # via is_default must kick in.
+    path, present = backend.find_model_path(
+        tmp_path, "ultralytics/bbox", "face_yolov8m.pt"
+    )
+    assert present is True
+    assert path == target / "face_yolov8m.pt"
+
+
+def test_parse_default_base_paths(tmp_path):
+    base1 = tmp_path / "default_root"
+    base2 = tmp_path / "non_default"
+    (tmp_path / "extra_model_paths.yaml").write_text(
+        f"""\
+section_a:
+    base_path: {base1}
+    is_default: true
+    checkpoints: checkpoints/
+
+section_b:
+    base_path: {base2}
+    checkpoints: m/Stable-diffusion/
+""",
+        encoding="utf-8",
+    )
+    bases = backend.parse_default_base_paths(tmp_path)
+    assert base1 in bases
+    assert base2 not in bases
+
+
 def test_find_model_path_subtree_under_extra_location(tmp_path):
     """REQUIRED_MODELS uses subdirs like 'loras/qwen/VNCCS' — must descend
     under the extra_model_paths-mapped base."""
