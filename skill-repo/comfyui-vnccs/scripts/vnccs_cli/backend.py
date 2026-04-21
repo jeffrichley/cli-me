@@ -630,6 +630,95 @@ def patch_workflow_node(
     return count
 
 
+# --- Live-environment prep --------------------------------------------------
+
+
+CHARACTER_SHEET_TEMPLATE = "CharacterSheetTemplate.png"
+
+
+def ensure_input_template(comfy_path: Path) -> Path:
+    """Copy VNCCS's bundled CharacterSheetTemplate.png into ComfyUI's input/.
+
+    The bundled API workflow's LoadImage titled "Character sheet" expects
+    this template at runtime — without it, ComfyUI's input validation
+    rejects the workflow. The template ships with VNCCS at
+    ``<vnccs>/character_template/CharacterSheetTemplate.png`` but isn't
+    auto-installed into ``<comfy>/input/``. This helper copies it once.
+
+    Returns the destination path. No-op if the file is already present.
+    """
+    src = (
+        comfy_path
+        / "custom_nodes"
+        / VNCCS_CUSTOM_NODE_DIR_NAME
+        / "character_template"
+        / CHARACTER_SHEET_TEMPLATE
+    )
+    dst = comfy_path / "input" / CHARACTER_SHEET_TEMPLATE
+    if dst.exists() and dst.stat().st_size > 0:
+        return dst
+    if not src.is_file():
+        raise VnccsPathError(
+            f"VNCCS character template missing: {src}",
+            detail=(
+                "Expected the bundled CharacterSheetTemplate.png in VNCCS's "
+                "character_template/ directory. Re-install VNCCS or check "
+                "that the custom-node dir is intact."
+            ),
+        )
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    import shutil
+    shutil.copy2(src, dst)
+    return dst
+
+
+def init_character_via_rest(
+    name: str,
+    *,
+    url: Optional[str] = None,
+    timeout: float = 60.0,
+) -> dict:
+    """Initialize a VNCCS character via the ``/vnccs/create`` REST endpoint.
+
+    Without this call, the CharacterCreator node's ``existing_character``
+    dropdown lacks the new name and ``/prompt`` rejects the workflow with
+    a ``value_not_in_list`` error. The endpoint also writes the per-character
+    config file + creates the on-disk directory tree. Idempotent: returns
+    the existing character record if NAME already exists.
+
+    Returns the parsed JSON dict from the endpoint.
+    Raises VnccsConnectionError (exit 2) if ComfyUI is unreachable, or
+    VnccsExecutionError (exit 4) if the endpoint returns a non-2xx.
+    """
+    if not name:
+        raise VnccsError("character name is required for init")
+    base = get_comfy_url(url)
+    try:
+        with httpx.Client(base_url=base, timeout=timeout) as client:
+            response = client.get("/vnccs/create", params={"name": name})
+    except (
+        httpx.ConnectError,
+        httpx.ConnectTimeout,
+        httpx.ReadTimeout,
+    ) as exc:
+        raise VnccsConnectionError(
+            f"Cannot reach ComfyUI at {base}",
+            detail=str(exc),
+        ) from exc
+    if response.status_code >= 400:
+        raise VnccsExecutionError(
+            f"VNCCS /vnccs/create failed (HTTP {response.status_code}).",
+            detail=response.text[:1000],
+        )
+    try:
+        return response.json()
+    except (json.JSONDecodeError, ValueError) as exc:
+        raise VnccsExecutionError(
+            "VNCCS /vnccs/create returned non-JSON.",
+            detail=str(exc),
+        ) from exc
+
+
 # --- Workflow submission + wait --------------------------------------------
 
 

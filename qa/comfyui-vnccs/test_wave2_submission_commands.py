@@ -102,6 +102,38 @@ def wait_recorder(monkeypatch):
     return rec
 
 
+class InitRecorder:
+    """Stub for backend.init_character_via_rest — records calls, returns ok dict."""
+
+    def __init__(self):
+        self.calls: list[dict] = []
+
+    def __call__(self, name, *, url=None, timeout=60.0):
+        self.calls.append({"name": name, "url": url})
+        return {"ok": True, "name": name, "config_path": f"/fake/{name}/config.json"}
+
+
+@pytest.fixture
+def init_recorder(monkeypatch):
+    rec = InitRecorder()
+    monkeypatch.setattr(backend, "init_character_via_rest", rec)
+    monkeypatch.setattr(character_create, "init_character_via_rest", rec)
+    return rec
+
+
+@pytest.fixture
+def stub_template(monkeypatch):
+    """Stub ensure_input_template so character_create doesn't need a real
+    VNCCS install + ComfyUI input dir during Tier-1 tests."""
+    monkeypatch.setattr(
+        backend, "ensure_input_template", lambda comfy: comfy / "input" / "stub.png"
+    )
+    monkeypatch.setattr(
+        character_create, "ensure_input_template",
+        lambda comfy: comfy / "input" / "stub.png",
+    )
+
+
 def _find_node_inputs(workflow: dict, class_type: str, title: str | None = None) -> dict:
     for node in workflow.values():
         if not isinstance(node, dict):
@@ -123,26 +155,49 @@ def _find_node_inputs(workflow: dict, class_type: str, title: str | None = None)
 # ---------------------------------------------------------------------------
 
 
-def test_character_create_patches_creator_and_submits(submit_recorder, wait_recorder):
+def test_character_create_patches_creator_and_submits(
+    submit_recorder, wait_recorder, init_recorder, stub_template, fake_comfy, monkeypatch,
+):
+    monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
     result = character_create.run_create(
         "Aria", "tall elf, silver hair, green eyes", seed=12345
     )
+    # /vnccs/create called first to register the name in the dropdown
+    assert init_recorder.calls == [{"name": "Aria", "url": None}]
+
     assert len(submit_recorder.calls) == 1
     inputs = _find_node_inputs(submit_recorder.calls[0]["workflow"], "CharacterCreator")
     assert inputs["new_character_name"] == "Aria"
+    # existing_character now points at the just-initialized name (was previously
+    # set to the same value but only worked after init_character_via_rest).
     assert inputs["existing_character"] == "Aria"
     assert inputs["additional_details"] == "tall elf, silver hair, green eyes"
     assert inputs["seed"] == 12345
 
+    # VNCCS_RMBG2 background patched away from the workflow's stale 'Color'
+    rmbg = _find_node_inputs(submit_recorder.calls[0]["workflow"], "VNCCS_RMBG2")
+    assert rmbg["background"] == "Green"
+
+    # Default LoadImage points at the bundled template
+    loader = _find_node_inputs(
+        submit_recorder.calls[0]["workflow"],
+        "LoadImage",
+        title="Character sheet",
+    )
+    assert loader["image"] == "CharacterSheetTemplate.png"
+
     # Default wait=True: wait_for_prompt called once
     assert len(wait_recorder.calls) == 1
     assert wait_recorder.calls[0]["prompt_id"] == "stub-prompt"
-
     assert result["prompt_id"] == "stub-prompt"
     assert result["history"]["status"]["status_str"] == "success"
+    assert result["init"]["ok"] is True
 
 
-def test_character_create_without_seed_leaves_workflow_default(submit_recorder, wait_recorder):
+def test_character_create_without_seed_leaves_workflow_default(
+    submit_recorder, wait_recorder, init_recorder, stub_template, fake_comfy, monkeypatch,
+):
+    monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
     character_create.run_create("Bob", "rogue")
     inputs = _find_node_inputs(submit_recorder.calls[0]["workflow"], "CharacterCreator")
     # Workflow default seed is 1125899906842624 (from the bundled JSON);
@@ -150,17 +205,24 @@ def test_character_create_without_seed_leaves_workflow_default(submit_recorder, 
     assert inputs["seed"] == 1125899906842624
 
 
-def test_character_create_pose_patches_load_image_node(submit_recorder, wait_recorder):
+def test_character_create_pose_overrides_default_template(
+    submit_recorder, wait_recorder, init_recorder, stub_template, fake_comfy, monkeypatch,
+):
+    monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
     character_create.run_create("Zara", "mage", pose="short_body6")
     loader = _find_node_inputs(
         submit_recorder.calls[0]["workflow"],
         "LoadImage",
         title="Character sheet",
     )
+    # Explicit --pose overrides the default CharacterSheetTemplate.png
     assert loader["image"] == "short_body6.png"
 
 
-def test_character_create_wait_false_skips_polling(submit_recorder, wait_recorder):
+def test_character_create_wait_false_skips_polling(
+    submit_recorder, wait_recorder, init_recorder, stub_template, fake_comfy, monkeypatch,
+):
+    monkeypatch.setenv("COMFY_PATH", str(fake_comfy))
     result = character_create.run_create("Dee", "warrior", wait=False)
     assert submit_recorder.calls, "should have submitted"
     assert wait_recorder.calls == [], "wait=False must not poll"

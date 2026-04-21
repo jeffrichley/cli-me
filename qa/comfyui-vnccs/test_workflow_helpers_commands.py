@@ -236,8 +236,8 @@ class _MockHttpClient:
             raise self._post_raises
         return self._post_responses.pop(0)
 
-    def get(self, url):
-        self.calls.append(("GET", url, {}))
+    def get(self, url, params=None):
+        self.calls.append(("GET", url, params or {}))
         if self._get_raises:
             raise self._get_raises
         return self._get_responses.pop(0)
@@ -470,3 +470,105 @@ def test_wait_for_prompt_connection_error_raises_exit_2(monkeypatch):
     with pytest.raises(VnccsConnectionError) as ei:
         backend.wait_for_prompt("abc", timeout=5.0)
     assert ei.value.exit_code == 2
+
+
+# ---------------------------------------------------------------------------
+# init_character_via_rest (live-env prep)
+# ---------------------------------------------------------------------------
+
+
+def test_init_character_via_rest_success(monkeypatch):
+    """Successful /vnccs/create returns the parsed JSON record."""
+    client = _MockHttpClient(
+        get_responses=[
+            _MockHttpResponse(
+                200,
+                {
+                    "ok": True,
+                    "name": "Aria",
+                    "config_path": "/output/.../Aria_config.json",
+                },
+            )
+        ]
+    )
+    _install_mock_client(monkeypatch, client)
+    result = backend.init_character_via_rest("Aria", url="http://127.0.0.1:8188")
+    assert result["ok"] is True
+    assert result["name"] == "Aria"
+    # Verify the GET hits the right path with the name param
+    method, url, _ = client.calls[0]
+    assert method == "GET"
+    assert url == "/vnccs/create"
+
+
+def test_init_character_via_rest_empty_name_raises():
+    from vnccs_cli.backend import VnccsError
+    with pytest.raises(VnccsError):
+        backend.init_character_via_rest("")
+
+
+def test_init_character_via_rest_connection_error_raises_exit_2(monkeypatch):
+    client = _MockHttpClient(get_raises=httpx.ConnectError("refused"))
+    _install_mock_client(monkeypatch, client)
+    with pytest.raises(VnccsConnectionError) as ei:
+        backend.init_character_via_rest("Aria")
+    assert ei.value.exit_code == 2
+
+
+def test_init_character_via_rest_400_raises_exit_4(monkeypatch):
+    client = _MockHttpClient(
+        get_responses=[
+            _MockHttpResponse(
+                400, {"error": "invalid characters"}, text='{"error":"invalid"}'
+            )
+        ]
+    )
+    _install_mock_client(monkeypatch, client)
+    with pytest.raises(VnccsExecutionError) as ei:
+        backend.init_character_via_rest("Aria/bad")
+    assert ei.value.exit_code == 4
+
+
+# ---------------------------------------------------------------------------
+# ensure_input_template
+# ---------------------------------------------------------------------------
+
+
+def test_ensure_input_template_copies_when_missing(tmp_path):
+    """Copies <vnccs>/character_template/CharacterSheetTemplate.png ->
+    <comfy>/input/CharacterSheetTemplate.png."""
+    comfy = tmp_path / "ComfyUI"
+    vnccs_template_dir = (
+        comfy / "custom_nodes" / "ComfyUI_VNCCS" / "character_template"
+    )
+    vnccs_template_dir.mkdir(parents=True)
+    template_src = vnccs_template_dir / "CharacterSheetTemplate.png"
+    template_src.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 1024)
+
+    dst = backend.ensure_input_template(comfy)
+
+    assert dst.exists()
+    assert dst.read_bytes() == template_src.read_bytes()
+    assert dst == comfy / "input" / "CharacterSheetTemplate.png"
+
+
+def test_ensure_input_template_idempotent(tmp_path):
+    """Pre-existing template is left alone (no overwrite, no error)."""
+    comfy = tmp_path / "ComfyUI"
+    (comfy / "input").mkdir(parents=True)
+    pre = comfy / "input" / "CharacterSheetTemplate.png"
+    pre.write_bytes(b"PRE-EXISTING_CONTENT")
+    # Source can be missing — we don't need it if dst already exists
+    dst = backend.ensure_input_template(comfy)
+    assert dst == pre
+    assert pre.read_bytes() == b"PRE-EXISTING_CONTENT"
+
+
+def test_ensure_input_template_missing_source_raises(tmp_path):
+    """Source template missing AND dst missing -> VnccsPathError."""
+    from vnccs_cli.backend import VnccsPathError
+    comfy = tmp_path / "ComfyUI"
+    (comfy / "custom_nodes" / "ComfyUI_VNCCS").mkdir(parents=True)
+    # Note: no character_template/ subdir under VNCCS.
+    with pytest.raises(VnccsPathError):
+        backend.ensure_input_template(comfy)
