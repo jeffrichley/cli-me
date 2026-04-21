@@ -186,9 +186,67 @@ command has its own set of adjustments:
    the LoadImage to use it. Users can override with `--ref-image`.
 7. **Three `VNCCS_RMBG2` instances**: same `'Color' → 'Green'` patch.
 8. **Orphaned preview nodes**: same prune as Step2.
+9. **/vnccs/create REST init**: same REST init as character create —
+   the new (derived) name has to be in the CharacterCreator dropdown
+   before submission.
 
-Live-verified end-to-end for `character create`: produces 1 character
-sheet (6144×6144 RGBA, ~17 MB) + 12 face crops in ~12 min on a single GPU.
+### `clothing add` (Step2 SDXL)
+
+10. **`costume` dropdown + `new_costume_name` both need the new name.**
+    Same pattern as character create's `existing_character`:
+    CharacterAssetSelector's `costume` is a dropdown populated from
+    VNCCS state. `new_costume_name` ALONE doesn't trigger directory
+    creation or switch the dropdown — VNCCS writes to whatever
+    `costume` points to (default `Naked`), overwriting the character's
+    base sheet. The wrapper calls `/vnccs/create_costume?character=X&
+    costume=Y` (new `init_costume_via_rest` helper) so the dropdown
+    includes Y and `Sheets/Y/neutral/` exists on disk before submission.
+
+### `emotion add` / `sprite render` / `dataset export`
+
+Each live-verified with no additional wrapper patches needed beyond
+what was already in Wave 2. Step3/4/5 workflows don't have stale
+widget defaults, no orphaned previews, no fresh dropdown constraints.
+
+Live-verified wall clocks on a single RTX 4060 Ti (16 GB):
+
+| Command | Workflow | Time | Output |
+|---|---|---|---|
+| character create | Step1 SDXL | ~13 min | 1 sheet (6144×6144, 17 MB) + 12 faces |
+| clothing add (1 variant) | Step2 SDXL | ~16 min | 1 sheet + 12 faces (per variant) |
+| emotion add | Step3 SDXL legacy | ~12 min | 1 sheet + 12 faces |
+| sprite render | Step4 | ~7 min | 24 sprites (tall portrait, RGBA) |
+| dataset export | Step5 | ~30 sec | kohya-style lora/ tree |
+| character clone | Step1.1 QWEN | **fails** on 16 GB (OOM) | see below |
+
+## Character clone OOMs on 16 GB VRAM
+
+VNCCS 2.1.0's Step1.1 QWEN clone workflow loads:
+
+- Qwen-Image-Edit-2511 GGUF UNet (14.4 GB on disk)
+- Qwen 2.5 VL CLIP (9.4 GB)
+- Qwen Lightning LoRA (0.85 GB)
+- Qwen pose_helper + ClothesHelper LoRAs (~0.5 GB)
+- SDXL checkpoint + IL LoRA + face detector for the refinement pass
+
+Runtime VRAM during the refinement stage exceeds 16 GB. Observed failure
+on an RTX 4060 Ti (16 GB): 27 images were saved (faces + an "Original"
+reference sheet) before `torch.OutOfMemoryError` on node `637:617` —
+allocation needed 644 MB while 12.75 GiB already held and 0 bytes free.
+
+**Not a wrapper bug.** Mitigations (all require user changes):
+
+1. Run ComfyUI with `--lowvram` or `--novram` so it offloads models
+   aggressively. Slows other workflows.
+2. Hardware with ≥24 GB VRAM (RTX 3090/4090/5090, A100, etc.) — the
+   QWEN stack fits comfortably.
+3. Swap out the Q5_0 GGUF for a smaller quantization (Q4_K_S, Q3_K_M)
+   at the cost of output quality. Would require patching the bundled
+   workflow to point at a different `unet_name`.
+
+The wrapper does NOT attempt any of the above — users on small-VRAM
+hardware should skip `character clone` and stick to Step1 + Step2
+(SDXL), which fit comfortably in 16 GB.
 
 ## REQUIRED_MODELS list grew during integration
 

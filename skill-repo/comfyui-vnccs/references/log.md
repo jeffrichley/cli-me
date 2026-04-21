@@ -126,3 +126,49 @@ live-env prep pattern likely needed for each):
 - emotion_add (Step3 SDXL legacy)
 - sprite_render (Step4 — minimal, may just need /vnccs/create-style init)
 - dataset_export (Step5 — minimal)
+
+---
+
+**2026-04-21 (final)** — All 6 Wave 2 commands live-tested.
+
+Verified on live GPU (RTX 4060 Ti 16 GB):
+
+- **character create** (Step1 SDXL): verified earlier, 13 min.
+- **emotion add** (Step3 SDXL legacy): verified, 12 min. Produced
+  `Sheets/Naked/happy/sheet_happy__00001.png` + 12 face crops under
+  `Faces/Naked/happy/`. No wrapper patches needed beyond Wave 2 — the
+  workflow's default `EmotionGeneratorV2` inputs work as-is.
+- **sprite render** (Step4): verified, 7 min. Produced 24 individual
+  portrait-aspect sprites under `Sprites/Naked/{neutral,happy}/` —
+  one 6144×6144 reference sheet (00001) plus 12 individual ~600-900×
+  2800 RGBA PNGs (00002+) per (costume, emotion) combo.
+- **dataset export** (Step5): verified, ~30s (lightweight). Populated
+  `lora/` with `Naked_{emotion}_{face,sprite}_NNNNN.{png,txt}` pairs —
+  the kohya-style training dataset.
+- **clothing add** (Step2 SDXL): verified after one fix round.
+  First attempt (pre-fix) wrote outputs to `Sheets/Naked/neutral/`
+  instead of `Sheets/school/neutral/` — a SILENT bug (status=success
+  but wrong target dir). Root cause: `CharacterAssetSelector.costume`
+  is a live dropdown like CharacterCreator.existing_character;
+  `new_costume_name` alone doesn't register the name. Fix: new
+  `backend.init_costume_via_rest` helper calls `/vnccs/create_costume`
+  before submission; also patch `costume` to the new name (not just
+  `new_costume_name`). Second attempt (81f2ee88) wrote to
+  `Sheets/school/neutral/sheet_neutral_00001_.png` — correct.
+- **character clone** (Step1.1 QWEN): **fails on 16 GB VRAM** with
+  `torch.OutOfMemoryError` during the refinement stage. 27 images
+  saved before the crash (faces + an "Original" reference sheet).
+  Not a wrapper bug — QWEN's 14 GB GGUF + 9 GB CLIP + SDXL refinement
+  exceeds 16 GB. Documented in gotchas as a hardware requirement;
+  users on small-VRAM GPUs should skip clone and stick to Step1+Step2.
+
+Wrapper fixes this round: `init_costume_via_rest` helper
+(commit `770838d`) + 3 more tests for clothing_add's new flow.
+Full suite: 272 passing, 1 skipped.
+
+Commits this round: `770838d` (clothing REST-init), plus
+`d3560a3` (clone LoadImage + clothing prune from earlier).
+
+All 6 Wave 2 commands now pass live validation + submission on this
+GPU; 5 run to completion end-to-end; 1 (clone) OOMs on 16 GB and
+needs ≥24 GB VRAM for the QWEN stack.
