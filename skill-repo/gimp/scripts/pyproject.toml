@@ -1,0 +1,11 @@
+[project]
+name = "gimp-cli"
+version = "0.1.0"
+description = "Agent-native CLI for GIMP batch automation"
+requires-python = ">=3.12"
+dependencies = [
+    "typer>=0.15.0",
+]
+
+[project.scripts]
+gimp-cli = "gimp_cli:app"

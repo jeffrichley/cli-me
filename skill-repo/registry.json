@@ -82,6 +82,23 @@
       "dependencies": []
     },
     {
+      "name": "gimp",
+      "description": "Headless batch automation CLI for GIMP using Script-Fu or Python batch interpreters",
+      "category": "graphics",
+      "tags": [
+        "gimp",
+        "image-editing",
+        "batch",
+        "script-fu",
+        "python-fu",
+        "headless"
+      ],
+      "version": "0.1.0",
+      "software_url": "https://www.gimp.org/",
+      "source_repo": "https://github.com/GNOME/gimp",
+      "dependencies": []
+    },
+    {
       "name": "pandoc",
       "description": "Universal document converter \u2014 md to PDF/DOCX/HTML/EPUB/LaTeX with citations, templates, Lua filters",
       "category": "documents",
