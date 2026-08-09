@@ -7,7 +7,7 @@ dependencies = [
     "typer>=0.15.0",
     "rich>=13.0.0",
     "qwen-tts>=0.1.0",
-    "torch>=2.0.0",
+    "torch>=2.13.0",
     "soundfile>=0.12.0",
 ]
 
